@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-06-07T00:00:00.000Z" agent="Codex" version="24.7.17" type="device">
+  <diagram id="zunino-remates-er" name="Modelo de datos">
+    <mxGraphModel dx="2200" dy="1500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2400" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="Zunino Remates · Modelo entidad-relación" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=28;fontStyle=1;fontColor=#0d3b23;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="900" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="Supabase PostgreSQL · Auth · Storage · RLS" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=15;fontColor=#5c5c5c;" vertex="1" parent="1">
+          <mxGeometry x="42" y="68" width="600" height="30" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="auth_users" value="&lt;b&gt;auth.users&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : uuid&lt;br&gt;email : text&lt;br&gt;encrypted_password&lt;br&gt;created_at&lt;br&gt;&lt;br&gt;&lt;i&gt;Gestionada por Supabase Auth&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#dce9f3;strokeColor=#285a7a;fontColor=#183c54;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="60" y="150" width="260" height="190" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="admin_profiles" value="&lt;b&gt;public.admin_profiles&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK/FK&lt;/b&gt; user_id : uuid&lt;br&gt;nombre : text&lt;br&gt;rol : rol_administrativo&lt;br&gt;activo : boolean&lt;br&gt;created_at : timestamptz&lt;br&gt;updated_at : timestamptz" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#fff2c7;strokeColor=#c99821;fontColor=#5f4a19;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="60" y="410" width="280" height="210" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="remates" value="&lt;b&gt;public.remates&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : uuid&lt;br&gt;&lt;b&gt;UK&lt;/b&gt; slug : text&lt;br&gt;estado : remate_estado&lt;br&gt;titulo / subtitulo : text&lt;br&gt;fecha_resumen : text&lt;br&gt;fecha_hora : timestamptz&lt;br&gt;fecha_texto : text&lt;br&gt;lugar / ubicacion_detalle : text&lt;br&gt;detalle / descripcion_larga : text&lt;br&gt;catalogo_descripcion : text&lt;br&gt;catalogo_estado : catalogo_estado&lt;br&gt;catalogo_storage_path : text&lt;br&gt;catalogo_file_name / label : text&lt;br&gt;destacado : boolean&lt;br&gt;orden : integer&lt;br&gt;publicado_en : timestamptz&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; created_by → auth.users.id&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; updated_by → auth.users.id&lt;br&gt;created_at / updated_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#dff4e7;strokeColor=#1b6a3b;fontColor=#0d3b23;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="470" y="170" width="350" height="450" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="requisitos" value="&lt;b&gt;public.remate_requisitos&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : uuid&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; remate_id → remates.id&lt;br&gt;contenido : text&lt;br&gt;orden : integer&lt;br&gt;created_at / updated_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#f6f2ea;strokeColor=#987b4d;fontColor=#4c3b22;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="380" y="750" width="290" height="185" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="condiciones" value="&lt;b&gt;public.remate_condiciones&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : uuid&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; remate_id → remates.id&lt;br&gt;contenido : text&lt;br&gt;orden : integer&lt;br&gt;created_at / updated_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#f6f2ea;strokeColor=#987b4d;fontColor=#4c3b22;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="700" y="750" width="290" height="185" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="lotes" value="&lt;b&gt;public.lotes_destacados&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : uuid&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; remate_id → remates.id&lt;br&gt;nombre : text&lt;br&gt;imagen_storage_path : text&lt;br&gt;imagen_alt : text&lt;br&gt;visible : boolean&lt;br&gt;orden : integer&lt;br&gt;created_at / updated_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#f6f2ea;strokeColor=#987b4d;fontColor=#4c3b22;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="720" width="300" height="235" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="faq" value="&lt;b&gt;public.preguntas_frecuentes&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : uuid&lt;br&gt;pregunta : text&lt;br&gt;respuesta : text&lt;br&gt;visible : boolean&lt;br&gt;orden : integer&lt;br&gt;created_at / updated_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#ffffff;strokeColor=#5c5c5c;fontColor=#303030;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="940" y="150" width="290" height="205" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="pasos" value="&lt;b&gt;public.pasos_participacion&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : uuid&lt;br&gt;numero : text&lt;br&gt;titulo : text&lt;br&gt;detalle : text&lt;br&gt;visible : boolean&lt;br&gt;orden : integer&lt;br&gt;created_at / updated_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#ffffff;strokeColor=#5c5c5c;fontColor=#303030;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="940" y="390" width="290" height="220" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="config" value="&lt;b&gt;public.configuracion_sitio&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : text = principal&lt;br&gt;hero_* : text&lt;br&gt;empresa_* : text&lt;br&gt;ubicacion_* : text&lt;br&gt;email / telefono : text&lt;br&gt;direccion / horario : text&lt;br&gt;map_embed_url : text&lt;br&gt;site_name : text&lt;br&gt;seo_titulo / descripcion : text&lt;br&gt;canonical_base_url : text&lt;br&gt;og_image_storage_path : text&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; updated_by → auth.users.id&lt;br&gt;created_at / updated_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#e8eef8;strokeColor=#536d9e;fontColor=#263d68;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1340" y="150" width="330" height="350" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="consultas" value="&lt;b&gt;public.consultas_contacto&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : uuid&lt;br&gt;nombre : text&lt;br&gt;email : text&lt;br&gt;mensaje : text&lt;br&gt;estado : consulta_estado&lt;br&gt;notas_internas : text&lt;br&gt;origen / user_agent : text&lt;br&gt;ip_hash : text&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; atendida_por → auth.users.id&lt;br&gt;atendida_en : timestamptz&lt;br&gt;created_at / updated_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#fde8e8;strokeColor=#b75454;fontColor=#6b2828;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="60" y="760" width="290" height="285" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="audit" value="&lt;b&gt;public.audit_log&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : bigint identity&lt;br&gt;entidad : text&lt;br&gt;registro_id : text&lt;br&gt;accion : INSERT | UPDATE | DELETE&lt;br&gt;datos_anteriores : jsonb&lt;br&gt;datos_nuevos : jsonb&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; changed_by → auth.users.id&lt;br&gt;created_at : timestamptz" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#ede6f5;strokeColor=#76569b;fontColor=#49345f;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1100" width="300" height="240" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="storage_objects" value="&lt;b&gt;storage.objects&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : uuid&lt;br&gt;bucket_id : text&lt;br&gt;name : text&lt;br&gt;owner_id : text&lt;br&gt;metadata : jsonb&lt;br&gt;&lt;br&gt;&lt;i&gt;Buckets privados:&lt;/i&gt;&lt;br&gt;• catalogos-remates&lt;br&gt;• lotes-remates" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#e0f0f3;strokeColor=#317b87;fontColor=#174a52;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1430" y="720" width="300" height="255" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="legend" value="&lt;b&gt;Leyenda&lt;/b&gt;&lt;br&gt;&lt;hr&gt;Línea continua: clave foránea real&lt;br&gt;Línea punteada: referencia lógica por ruta&lt;br&gt;1:N: uno a muchos&lt;br&gt;1:1: uno a uno&lt;br&gt;&lt;br&gt;RLS limita el acceso público a contenido publicado." style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#ffffff;strokeColor=#1b6a3b;dashed=1;fontColor=#0d3b23;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1430" y="1080" width="330" height="210" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge_auth_admin" value="1 : 1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERone;endFill=0;strokeWidth=2;strokeColor=#285a7a;fontColor=#285a7a;" edge="1" parent="1" source="auth_users" target="admin_profiles">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_auth_remates_created" value="crea 1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeWidth=2;strokeColor=#285a7a;fontColor=#285a7a;" edge="1" parent="1" source="auth_users" target="remates">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_auth_config" value="actualiza 1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeWidth=2;strokeColor=#285a7a;fontColor=#285a7a;" edge="1" parent="1" source="auth_users" target="config">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_auth_consultas" value="atiende 1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeWidth=2;strokeColor=#285a7a;fontColor=#285a7a;" edge="1" parent="1" source="auth_users" target="consultas">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_auth_audit" value="modifica 1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeWidth=2;strokeColor=#285a7a;fontColor=#285a7a;" edge="1" parent="1" source="auth_users" target="audit">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge_remates_requisitos" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeWidth=2;strokeColor=#1b6a3b;fontColor=#1b6a3b;" edge="1" parent="1" source="remates" target="requisitos">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_remates_condiciones" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeWidth=2;strokeColor=#1b6a3b;fontColor=#1b6a3b;" edge="1" parent="1" source="remates" target="condiciones">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_remates_lotes" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeWidth=2;strokeColor=#1b6a3b;fontColor=#1b6a3b;" edge="1" parent="1" source="remates" target="lotes">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="edge_remates_storage" value="catálogo PDF" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;dashed=1;dashPattern=8 6;strokeWidth=2;strokeColor=#317b87;fontColor=#317b87;" edge="1" parent="1" source="remates" target="storage_objects">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_lotes_storage" value="imagen" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;dashed=1;dashPattern=8 6;strokeWidth=2;strokeColor=#317b87;fontColor=#317b87;" edge="1" parent="1" source="lotes" target="storage_objects">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_config_storage" value="Open Graph" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;dashed=1;dashPattern=8 6;strokeWidth=2;strokeColor=#317b87;fontColor=#317b87;" edge="1" parent="1" source="config" target="storage_objects">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

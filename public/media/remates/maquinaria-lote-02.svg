@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="#0d3b23"/>
+  <circle cx="220" cy="170" r="90" fill="#2fac5e" opacity="0.25"/>
+  <circle cx="960" cy="580" r="130" fill="#dff4e7" opacity="0.18"/>
+  <rect x="210" y="300" width="770" height="210" rx="28" fill="#f6f2ea" opacity="0.14"/>
+  <text x="170" y="210" fill="#ffffff" font-family="Georgia, serif" font-size="68">Herramientas y bancos</text>
+  <text x="170" y="268" fill="#dff4e7" font-family="Manrope, Arial, sans-serif" font-size="28">Material visual de referencia para catálogo y difusión</text>
+</svg>

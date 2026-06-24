@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="#143324"/>
+  <rect x="80" y="80" width="1040" height="600" rx="30" fill="#f6f2ea" opacity="0.1"/>
+  <rect x="160" y="390" width="420" height="160" rx="20" fill="#dff4e7" opacity="0.2"/>
+  <rect x="610" y="300" width="380" height="250" rx="30" fill="#2fac5e" opacity="0.45"/>
+  <text x="130" y="170" fill="#dff4e7" font-family="Georgia, serif" font-size="72">Lote destacado</text>
+  <text x="130" y="230" fill="#ffffff" font-family="Manrope, Arial, sans-serif" font-size="28">Equipos industriales listos para inspección</text>
+</svg>

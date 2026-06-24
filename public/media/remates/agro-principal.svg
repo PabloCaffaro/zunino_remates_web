@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="#173226"/>
+  <rect x="100" y="100" width="1000" height="560" rx="34" fill="#f6f2ea" opacity="0.1"/>
+  <path d="M160 540c120-70 260-100 420-90 140 8 280 40 440 120H160z" fill="#2fac5e" opacity="0.34"/>
+  <text x="130" y="180" fill="#dff4e7" font-family="Georgia, serif" font-size="78">Agro y campo</text>
+  <text x="130" y="242" fill="#ffffff" font-family="Manrope, Arial, sans-serif" font-size="30">Listado preliminar · Implementos rurales y herramientas</text>
+</svg>

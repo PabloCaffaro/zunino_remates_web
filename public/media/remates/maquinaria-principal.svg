@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#11281d"/>
+      <stop offset="100%" stop-color="#2fac5e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="760" fill="url(#bg)"/>
+  <rect x="90" y="110" width="1020" height="540" rx="36" fill="#f6f2ea" opacity="0.12"/>
+  <circle cx="970" cy="190" r="110" fill="#dff4e7" opacity="0.22"/>
+  <path d="M180 540h830l-90-160H410l-70-110-160 70z" fill="#0d3b23" opacity="0.85"/>
+  <text x="120" y="180" fill="#ffffff" font-family="Manrope, Arial, sans-serif" font-size="34">Zunino Remates</text>
+  <text x="120" y="240" fill="#dff4e7" font-family="Georgia, serif" font-size="86">Maquinaria y herramientas</text>
+  <text x="120" y="300" fill="#f6f2ea" font-family="Manrope, Arial, sans-serif" font-size="30">Catálogo abierto · Lotes industriales y herramientas pesadas</text>
+</svg>

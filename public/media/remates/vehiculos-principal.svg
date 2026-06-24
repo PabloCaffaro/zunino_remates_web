@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="#101718"/>
+  <rect x="90" y="120" width="1020" height="520" rx="34" fill="#2fac5e" opacity="0.14"/>
+  <path d="M240 500h720l-80-120H450l-90-110H250z" fill="#f6f2ea" opacity="0.24"/>
+  <text x="130" y="180" fill="#dff4e7" font-family="Georgia, serif" font-size="78">Vehículos utilitarios</text>
+  <text x="130" y="240" fill="#ffffff" font-family="Manrope, Arial, sans-serif" font-size="30">Catálogo en preparación · Flota urbana y unidades de trabajo</text>
+</svg>

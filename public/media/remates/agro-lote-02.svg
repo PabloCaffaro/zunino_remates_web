@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="#0f2218"/>
+  <circle cx="210" cy="170" r="90" fill="#2fac5e" opacity="0.22"/>
+  <circle cx="980" cy="560" r="120" fill="#dff4e7" opacity="0.15"/>
+  <text x="140" y="200" fill="#ffffff" font-family="Georgia, serif" font-size="66">Herramientas de campo</text>
+  <text x="140" y="258" fill="#dff4e7" font-family="Manrope, Arial, sans-serif" font-size="28">Soporte visual para lotes y fichas de catálogo</text>
+</svg>
