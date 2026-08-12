@@ -236,7 +236,7 @@ export function RemateDetailPage() {
               <div className="detail-meta-card">
                 <p className="card-tag">Fecha y hora</p>
                 <p>
-                  {formatRemateDateDisplay(remate.fechaCompleta, remate.fechaPorConfirmar)}
+                  {formatRemateDateDisplay(remate.fechaHora, remate.fechaPorConfirmar)}
                 </p>
               </div>
               <div className="detail-meta-card">

@@ -10,6 +10,7 @@ create type public.remate_estado as enum (
   'borrador',
   'en_revision',
   'publicado',
+  'oculto',
   'finalizado',
   'cancelado'
 );
@@ -58,6 +59,7 @@ create table public.remates (
   destacado boolean not null default false,
   orden integer not null default 0 check (orden >= 0),
   publicado_en timestamptz,
+  version integer not null default 1 check (version > 0),
   created_by uuid references auth.users(id) on delete set null,
   updated_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
@@ -299,6 +301,40 @@ begin
     new.updated_by = (select auth.uid());
   end if;
 
+  return new;
+end;
+$$;
+
+create or replace function private.prepare_remate_update()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  valid_transition boolean;
+begin
+  if old.estado <> new.estado then
+    valid_transition := case old.estado
+      when 'borrador' then new.estado = 'en_revision'
+      when 'en_revision' then new.estado in ('borrador', 'publicado')
+      when 'publicado' then new.estado in ('oculto', 'finalizado', 'cancelado')
+      when 'oculto' then new.estado in ('publicado', 'finalizado', 'cancelado')
+      else false
+    end;
+
+    if not valid_transition then
+      raise exception 'La transición de estado solicitada no está permitida.'
+        using errcode = '23514';
+    end if;
+  end if;
+
+  if old.estado not in ('borrador', 'en_revision') and new.slug <> old.slug then
+    raise exception 'El slug no puede cambiar después de publicar el remate.'
+      using errcode = '23514';
+  end if;
+
+  -- La condición por versión se incluirá en cada UPDATE; el servidor incrementa la versión aceptada.
+  new.version = old.version + 1;
   return new;
 end;
 $$;
@@ -596,6 +632,10 @@ for each row execute function private.write_audit_log();
 create trigger remates_set_actor
 before insert or update on public.remates
 for each row execute function private.set_remate_actor();
+
+create trigger remates_prepare_update
+before update on public.remates
+for each row execute function private.prepare_remate_update();
 
 create trigger remates_validate_publication
 before insert or update on public.remates

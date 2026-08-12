@@ -42,7 +42,7 @@ export function HeroSection({ rematePrincipal, copy }: HeroSectionProps) {
               <h2>{rematePrincipal.titulo}</h2>
               <p className="card-meta">
                 {formatRemateDateDisplay(
-                  rematePrincipal.fechaCompleta,
+                  rematePrincipal.fechaHora,
                   rematePrincipal.fechaPorConfirmar
                 )}
               </p>

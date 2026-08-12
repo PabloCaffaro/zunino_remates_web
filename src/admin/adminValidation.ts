@@ -1,5 +1,4 @@
 import type { AdminRemate } from "../types/site";
-import { isValidRemateDateTime } from "../data/remateFormatting";
 
 export type PublishValidationErrors = Record<string, string>;
 
@@ -39,10 +38,8 @@ export function validateRemateForPublish(remate: AdminRemate): PublishValidation
   });
 
   if (!remate.fechaPorConfirmar) {
-    if (!remate.fechaCompleta.trim()) {
-      errors.fechaCompleta = "La fecha y hora son obligatorias o deben marcarse como pendientes.";
-    } else if (!isValidRemateDateTime(remate.fechaCompleta)) {
-      errors.fechaCompleta = "Ingresá una fecha válida con el formato dd/mm/yyyy HH:mm.";
+    if (!remate.fechaHora) {
+      errors.fechaHora = "Ingresá una fecha válida con el formato dd/mm/yyyy HH:mm.";
     }
   }
 

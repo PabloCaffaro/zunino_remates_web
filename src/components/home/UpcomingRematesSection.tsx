@@ -19,7 +19,7 @@ export function UpcomingRematesSection({ remates }: UpcomingRematesSectionProps)
           {remates.map((remate) => (
             <article key={remate.id} className="card reveal">
               <p className="card-date">
-                {formatRemateDateSummary(remate.fechaCompleta, remate.fechaPorConfirmar)}
+                {formatRemateDateSummary(remate.fechaHora, remate.fechaPorConfirmar)}
               </p>
               <h3>{remate.titulo}</h3>
               <p className="card-location">{remate.lugar}</p>

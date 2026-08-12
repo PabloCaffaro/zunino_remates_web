@@ -5,7 +5,7 @@ export const siteContent: SiteContent = {
     {
       id: "maq-herr-2026-03-22",
       slug: "maquinaria-y-herramientas",
-      fechaCompleta: "22/03/2026 17:00",
+      fechaHora: "2026-03-22T20:00:00.000Z",
       fechaPorConfirmar: false,
       titulo: "Maquinaria y herramientas",
       subtitulo: "Remate presencial de equipamiento industrial",
@@ -56,7 +56,7 @@ export const siteContent: SiteContent = {
     {
       id: "veh-util-2026-04-05",
       slug: "vehiculos-utilitarios",
-      fechaCompleta: "05/04/2026 19:00",
+      fechaHora: "2026-04-05T22:00:00.000Z",
       fechaPorConfirmar: false,
       titulo: "Vehículos utilitarios",
       subtitulo: "Flota urbana y unidades de trabajo",
@@ -107,7 +107,7 @@ export const siteContent: SiteContent = {
     {
       id: "agro-campo-2026-04-19",
       slug: "agro-y-campo",
-      fechaCompleta: "19/04/2026 16:30",
+      fechaHora: "2026-04-19T19:30:00.000Z",
       fechaPorConfirmar: false,
       titulo: "Agro y campo",
       subtitulo: "Implementos rurales y herramientas de campo",

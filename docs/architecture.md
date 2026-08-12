@@ -57,13 +57,15 @@ que React Router las resuelva.
 ## Flujo de un remate
 
 ```text
-borrador → en_revision → publicado → finalizado
-                           └───────→ cancelado
+borrador ↔ en_revision → publicado ↔ oculto
+                           ├──────→ finalizado
+                           └──────→ cancelado
 ```
 
 - `borrador`: permite información incompleta.
 - `en_revision`: carga preparada para ser verificada.
 - `publicado`: visible en la web pública.
+- `oculto`: retirado temporalmente, conserva su URL y puede volver a publicarse.
 - `finalizado`: evento cerrado y retirado de próximos remates.
 - `cancelado`: evento suspendido.
 
@@ -71,6 +73,11 @@ La publicación requiere título, una fecha concreta o el estado `Fecha a confir
 ubicación, descripciones, información del catálogo, al menos un requisito y al
 menos una condición. El frontend valida el formulario y PostgreSQL volverá a
 validar la transición.
+
+La fecha se conserva como un instante real y se presenta en
+`America/Montevideo`. El slug se regenera en borrador y revisión, pero queda fijo
+desde la primera publicación. Las actualizaciones utilizan una versión numérica
+para detectar ediciones simultáneas antes de sobrescribir datos.
 
 ## Organización del código
 

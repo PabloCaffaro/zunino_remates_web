@@ -6,7 +6,7 @@ export function createCompleteRemate(
   const base: AdminRemate = {
     id: "remate-prueba",
     slug: "remate-de-prueba",
-    fechaCompleta: "20/06/2026 17:00",
+    fechaHora: "2026-06-20T20:00:00.000Z",
     fechaPorConfirmar: false,
     titulo: "Remate de prueba",
     subtitulo: "Activos seleccionados",
@@ -21,6 +21,7 @@ export function createCompleteRemate(
     condiciones: ["Pago dentro del plazo indicado"],
     estadoAdmin: "publicado",
     catalogoPublicacionEstado: "disponible",
+    version: 1,
     creadoEn: "2026-06-01T12:00:00.000Z",
     actualizadoEn: "2026-06-01T12:00:00.000Z",
   };

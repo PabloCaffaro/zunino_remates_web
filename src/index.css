@@ -859,6 +859,11 @@ textarea[aria-invalid="true"] {
   color: #176b39;
 }
 
+.admin-status-oculto {
+  background: #e8e4dc;
+  color: #5d5547;
+}
+
 .admin-status-finalizado {
   background: #dce9f3;
   color: #285a7a;

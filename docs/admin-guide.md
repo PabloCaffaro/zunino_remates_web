@@ -23,7 +23,8 @@ Permite:
 - Guardar información incompleta como borrador.
 - Enviar una carga a revisión.
 - Publicar cuando se completan los datos obligatorios.
-- Finalizar un evento publicado.
+- Ocultar temporalmente un remate publicado y volver a publicarlo.
+- Finalizar o cancelar un evento con confirmación previa.
 - Eliminar con confirmación.
 
 ### Contenido general
@@ -51,7 +52,8 @@ Una carga en borrador o revisión no aparece en la web pública.
 
 ## Datos obligatorios para publicar
 
-- Título y subtítulo. El slug se genera automáticamente desde el título.
+- Título y subtítulo. El slug se genera desde el título mientras el remate está
+  en borrador o revisión, y queda fijo después de publicar.
 - Fecha y hora en formato `dd/mm/yyyy HH:mm`, o la opción `Fecha a confirmar`.
 - Lugar y ubicación detallada.
 - Descripción breve y completa.
@@ -88,8 +90,26 @@ remate.
 - `Borrador`: carga incompleta.
 - `En revisión`: pendiente de verificación.
 - `Publicado`: visible para visitantes.
+- `Oculto`: retirado temporalmente de la web pública; puede volver a publicarse.
 - `Finalizado`: ya no figura como próximo remate.
 - `Cancelado`: evento suspendido.
+
+`Finalizar` y `Cancelar` son estados terminales: el panel solicita confirmación
+antes de aplicarlos y luego no permite volver a publicar el remate. `Ocultar` sí
+es reversible y conserva el slug para una publicación posterior.
+
+Las transiciones admitidas son:
+
+```text
+borrador → en_revision
+en_revision → borrador | publicado
+publicado → oculto | finalizado | cancelado
+oculto → publicado | finalizado | cancelado
+```
+
+Cada guardado incrementa la versión del remate. Si otra persona guardó primero,
+el panel conserva los cambios locales y avisa el conflicto en lugar de
+sobrescribir silenciosamente la versión más reciente.
 
 Conviene finalizar o cancelar antes que eliminar. La eliminación debería
 reservarse para duplicados o cargas erróneas.

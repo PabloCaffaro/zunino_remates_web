@@ -19,7 +19,7 @@ describe("validateRemateForPublish", () => {
     const remate = createCompleteRemate({
       titulo: " ",
       slug: "",
-      fechaCompleta: "",
+      fechaHora: null,
       subtitulo: "",
       lugar: "",
       ubicacionDetalle: "",
@@ -33,7 +33,7 @@ describe("validateRemateForPublish", () => {
     expect(errors).toMatchObject({
       titulo: expect.any(String),
       slug: expect.any(String),
-      fechaCompleta: expect.any(String),
+      fechaHora: expect.any(String),
       subtitulo: expect.any(String),
       lugar: expect.any(String),
       ubicacionDetalle: expect.any(String),
@@ -43,27 +43,16 @@ describe("validateRemateForPublish", () => {
     });
   });
 
-  it("rechaza fechas libres, horas inválidas y días inexistentes", () => {
-    expect(
-      validateRemateForPublish(createCompleteRemate({ fechaCompleta: "Cualquier cosa" }))
-        .fechaCompleta
-    ).toBeDefined();
-    expect(
-      validateRemateForPublish(createCompleteRemate({ fechaCompleta: "20/06/2026 25:00" }))
-        .fechaCompleta
-    ).toBeDefined();
-    expect(
-      validateRemateForPublish(createCompleteRemate({ fechaCompleta: "31/02/2026 17:00" }))
-        .fechaCompleta
-    ).toBeDefined();
+  it("rechaza un remate sin un instante de fecha real", () => {
+    expect(validateRemateForPublish(createCompleteRemate({ fechaHora: null })).fechaHora).toBeDefined();
   });
 
   it("permite publicar con fecha a confirmar", () => {
     const errors = validateRemateForPublish(
-      createCompleteRemate({ fechaCompleta: "", fechaPorConfirmar: true })
+      createCompleteRemate({ fechaHora: null, fechaPorConfirmar: true })
     );
 
-    expect(errors.fechaCompleta).toBeUndefined();
+    expect(errors.fechaHora).toBeUndefined();
   });
 
   it("rechaza requisitos y condiciones incompletos", () => {

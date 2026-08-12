@@ -15,13 +15,14 @@ export type RemateEstadoAdmin =
   | "borrador"
   | "en_revision"
   | "publicado"
+  | "oculto"
   | "finalizado"
   | "cancelado";
 
 export type Remate = {
   id: string;
   slug: string;
-  fechaCompleta: string;
+  fechaHora: string | null;
   fechaPorConfirmar: boolean;
   titulo: string;
   subtitulo: string;
@@ -39,6 +40,7 @@ export type Remate = {
 export type AdminRemate = Remate & {
   estadoAdmin: RemateEstadoAdmin;
   catalogoPublicacionEstado: CatalogoEstado;
+  version: number;
   creadoEn: string;
   actualizadoEn: string;
 };

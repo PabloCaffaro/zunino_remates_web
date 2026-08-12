@@ -17,8 +17,19 @@ import {
   type PublishValidationErrors,
 } from "../admin/adminValidation";
 import { createUniqueRemateSlug } from "../admin/remateSlug";
-import { useSiteData } from "../context/siteDataContextValue";
-import { formatRemateDateSummary } from "../data/remateFormatting";
+import {
+  canRegenerateRemateSlug,
+  remateStatusLabels,
+} from "../admin/remateWorkflow";
+import {
+  useSiteData,
+  type RemateMutationResult,
+} from "../context/siteDataContextValue";
+import {
+  formatRemateDateInput,
+  formatRemateDateSummary,
+  remateDateTimeInputToIso,
+} from "../data/remateFormatting";
 import type {
   AdminRemate,
   EditableSiteContent,
@@ -32,14 +43,6 @@ const LOT_IMAGE_MAX_BYTES = 700_000;
 const LOT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 type LotFileResult = { lot: HighlightedLot } | { error: string };
-
-const statusLabels: Record<RemateEstadoAdmin, string> = {
-  borrador: "Borrador",
-  en_revision: "En revisión",
-  publicado: "Publicado",
-  finalizado: "Finalizado",
-  cancelado: "Cancelado",
-};
 
 function FieldTitle({
   children,
@@ -72,7 +75,7 @@ function createEmptyRemate(): AdminRemate {
   return {
     id,
     slug: "",
-    fechaCompleta: "",
+    fechaHora: null,
     fechaPorConfirmar: false,
     titulo: "",
     subtitulo: "",
@@ -87,6 +90,7 @@ function createEmptyRemate(): AdminRemate {
     condiciones: [],
     estadoAdmin: "borrador",
     catalogoPublicacionEstado: "proximamente",
+    version: 0,
     creadoEn: now,
     actualizadoEn: now,
   };
@@ -197,7 +201,8 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
 type RemateEditorProps = {
   initialRemate: AdminRemate;
   existingRemates: AdminRemate[];
-  onSave: (remate: AdminRemate) => void;
+  onSave: (remate: AdminRemate) => Promise<RemateMutationResult>;
+  onSaved: () => void;
   onCancel: () => void;
 };
 
@@ -205,15 +210,18 @@ function RemateEditor({
   initialRemate,
   existingRemates,
   onSave,
+  onSaved,
   onCancel,
 }: RemateEditorProps) {
   const [form, setForm] = useState(initialRemate);
+  const [dateInput, setDateInput] = useState(formatRemateDateInput(initialRemate.fechaHora));
   const [requisitosText, setRequisitosText] = useState(initialRemate.requisitos.join("\n"));
   const [condicionesText, setCondicionesText] = useState(initialRemate.condiciones.join("\n"));
   const [errors, setErrors] = useState<PublishValidationErrors>({});
   const [notice, setNotice] = useState<{ id: number; message: string } | null>(null);
   const [lotUploadNotice, setLotUploadNotice] = useState<{ id: number; message: string } | null>(null);
   const [isDraggingLotImages, setIsDraggingLotImages] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const noticeSequence = useRef(0);
   const lotUploadNoticeSequence = useRef(0);
   const lotSequence = useRef(0);
@@ -221,6 +229,7 @@ function RemateEditor({
 
   useEffect(() => {
     setForm(initialRemate);
+    setDateInput(formatRemateDateInput(initialRemate.fechaHora));
     setRequisitosText(initialRemate.requisitos.join("\n"));
     setCondicionesText(initialRemate.condiciones.join("\n"));
     setErrors({});
@@ -265,8 +274,10 @@ function RemateEditor({
 
   const normalizedForm = (status: RemateEstadoAdmin): AdminRemate => ({
     ...form,
-    slug: createUniqueRemateSlug(form.titulo, existingRemates, form.id),
-    fechaCompleta: form.fechaPorConfirmar ? "" : form.fechaCompleta.trim(),
+    slug: canRegenerateRemateSlug(form.estadoAdmin)
+      ? createUniqueRemateSlug(form.titulo, existingRemates, form.id)
+      : form.slug,
+    fechaHora: form.fechaPorConfirmar ? null : remateDateTimeInputToIso(dateInput),
     requisitos: requisitosText
       .split("\n")
       .map((item) => item.trim())
@@ -279,18 +290,22 @@ function RemateEditor({
     actualizadoEn: new Date().toISOString(),
   });
 
-  const saveWithStatus = (status: RemateEstadoAdmin) => {
+  const saveWithStatus = async (status: RemateEstadoAdmin) => {
     const nextRemate = normalizedForm(status);
-    const validationErrors =
-      status === "publicado"
+    const validationErrors: PublishValidationErrors =
+      status === "publicado" || status === "oculto"
         ? validateRemateForPublish(nextRemate)
         : validateHighlightedLotNames(nextRemate);
+
+    if (!form.fechaPorConfirmar && dateInput.trim() && !nextRemate.fechaHora) {
+      validationErrors.fechaHora = "Ingresá una fecha válida con el formato dd/mm/yyyy HH:mm.";
+    }
 
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
       showNotice(
-        status === "publicado"
+        status === "publicado" || status === "oculto"
           ? "El remate no puede publicarse hasta completar todos los campos obligatorios."
           : "Poné un nombre a cada foto antes de guardar el remate."
       );
@@ -298,7 +313,19 @@ function RemateEditor({
     }
 
     setErrors({});
-    onSave(nextRemate);
+    setIsSaving(true);
+    const result = await onSave(nextRemate);
+    setIsSaving(false);
+
+    if (result.status === "saved") {
+      onSaved();
+    } else if (result.status === "conflict") {
+      showNotice(
+        "Otra persona modificó este remate mientras lo estabas editando. Tus cambios siguen en pantalla; volvé al listado para cargar la versión actual."
+      );
+    } else if (result.status === "invalid_transition" || result.status === "error") {
+      showNotice(result.message);
+    }
   };
 
   const updateHighlightedLot = (
@@ -438,7 +465,9 @@ function RemateEditor({
               setForm((current) => ({
                 ...current,
                 titulo: title,
-                slug: createUniqueRemateSlug(title, existingRemates, current.id),
+                slug: canRegenerateRemateSlug(current.estadoAdmin)
+                  ? createUniqueRemateSlug(title, existingRemates, current.id)
+                  : current.slug,
               }));
             }}
             aria-invalid={Boolean(errors.titulo)}
@@ -446,7 +475,7 @@ function RemateEditor({
           {errors.titulo ? <span className="admin-field-error">{errors.titulo}</span> : null}
         </label>
         <label>
-          <FieldTitle description="Se genera siempre desde el título. Si ya existe, el sistema agrega un número para mantener una dirección única.">
+          <FieldTitle description="Se genera desde el título mientras el remate está en borrador o revisión. Al publicarse queda fijo para no romper enlaces compartidos.">
             Ruta o slug *
           </FieldTitle>
           <input
@@ -463,15 +492,22 @@ function RemateEditor({
             Fecha y hora completas *
           </FieldTitle>
           <input
-            value={form.fechaCompleta}
-            onChange={(event) => updateTextField("fechaCompleta", event.target.value)}
+            value={dateInput}
+            onChange={(event) => {
+              setDateInput(event.target.value);
+              setErrors((current) => {
+                const next = { ...current };
+                delete next.fechaHora;
+                return next;
+              });
+            }}
             placeholder="22/03/2026 17:00"
             inputMode="numeric"
             disabled={form.fechaPorConfirmar}
-            aria-invalid={Boolean(errors.fechaCompleta)}
+            aria-invalid={Boolean(errors.fechaHora)}
           />
-          {errors.fechaCompleta ? (
-            <span className="admin-field-error">{errors.fechaCompleta}</span>
+          {errors.fechaHora ? (
+            <span className="admin-field-error">{errors.fechaHora}</span>
           ) : null}
         </label>
         <label className="admin-checkbox-field">
@@ -483,11 +519,10 @@ function RemateEditor({
               setForm((current) => ({
                 ...current,
                 fechaPorConfirmar: checked,
-                fechaCompleta: checked ? "" : current.fechaCompleta,
               }));
               setErrors((current) => {
                 const next = { ...current };
-                delete next.fechaCompleta;
+                delete next.fechaHora;
                 return next;
               });
             }}
@@ -726,15 +761,49 @@ function RemateEditor({
       </div>
 
       <div className="admin-editor-actions">
-        <button className="btn btn-ghost" type="button" onClick={() => saveWithStatus("borrador")}>
-          Guardar borrador
-        </button>
-        <button className="btn btn-outline" type="button" onClick={() => saveWithStatus("en_revision")}>
-          Enviar a revisión
-        </button>
-        <button className="btn" type="button" onClick={() => saveWithStatus("publicado")}>
-          Publicar remate
-        </button>
+        {form.estadoAdmin === "borrador" || form.estadoAdmin === "en_revision" ? (
+          <button
+            className="btn btn-ghost"
+            type="button"
+            disabled={isSaving}
+            onClick={() => void saveWithStatus("borrador")}
+          >
+            Guardar borrador
+          </button>
+        ) : null}
+        {form.estadoAdmin === "borrador" || form.estadoAdmin === "en_revision" ? (
+          <button
+            className="btn btn-outline"
+            type="button"
+            disabled={isSaving}
+            onClick={() => void saveWithStatus("en_revision")}
+          >
+            {form.estadoAdmin === "borrador" ? "Enviar a revisión" : "Guardar revisión"}
+          </button>
+        ) : null}
+        {form.estadoAdmin === "en_revision" ? (
+          <button
+            className="btn"
+            type="button"
+            disabled={isSaving}
+            onClick={() => void saveWithStatus("publicado")}
+          >
+            Publicar remate
+          </button>
+        ) : null}
+        {form.estadoAdmin === "publicado" ||
+        form.estadoAdmin === "oculto" ||
+        form.estadoAdmin === "finalizado" ||
+        form.estadoAdmin === "cancelado" ? (
+          <button
+            className="btn"
+            type="button"
+            disabled={isSaving}
+            onClick={() => void saveWithStatus(form.estadoAdmin)}
+          >
+            {isSaving ? "Guardando..." : "Guardar cambios"}
+          </button>
+        ) : null}
       </div>
     </section>
   );
@@ -744,11 +813,18 @@ function SiteContentEditor() {
   const { content, saveContent } = useSiteData();
   const [draft, setDraft] = useState<EditableSiteContent>(content);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => setDraft(content), [content]);
 
-  const save = () => {
-    saveContent(draft);
+  const save = async () => {
+    const result = await saveContent(draft);
+    if (result.status === "error") {
+      setSaveError(result.message);
+      return;
+    }
+
+    setSaveError("");
     setSaved(true);
     window.setTimeout(() => setSaved(false), 2500);
   };
@@ -760,11 +836,12 @@ function SiteContentEditor() {
           <p className="eyebrow">Contenido general</p>
           <h2>Textos y datos de la empresa</h2>
         </div>
-        <button className="btn" type="button" onClick={save}>
+        <button className="btn" type="button" onClick={() => void save()}>
           Guardar cambios
         </button>
       </div>
       {saved ? <p className="form-status form-status-success">Cambios guardados.</p> : null}
+      {saveError ? <p className="form-status form-status-error">{saveError}</p> : null}
 
       <div className="admin-subsection">
         <h3>Portada y empresa</h3>
@@ -980,6 +1057,19 @@ export function AdminPage() {
   );
   const [tab, setTab] = useState<AdminTab>("resumen");
   const [editingRemate, setEditingRemate] = useState<AdminRemate | null>(null);
+  const [pageNotice, setPageNotice] = useState<{ id: number; message: string } | null>(null);
+  const pageNoticeSequence = useRef(0);
+
+  useEffect(() => {
+    if (!pageNotice) return;
+    const timeoutId = window.setTimeout(() => setPageNotice(null), 10_000);
+    return () => window.clearTimeout(timeoutId);
+  }, [pageNotice]);
+
+  const showPageNotice = (message: string) => {
+    pageNoticeSequence.current += 1;
+    setPageNotice({ id: pageNoticeSequence.current, message });
+  };
 
   const counts = useMemo(
     () =>
@@ -992,6 +1082,7 @@ export function AdminPage() {
           borrador: 0,
           en_revision: 0,
           publicado: 0,
+          oculto: 0,
           finalizado: 0,
           cancelado: 0,
         } as Record<RemateEstadoAdmin, number>
@@ -1003,17 +1094,45 @@ export function AdminPage() {
     return <AdminLogin onLogin={() => setAuthenticated(true)} />;
   }
 
-  const handleSaveRemate = (remate: AdminRemate) => {
-    saveRemate(remate);
-    setEditingRemate(null);
-    setTab("remates");
+  const handleSaveRemate = async (remate: AdminRemate) => {
+    return saveRemate(remate);
   };
 
-  const handleDelete = (remate: AdminRemate) => {
+  const handleDelete = async (remate: AdminRemate) => {
     const confirmed = window.confirm(
       `¿Seguro que querés eliminar "${remate.titulo || "este remate"}"? Esta acción no se puede deshacer.`
     );
-    if (confirmed) deleteRemate(remate.id);
+    if (!confirmed) return;
+
+    const result = await deleteRemate(remate.id, remate.version);
+    if (result.status === "error") showPageNotice(result.message);
+  };
+
+  const handleStatusChange = async (
+    remate: AdminRemate,
+    status: RemateEstadoAdmin
+  ) => {
+    if (status === "finalizado" || status === "cancelado") {
+      const action = status === "finalizado" ? "finalizar" : "cancelar";
+      const confirmed = window.confirm(
+        `¿Seguro que querés ${action} "${remate.titulo || "este remate"}"? Este cambio no se puede deshacer.`
+      );
+      if (!confirmed) return;
+    }
+
+    if (status === "publicado" && Object.keys(validateRemateForPublish(remate)).length > 0) {
+      showPageNotice("El remate debe conservar todos los datos obligatorios para volver a publicarse.");
+      return;
+    }
+
+    const result = await changeRemateStatus(remate.id, remate.version, status);
+    if (result.status === "saved") return;
+
+    showPageNotice(
+      result.status === "conflict"
+        ? "Otra persona modificó este remate. El listado fue actualizado; revisá la versión actual."
+        : result.message
+    );
   };
 
   const logout = () => {
@@ -1073,11 +1192,24 @@ export function AdminPage() {
         </nav>
 
         <div className="admin-content">
+          {pageNotice ? (
+            <p
+              key={pageNotice.id}
+              className="form-status form-status-error transient-message-enter"
+              role="alert"
+            >
+              {pageNotice.message}
+            </p>
+          ) : null}
           {editingRemate ? (
             <RemateEditor
               initialRemate={editingRemate}
               existingRemates={remates}
               onSave={handleSaveRemate}
+              onSaved={() => {
+                setEditingRemate(null);
+                setTab("remates");
+              }}
               onCancel={() => setEditingRemate(null)}
             />
           ) : null}
@@ -1101,9 +1233,9 @@ export function AdminPage() {
                 </button>
               </div>
               <div className="admin-stats-grid">
-                {(Object.keys(statusLabels) as RemateEstadoAdmin[]).map((status) => (
+                {(Object.keys(remateStatusLabels) as RemateEstadoAdmin[]).map((status) => (
                   <article className="admin-stat-card" key={status}>
-                    <span>{statusLabels[status]}</span>
+                    <span>{remateStatusLabels[status]}</span>
                     <strong>{counts[status]}</strong>
                   </article>
                 ))}
@@ -1162,13 +1294,13 @@ export function AdminPage() {
                         </td>
                         <td>
                           {formatRemateDateSummary(
-                            remate.fechaCompleta,
+                            remate.fechaHora,
                             remate.fechaPorConfirmar
                           ) || "Pendiente"}
                         </td>
                         <td>
                           <span className={`admin-status admin-status-${remate.estadoAdmin}`}>
-                            {statusLabels[remate.estadoAdmin]}
+                            {remateStatusLabels[remate.estadoAdmin]}
                           </span>
                         </td>
                         <td>
@@ -1179,15 +1311,41 @@ export function AdminPage() {
                             {remate.estadoAdmin === "publicado" ? (
                               <button
                                 type="button"
-                                onClick={() => changeRemateStatus(remate.id, "finalizado")}
+                                onClick={() => void handleStatusChange(remate, "oculto")}
+                              >
+                                Ocultar
+                              </button>
+                            ) : null}
+                            {remate.estadoAdmin === "oculto" ? (
+                              <button
+                                type="button"
+                                onClick={() => void handleStatusChange(remate, "publicado")}
+                              >
+                                Volver a publicar
+                              </button>
+                            ) : null}
+                            {remate.estadoAdmin === "publicado" ||
+                            remate.estadoAdmin === "oculto" ? (
+                              <button
+                                type="button"
+                                onClick={() => void handleStatusChange(remate, "finalizado")}
                               >
                                 Finalizar
+                              </button>
+                            ) : null}
+                            {remate.estadoAdmin === "publicado" ||
+                            remate.estadoAdmin === "oculto" ? (
+                              <button
+                                type="button"
+                                onClick={() => void handleStatusChange(remate, "cancelado")}
+                              >
+                                Cancelar
                               </button>
                             ) : null}
                             <button
                               className="danger"
                               type="button"
-                              onClick={() => handleDelete(remate)}
+                              onClick={() => void handleDelete(remate)}
                             >
                               Eliminar
                             </button>
@@ -1214,7 +1372,9 @@ export function AdminPage() {
                 type="button"
                 onClick={() => {
                   if (window.confirm("¿Restablecer todos los datos de demostración?")) {
-                    resetDemoData();
+                    void resetDemoData().then((result) => {
+                      if (result.status === "error") showPageNotice(result.message);
+                    });
                   }
                 }}
               >

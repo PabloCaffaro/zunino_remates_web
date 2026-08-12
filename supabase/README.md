@@ -14,7 +14,8 @@ cardinalidades y referencias lógicas de archivos.
 ## Qué incluye
 
 - Usuarios administrativos vinculados con Supabase Auth.
-- Remates con estados `borrador`, `en_revision`, `publicado`, `finalizado` y `cancelado`.
+- Remates con estados `borrador`, `en_revision`, `publicado`, `oculto`,
+  `finalizado` y `cancelado`.
 - Requisitos, condiciones y lotes destacados relacionados.
 - Preguntas frecuentes, pasos de participación y configuración general.
 - Consultas de contacto preparadas para una Edge Function.
@@ -81,6 +82,11 @@ Para pasar a `publicado`, PostgreSQL exige:
 - Descripción y estado del catálogo.
 - Al menos un requisito.
 - Al menos una condición.
+
+El slug puede cambiar en borrador o revisión y queda fijo después de publicar.
+Un remate publicado puede ocultarse y volver a publicarse sin cambiar su URL.
+Cada actualización incrementa `version`; los clientes deben incluir la versión
+leída en la condición del `UPDATE` para detectar ediciones concurrentes.
 
 El panel puede consultar los errores antes de publicar:
 

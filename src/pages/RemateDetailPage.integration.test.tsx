@@ -1,8 +1,11 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { SiteDataProvider } from "../context/SiteDataContext";
+import { defaultSiteCopy } from "../data/siteCopy";
+import { siteContent } from "../data/siteContent";
+import { createCompleteRemate } from "../test/fixtures";
 import { RemateDetailPage } from "./RemateDetailPage";
 
 function renderDetailPage() {
@@ -19,6 +22,36 @@ function renderDetailPage() {
     </SiteDataProvider>
   );
 }
+
+beforeEach(() => {
+  window.localStorage.clear();
+});
+
+describe("visibilidad del detalle", () => {
+  it("no permite abrir por URL un remate oculto", () => {
+    const hiddenRemate = createCompleteRemate({
+      slug: "maquinaria-y-herramientas",
+      estadoAdmin: "oculto",
+    });
+    window.localStorage.setItem(
+      "zunino-remates-admin-data-v3",
+      JSON.stringify({
+        remates: [hiddenRemate],
+        content: {
+          contacto: siteContent.contacto,
+          pasos: siteContent.pasos,
+          faqs: siteContent.faqs,
+          copy: defaultSiteCopy,
+        },
+      })
+    );
+
+    renderDetailPage();
+
+    expect(screen.getByRole("heading", { name: "No encontramos ese evento." })).toBeInTheDocument();
+    expect(screen.queryByText(hiddenRemate.subtitulo)).not.toBeInTheDocument();
+  });
+});
 
 describe("carrusel de lotes destacados", () => {
   it("conserva el nuevo orden cuando termina la transición", async () => {

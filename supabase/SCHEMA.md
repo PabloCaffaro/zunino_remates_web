@@ -31,6 +31,7 @@ erDiagram
     catalogo_estado catalogo_estado
     boolean destacado
     integer orden
+    integer version
   }
 
   REMATE_REQUISITOS {
@@ -88,6 +89,9 @@ La matriz detallada de operaciones permitidas está en
 - Requisitos y condiciones están normalizados para poder ordenarlos y editarlos.
 - Los lotes destacados son opcionales.
 - Solo puede existir un remate publicado marcado como destacado.
+- El slug queda inmutable después de la primera publicación.
+- Las transiciones de estado se validan en PostgreSQL y `version` aumenta en
+  cada actualización aceptada.
 - Las consultas públicas entrarán mediante una Edge Function.
 - Los cambios administrativos importantes quedan registrados en `audit_log`.
 - Solo los administradores pueden leer la auditoría; editores y visitantes no

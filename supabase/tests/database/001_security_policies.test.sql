@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(36);
+select plan(41);
 
 -- Estos usuarios representan cada nivel de acceso sin depender de datos reales.
 insert into auth.users (id, email)
@@ -49,7 +49,7 @@ values
   (
     '20000000-0000-0000-0000-000000000002',
     'remate-publicado-prueba',
-    'borrador',
+    'en_revision',
     'Remate publicado',
     'Contenido visible',
     true,
@@ -69,6 +69,56 @@ values ('20000000-0000-0000-0000-000000000002', 'Aceptar las condiciones del rem
 update public.remates
 set estado = 'publicado'
 where id = '20000000-0000-0000-0000-000000000002';
+
+select throws_ok(
+  $$
+    update public.remates
+    set estado = 'borrador'
+    where id = '20000000-0000-0000-0000-000000000002'
+  $$,
+  '23514',
+  'La transición de estado solicitada no está permitida.',
+  'Un remate publicado no puede volver a borrador'
+);
+
+select throws_ok(
+  $$
+    update public.remates
+    set slug = 'slug-modificado'
+    where id = '20000000-0000-0000-0000-000000000002'
+  $$,
+  '23514',
+  'El slug no puede cambiar después de publicar el remate.',
+  'El slug queda fijo después de publicar'
+);
+
+select lives_ok(
+  $$
+    update public.remates
+    set estado = 'oculto'
+    where id = '20000000-0000-0000-0000-000000000002'
+  $$,
+  'Un remate publicado puede ocultarse'
+);
+
+select lives_ok(
+  $$
+    update public.remates
+    set estado = 'publicado'
+    where id = '20000000-0000-0000-0000-000000000002'
+  $$,
+  'Un remate oculto puede volver a publicarse'
+);
+
+select is(
+  (
+    select version
+    from public.remates
+    where id = '20000000-0000-0000-0000-000000000002'
+  ),
+  4,
+  'La versión aumenta con cada modificación aceptada'
+);
 
 insert into public.consultas_contacto (
   id,

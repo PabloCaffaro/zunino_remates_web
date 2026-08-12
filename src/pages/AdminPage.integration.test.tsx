@@ -3,7 +3,14 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ADMIN_SESSION_KEY, DEMO_ADMIN_CREDENTIALS } from "../admin/adminConfig";
+import { defaultSiteCopy } from "../data/siteCopy";
+import { siteContent } from "../data/siteContent";
 import { SiteDataProvider } from "../context/SiteDataContext";
+import {
+  SiteDataContext,
+  type SiteDataContextValue,
+} from "../context/siteDataContextValue";
+import { createCompleteRemate } from "../test/fixtures";
 import { AdminPage } from "./AdminPage";
 
 function renderAdmin() {
@@ -18,10 +25,23 @@ function renderAdmin() {
   );
 }
 
+function renderAdminWithContext(value: SiteDataContextValue) {
+  return render(
+    <SiteDataContext.Provider value={value}>
+      <MemoryRouter
+        future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
+      >
+        <AdminPage />
+      </MemoryRouter>
+    </SiteDataContext.Provider>
+  );
+}
+
 describe("panel administrador", () => {
   beforeEach(() => {
     window.localStorage.clear();
     window.sessionStorage.clear();
+    vi.restoreAllMocks();
   });
 
   afterEach(() => {
@@ -185,5 +205,121 @@ describe("panel administrador", () => {
       (dropzone as HTMLLabelElement).compareDocumentPosition(uploadError) &
         Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy();
+  });
+
+  it("oculta y vuelve a publicar un remate", async () => {
+    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
+    const user = userEvent.setup();
+    renderAdmin();
+
+    await user.click(screen.getByRole("button", { name: "Remates" }));
+    const row = screen.getByText("Maquinaria y herramientas").closest("tr")!;
+
+    await user.click(within(row).getByRole("button", { name: "Ocultar" }));
+    expect(within(row).getByText("Oculto")).toBeInTheDocument();
+    expect(within(row).getByRole("button", { name: "Volver a publicar" })).toBeInTheDocument();
+
+    await user.click(within(row).getByRole("button", { name: "Volver a publicar" }));
+    expect(within(row).getByText("Publicado")).toBeInTheDocument();
+  });
+
+  it("no finaliza ni cancela un remate si se rechaza la confirmación", async () => {
+    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
+    const confirmMock = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const user = userEvent.setup();
+    renderAdmin();
+
+    await user.click(screen.getByRole("button", { name: "Remates" }));
+    const row = screen.getByText("Maquinaria y herramientas").closest("tr")!;
+    await user.click(within(row).getByRole("button", { name: "Finalizar" }));
+    await user.click(within(row).getByRole("button", { name: "Cancelar" }));
+
+    expect(confirmMock).toHaveBeenNthCalledWith(
+      1,
+      '¿Seguro que querés finalizar "Maquinaria y herramientas"? Este cambio no se puede deshacer.'
+    );
+    expect(confirmMock).toHaveBeenNthCalledWith(
+      2,
+      '¿Seguro que querés cancelar "Maquinaria y herramientas"? Este cambio no se puede deshacer.'
+    );
+    expect(within(row).getByText("Publicado")).toBeInTheDocument();
+  });
+
+  it("finaliza y cancela remates cuando se acepta la confirmación", async () => {
+    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const user = userEvent.setup();
+    renderAdmin();
+
+    await user.click(screen.getByRole("button", { name: "Remates" }));
+    const finalizedRow = screen.getByText("Maquinaria y herramientas").closest("tr")!;
+    const cancelledRow = screen.getByText("Vehículos utilitarios").closest("tr")!;
+
+    await user.click(within(finalizedRow).getByRole("button", { name: "Finalizar" }));
+    await user.click(within(cancelledRow).getByRole("button", { name: "Cancelar" }));
+
+    expect(within(finalizedRow).getByText("Finalizado")).toBeInTheDocument();
+    expect(within(cancelledRow).getByText("Cancelado")).toBeInTheDocument();
+    expect(within(finalizedRow).queryByRole("button", { name: "Finalizar" })).not.toBeInTheDocument();
+    expect(within(cancelledRow).queryByRole("button", { name: "Cancelar" })).not.toBeInTheDocument();
+  });
+
+  it("mantiene abierto el editor y conserva los datos locales ante un conflicto", async () => {
+    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
+    const remate = createCompleteRemate();
+    const saveRemate = vi.fn<SiteDataContextValue["saveRemate"]>().mockResolvedValue({
+      status: "conflict",
+      current: { ...remate, version: remate.version + 1 },
+    });
+    const contextValue: SiteDataContextValue = {
+      remates: [remate],
+      publishedRemates: [remate],
+      content: {
+        contacto: siteContent.contacto,
+        pasos: siteContent.pasos,
+        faqs: siteContent.faqs,
+        copy: defaultSiteCopy,
+      },
+      saveRemate,
+      deleteRemate: async () => ({ status: "saved" }),
+      changeRemateStatus: async () => ({ status: "saved", remate }),
+      saveContent: async () => ({ status: "saved" }),
+      resetDemoData: async () => ({ status: "saved" }),
+    };
+    const user = userEvent.setup();
+    renderAdminWithContext(contextValue);
+
+    await user.click(screen.getByRole("button", { name: "Remates" }));
+    const row = screen.getByText("Remate de prueba").closest("tr")!;
+    await user.click(within(row).getByRole("button", { name: "Editar" }));
+    const titleInput = screen.getByRole("textbox", { name: /Título/ });
+    await user.clear(titleInput);
+    await user.type(titleInput, "Cambio local sin guardar");
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/tus cambios siguen en pantalla/i);
+    expect(titleInput).toHaveValue("Cambio local sin guardar");
+    expect(screen.getByRole("button", { name: "Guardar cambios" })).toBeInTheDocument();
+  });
+
+  it("mantiene fijo el slug cuando cambia el título de un remate publicado", async () => {
+    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
+    const user = userEvent.setup();
+    renderAdmin();
+
+    await user.click(screen.getByRole("button", { name: "Remates" }));
+    const row = screen.getByText("Maquinaria y herramientas").closest("tr")!;
+    await user.click(within(row).getByRole("button", { name: "Editar" }));
+
+    const titleInput = screen.getByRole("textbox", { name: /Título/ });
+    const slugInput = screen.getByRole("textbox", { name: /Ruta o slug/ });
+    expect(slugInput).toHaveValue("maquinaria-y-herramientas");
+
+    await user.clear(titleInput);
+    await user.type(titleInput, "Gran remate de maquinaria");
+
+    expect(slugInput).toHaveValue("maquinaria-y-herramientas");
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+    expect(screen.getByText("Gran remate de maquinaria")).toBeInTheDocument();
   });
 });
