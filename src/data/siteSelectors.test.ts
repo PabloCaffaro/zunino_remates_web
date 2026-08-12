@@ -33,7 +33,7 @@ describe("selectores del sitio", () => {
     expect(catalogos[1]).toMatchObject({
       remateId: "segundo",
       estado: "preliminar",
-      pdf: second.catalogoPdf,
+      detalle: second.catalogoEstado,
     });
     expect(getCatalogoByRemateId(catalogos, "segundo")).toEqual(catalogos[1]);
   });

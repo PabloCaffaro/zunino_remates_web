@@ -44,11 +44,17 @@ proveedor correspondiente.
 
 ## Roles
 
-- `editor`: crea, edita, revisa y publica contenido.
-- `administrador`: además gestiona usuarios y eliminaciones sensibles.
+- `editor`: crea, edita, revisa y publica contenido; actualiza la configuración
+  principal y atiende consultas.
+- `administrador`: además gestiona usuarios, elimina registros sensibles y lee
+  la auditoría.
 
 Los permisos se validan en la base. Ocultar botones en la interfaz mejora la
 experiencia, pero no reemplaza RLS.
+
+La configuración principal no puede insertarse ni eliminarse desde la
+aplicación. La matriz completa está en
+[`supabase/ACCESS_CONTROL.md`](../supabase/ACCESS_CONTROL.md).
 
 Cuando una persona deja de administrar el sitio:
 
@@ -56,9 +62,12 @@ Cuando una persona deja de administrar el sitio:
 2. Cerrar o revocar sus sesiones.
 3. Revisar auditoría reciente.
 
+La base impide que una modificación deje al sistema sin ningún administrador
+activo.
+
 ## Archivos
 
-- Catálogos e imágenes se guardarán en buckets privados.
+- Las imágenes de lotes se guardarán en un bucket privado.
 - Solo el equipo autenticado podrá subir o eliminar.
 - Los visitantes accederán a archivos asociados a remates publicados.
 - Se validarán tipo, tamaño y nombre de archivo.
@@ -76,6 +85,13 @@ La versión de producción debe:
 - Registrar solamente los datos necesarios.
 
 La clave de servicio solo podrá utilizarse dentro de la Edge Function.
+
+Los cambios de estado se auditan sin copiar nombre, email, mensaje, notas
+internas, agente de usuario ni hash de IP. Solo un administrador activo puede
+leer `audit_log`.
+
+El contenido original de las consultas es inmutable desde la aplicación. El
+equipo solo puede actualizar su estado, notas internas y datos de atención.
 
 ## Dependencias
 
@@ -109,4 +125,3 @@ Si se sospecha una exposición:
 4. Revisar `audit_log`, Auth y logs de Storage.
 5. Corregir la causa antes de restaurar el acceso.
 6. Documentar el incidente y las medidas tomadas.
-

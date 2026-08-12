@@ -28,11 +28,8 @@ export function CatalogSection({ catalogos, remates }: CatalogSectionProps) {
                 <h3>{catalogo.titulo}</h3>
                 <p>{catalogo.detalle}</p>
                 <div className="card-actions">
-                  <a className="btn btn-small" href={catalogo.pdf.url} target="_blank" rel="noreferrer">
-                    {catalogo.accion}
-                  </a>
                   <Link className="btn btn-outline btn-small" to={`/remates/${remate.slug}`}>
-                    {catalogo.secundaria}
+                    Ver detalle
                   </Link>
                 </div>
               </div>

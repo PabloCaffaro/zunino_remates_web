@@ -1,15 +1,28 @@
 import type { AdminRemate } from "../types/site";
+import { isValidRemateDateTime } from "../data/remateFormatting";
 
 export type PublishValidationErrors = Record<string, string>;
 
+export function highlightedLotNameErrorKey(lotId: string) {
+  return `destacados.${lotId}.nombre`;
+}
+
+export function validateHighlightedLotNames(remate: AdminRemate): PublishValidationErrors {
+  return remate.destacados.reduce<PublishValidationErrors>((errors, lot) => {
+    if (!lot.nombre.trim()) {
+      errors[highlightedLotNameErrorKey(lot.id)] = "Cada foto debe tener un nombre.";
+    }
+
+    return errors;
+  }, {});
+}
+
 export function validateRemateForPublish(remate: AdminRemate): PublishValidationErrors {
-  const errors: PublishValidationErrors = {};
+  const errors: PublishValidationErrors = validateHighlightedLotNames(remate);
 
   const requiredTextFields: Array<[keyof AdminRemate, string]> = [
     ["titulo", "El título es obligatorio."],
     ["slug", "La URL del remate es obligatoria."],
-    ["fecha", "La fecha resumida es obligatoria."],
-    ["fechaCompleta", "La fecha y hora completas son obligatorias."],
     ["subtitulo", "El subtítulo es obligatorio."],
     ["lugar", "El lugar resumido es obligatorio."],
     ["ubicacionDetalle", "La ubicación detallada es obligatoria."],
@@ -25,12 +38,12 @@ export function validateRemateForPublish(remate: AdminRemate): PublishValidation
     }
   });
 
-  if (!remate.catalogoPdf.url.trim()) {
-    errors.catalogoPdfUrl = "Debe cargarse una URL, ruta o archivo PDF del catálogo.";
-  }
-
-  if (!remate.catalogoPdf.fileName.trim()) {
-    errors.catalogoPdfFileName = "El nombre del archivo PDF es obligatorio.";
+  if (!remate.fechaPorConfirmar) {
+    if (!remate.fechaCompleta.trim()) {
+      errors.fechaCompleta = "La fecha y hora son obligatorias o deben marcarse como pendientes.";
+    } else if (!isValidRemateDateTime(remate.fechaCompleta)) {
+      errors.fechaCompleta = "Ingresá una fecha válida con el formato dd/mm/yyyy HH:mm.";
+    }
   }
 
   if (!remate.requisitos.some((item) => item.trim())) {

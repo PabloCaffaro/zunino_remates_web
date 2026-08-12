@@ -352,6 +352,11 @@ a {
   color: #155973;
 }
 
+.catalog-pending {
+  color: var(--green-800);
+  font-weight: 700;
+}
+
 .cards-grid,
 .catalog-grid,
 .steps-grid {
@@ -607,6 +612,46 @@ textarea[aria-invalid="true"] {
   font-size: 0.95rem;
 }
 
+.admin-password-field {
+  position: relative;
+  display: grid;
+}
+
+.admin-password-field input {
+  width: 100%;
+  padding-right: 88px;
+}
+
+.admin-password-field button {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  border: 0;
+  padding: 5px 7px;
+  background: transparent;
+  color: var(--green-700);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.transient-message-enter {
+  animation: transient-message-enter 180ms ease-out both;
+}
+
+@keyframes transient-message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .admin-page {
   min-height: 100vh;
   background: #eef2ed;
@@ -680,6 +725,7 @@ textarea[aria-invalid="true"] {
 
 .admin-content {
   width: min(1280px, 100%);
+  margin: 0 auto;
   padding: clamp(24px, 4vw, 52px);
 }
 
@@ -868,10 +914,83 @@ textarea[aria-invalid="true"] {
   grid-column: 1 / -1;
 }
 
+.admin-field-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+}
+
+.admin-field-help {
+  position: relative;
+  display: inline-grid;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  border: 1px solid rgba(13, 59, 35, 0.35);
+  border-radius: 50%;
+  color: var(--green-800);
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: help;
+}
+
+.admin-field-help:focus {
+  outline: 2px solid var(--green-500);
+  outline-offset: 2px;
+}
+
+.admin-field-tooltip {
+  position: absolute;
+  z-index: 20;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  width: min(280px, 75vw);
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: var(--green-900);
+  box-shadow: 0 8px 24px rgba(8, 32, 20, 0.22);
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 5px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.admin-field-help:hover .admin-field-tooltip,
+.admin-field-help:focus .admin-field-tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 .admin-field-error {
   color: #8b2525;
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.admin-checkbox-field {
+  display: flex;
+  align-items: center;
+  align-self: end;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid rgba(13, 59, 35, 0.12);
+  border-radius: 12px;
+  background: #f8faf7;
+  cursor: pointer;
+}
+
+.admin-checkbox-field input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--green-700);
 }
 
 .admin-subsection {
@@ -892,8 +1011,8 @@ textarea[aria-invalid="true"] {
 
 .admin-lot-card {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 18px;
   padding: 20px;
   border: 1px solid rgba(13, 59, 35, 0.12);
   border-radius: 16px;
@@ -912,12 +1031,94 @@ textarea[aria-invalid="true"] {
   color: var(--green-900);
 }
 
-.admin-empty-state {
-  padding: 22px;
-  border: 1px dashed rgba(13, 59, 35, 0.22);
-  border-radius: 14px;
+.admin-lot-preview {
+  display: grid;
+  min-height: 140px;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 13px;
+  background: #dfe9e1;
+  color: var(--stone);
   text-align: center;
-  font-size: 1rem;
+}
+
+.admin-lot-preview img {
+  width: 100%;
+  height: 100%;
+  min-height: 140px;
+  aspect-ratio: 4 / 3;
+  display: block;
+  object-fit: cover;
+}
+
+.admin-lot-details {
+  align-content: center;
+  display: grid;
+  gap: 8px;
+}
+
+.admin-lot-details p {
+  margin: 2px 0 0;
+  color: var(--stone);
+  font-size: 0.9rem;
+}
+
+.admin-lot-dropzone {
+  display: grid;
+  min-height: 210px;
+  padding: 30px 22px;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  border: 2px dashed rgba(27, 106, 59, 0.42);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(47, 172, 94, 0.13), transparent 46%),
+    #f4f9f4;
+  color: var(--green-900);
+  text-align: center;
+  cursor: copy;
+  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
+}
+
+.admin-lot-dropzone:hover,
+.admin-lot-dropzone:focus-within,
+.admin-lot-dropzone.is-dragging {
+  border-color: var(--green-600);
+  background-color: #e7f4e9;
+  transform: translateY(-2px);
+}
+
+.admin-lot-dropzone strong {
+  font-size: 1.12rem;
+}
+
+.admin-lot-dropzone span,
+.admin-lot-dropzone small {
+  color: var(--stone);
+}
+
+.admin-lot-drop-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--green-700);
+  color: var(--white) !important;
+  font-size: 1.8rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.admin-lot-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .admin-editor-actions {
@@ -1088,6 +1289,10 @@ textarea[aria-invalid="true"] {
   box-shadow: var(--shadow);
 }
 
+.lot-strip-arrow:disabled {
+  cursor: default;
+}
+
 .lot-strip-viewport {
   position: relative;
   overflow: hidden;
@@ -1098,6 +1303,7 @@ textarea[aria-invalid="true"] {
 .lot-strip-track {
   display: flex;
   gap: var(--carousel-gap);
+  backface-visibility: hidden;
 }
 
 .lot-strip-track .lot-highlight-card {
@@ -1105,18 +1311,6 @@ textarea[aria-invalid="true"] {
     calc(
       (100% - (var(--cards-per-view) - 1) * var(--carousel-gap)) / var(--cards-per-view)
     );
-}
-
-.lot-strip-track-animating {
-  will-change: transform;
-}
-
-.lot-strip-track-right {
-  animation: carousel-track-right 0.42s linear forwards;
-}
-
-.lot-strip-track-left {
-  animation: carousel-track-left 0.42s linear forwards;
 }
 
 .lot-highlight-card {
@@ -1151,42 +1345,9 @@ textarea[aria-invalid="true"] {
   margin-bottom: 0;
 }
 
-@keyframes carousel-track-right {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    transform: translateX(
-      calc(
-        -1 * (
-          (100% - (var(--cards-per-view) - 1) * var(--carousel-gap)) / var(--cards-per-view) +
-            var(--carousel-gap)
-        )
-      )
-    );
-  }
-}
-
-@keyframes carousel-track-left {
-  0% {
-    transform: translateX(
-      calc(
-        -1 * (
-          (100% - (var(--cards-per-view) - 1) * var(--carousel-gap)) / var(--cards-per-view) +
-            var(--carousel-gap)
-        )
-      )
-    );
-  }
-
-  100% {
-    transform: translateX(0);
-  }
-}
-
 .lightbox-nav {
   position: absolute;
+  top: 50%;
   width: 48px;
   height: 48px;
   border: 0;
@@ -1197,14 +1358,15 @@ textarea[aria-invalid="true"] {
   line-height: 1;
   cursor: pointer;
   z-index: 1;
+  transform: translateY(-50%);
 }
 
 .lightbox-nav-left {
-  left: 14px;
+  left: -64px;
 }
 
 .lightbox-nav-right {
-  right: 14px;
+  right: -64px;
 }
 
 .lightbox-overlay {
@@ -1218,11 +1380,14 @@ textarea[aria-invalid="true"] {
 }
 
 .lightbox-content {
-  width: min(960px, 100%);
+  width: min(960px, calc(100% - 152px));
   background: var(--white);
   border-radius: 24px;
-  overflow: hidden;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  position: relative;
+}
+
+.lightbox-media {
   position: relative;
 }
 
@@ -1230,6 +1395,7 @@ textarea[aria-invalid="true"] {
   position: absolute;
   top: 14px;
   right: 14px;
+  z-index: 3;
   width: 42px;
   height: 42px;
   border: 0;
@@ -1246,6 +1412,7 @@ textarea[aria-invalid="true"] {
   max-height: 72vh;
   object-fit: cover;
   display: block;
+  border-radius: 24px 24px 0 0;
 }
 
 .lightbox-copy {
@@ -1303,6 +1470,26 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+@media (min-width: 1600px) {
+  .container {
+    width: min(1480px, 90%);
+  }
+
+  .admin-content {
+    width: min(1540px, 100%);
+  }
+
+  .hero-grid,
+  .company-grid,
+  .contact-grid {
+    gap: clamp(48px, 5vw, 88px);
+  }
+
+  .section-title {
+    max-width: 760px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -1312,7 +1499,9 @@ textarea:focus-visible {
   .reveal.in-view,
   .faq-content,
   .faq-icon,
-  .btn {
+  .btn,
+  .transient-message-enter {
+    animation: none;
     transition: none;
     transform: none;
   }
@@ -1491,6 +1680,10 @@ textarea:focus-visible {
     padding: 16px;
   }
 
+  .lightbox-content {
+    width: calc(100% - 104px);
+  }
+
   .lightbox-image {
     max-height: 58vh;
   }
@@ -1504,6 +1697,14 @@ textarea:focus-visible {
     width: 42px;
     height: 42px;
     font-size: 1.8rem;
+  }
+
+  .lightbox-nav-left {
+    left: -50px;
+  }
+
+  .lightbox-nav-right {
+    right: -50px;
   }
 
   .admin-login-card {
@@ -1533,6 +1734,10 @@ textarea:focus-visible {
   .admin-span-two,
   .admin-lot-heading {
     grid-column: auto;
+  }
+
+  .admin-lot-preview img {
+    max-height: 260px;
   }
 
   .admin-editor-actions {

@@ -13,7 +13,7 @@ La aplicación es una SPA desarrollada con React y Vite.
 - El panel modifica esos mismos datos.
 - La persistencia actual utiliza `localStorage`.
 - El acceso administrativo actual utiliza credenciales incluidas en el frontend.
-- Los PDFs e imágenes de demostración están en `public/`.
+- Las imágenes de demostración están en `public/`.
 
 Esta solución permite desarrollar y probar el flujo, pero no es apta para
 producción.
@@ -37,7 +37,7 @@ Supabase será responsable de:
 - Autenticar administradores.
 - Persistir remates y contenido general.
 - Aplicar permisos mediante Row Level Security.
-- Guardar catálogos e imágenes.
+- Guardar imágenes de lotes y del sitio.
 - Registrar consultas y auditoría.
 
 El navegador utilizará únicamente la clave publicable. Las operaciones sensibles
@@ -67,9 +67,10 @@ borrador → en_revision → publicado → finalizado
 - `finalizado`: evento cerrado y retirado de próximos remates.
 - `cancelado`: evento suspendido.
 
-La publicación requiere título, fechas, ubicación, descripciones, catálogo PDF,
-al menos un requisito y al menos una condición. El frontend valida el formulario
-y PostgreSQL volverá a validar la transición.
+La publicación requiere título, una fecha concreta o el estado `Fecha a confirmar`,
+ubicación, descripciones, información del catálogo, al menos un requisito y al
+menos una condición. El frontend valida el formulario y PostgreSQL volverá a
+validar la transición.
 
 ## Organización del código
 
@@ -92,4 +93,3 @@ El detalle de tablas, relaciones y políticas está en:
 - [`supabase/SCHEMA.md`](../supabase/SCHEMA.md)
 - [`supabase/Zunino-Remates-ER.drawio`](../supabase/Zunino-Remates-ER.drawio)
 - [`supabase/migrations`](../supabase/migrations)
-

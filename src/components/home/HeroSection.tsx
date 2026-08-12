@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { formatRemateDateDisplay } from "../../data/remateFormatting";
 import type { Remate, SiteCopy } from "../../types/site";
 
 type HeroSectionProps = {
@@ -39,7 +40,12 @@ export function HeroSection({ rematePrincipal, copy }: HeroSectionProps) {
             <div className="hero-card">
               <p className="card-tag">Próximo remate</p>
               <h2>{rematePrincipal.titulo}</h2>
-              <p className="card-meta">{rematePrincipal.fechaCompleta}</p>
+              <p className="card-meta">
+                {formatRemateDateDisplay(
+                  rematePrincipal.fechaCompleta,
+                  rematePrincipal.fechaPorConfirmar
+                )}
+              </p>
               <p>{rematePrincipal.detalle}</p>
               <p className="hero-note">
                 Sin reserva previa. Participación presencial con registro en sala.
@@ -48,14 +54,6 @@ export function HeroSection({ rematePrincipal, copy }: HeroSectionProps) {
                 <Link className="btn btn-small" to={`/remates/${rematePrincipal.slug}`}>
                   Ver detalle
                 </Link>
-                <a
-                  className="btn btn-outline btn-small"
-                  href={rematePrincipal.catalogoPdf.url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Descargar catálogo
-                </a>
               </div>
             </div>
           ) : (

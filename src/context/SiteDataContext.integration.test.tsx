@@ -33,7 +33,7 @@ describe("SiteDataProvider", () => {
     );
 
     await waitFor(() => {
-      const stored = window.localStorage.getItem("zunino-remates-admin-data-v1");
+      const stored = window.localStorage.getItem("zunino-remates-admin-data-v2");
       expect(stored).toContain("nuevo-publicado");
     });
   });

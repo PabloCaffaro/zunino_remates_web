@@ -1,8 +1,9 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
-  type ChangeEvent,
+  type DragEvent,
   type FormEvent,
 } from "react";
 import {
@@ -10,10 +11,14 @@ import {
   DEMO_ADMIN_CREDENTIALS,
 } from "../admin/adminConfig";
 import {
+  highlightedLotNameErrorKey,
+  validateHighlightedLotNames,
   validateRemateForPublish,
   type PublishValidationErrors,
 } from "../admin/adminValidation";
+import { createUniqueRemateSlug } from "../admin/remateSlug";
 import { useSiteData } from "../context/siteDataContextValue";
+import { formatRemateDateSummary } from "../data/remateFormatting";
 import type {
   AdminRemate,
   EditableSiteContent,
@@ -23,6 +28,11 @@ import type {
 
 type AdminTab = "resumen" | "remates" | "contenido";
 
+const LOT_IMAGE_MAX_BYTES = 700_000;
+const LOT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+type LotFileResult = { lot: HighlightedLot } | { error: string };
+
 const statusLabels: Record<RemateEstadoAdmin, string> = {
   borrador: "Borrador",
   en_revision: "En revisión",
@@ -31,14 +41,28 @@ const statusLabels: Record<RemateEstadoAdmin, string> = {
   cancelado: "Cancelado",
 };
 
-function slugify(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+function FieldTitle({
+  children,
+  description,
+}: {
+  children: string;
+  description: string;
+}) {
+  return (
+    <span className="admin-field-title">
+      {children}
+      <span
+        className="admin-field-help"
+        tabIndex={0}
+        aria-label={`Ayuda: ${description}`}
+      >
+        ?
+        <span className="admin-field-tooltip" role="tooltip">
+          {description}
+        </span>
+      </span>
+    </span>
+  );
 }
 
 function createEmptyRemate(): AdminRemate {
@@ -48,8 +72,8 @@ function createEmptyRemate(): AdminRemate {
   return {
     id,
     slug: "",
-    fecha: "",
     fechaCompleta: "",
+    fechaPorConfirmar: false,
     titulo: "",
     subtitulo: "",
     lugar: "",
@@ -61,11 +85,6 @@ function createEmptyRemate(): AdminRemate {
     destacados: [],
     requisitos: [],
     condiciones: [],
-    catalogoPdf: {
-      url: "",
-      fileName: "",
-      label: "Descargar catálogo PDF",
-    },
     estadoAdmin: "borrador",
     catalogoPublicacionEstado: "proximamente",
     creadoEn: now,
@@ -89,7 +108,16 @@ function readFileAsDataUrl(file: File, maxBytes: number): Promise<string> {
 function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<{ id: number; message: string } | null>(null);
+  const errorSequence = useRef(0);
+
+  useEffect(() => {
+    if (!error) return;
+
+    const timeoutId = window.setTimeout(() => setError(null), 10_000);
+    return () => window.clearTimeout(timeoutId);
+  }, [error]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -103,7 +131,11 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
       return;
     }
 
-    setError("Usuario o contraseña incorrectos.");
+    errorSequence.current += 1;
+    setError({
+      id: errorSequence.current,
+      message: "Usuario o contraseña incorrectos.",
+    });
   };
 
   return (
@@ -122,17 +154,34 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
               required
             />
           </label>
-          <label>
-            Contraseña
+          <label htmlFor="admin-password">Contraseña</label>
+          <span className="admin-password-field">
             <input
-              type="password"
+              id="admin-password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
               required
             />
-          </label>
-          {error ? <p className="form-status form-status-error">{error}</p> : null}
+            <button
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            >
+              {showPassword ? "Ocultar" : "Mostrar"}
+            </button>
+          </span>
+          {error ? (
+            <p
+              key={error.id}
+              className="form-status form-status-error transient-message-enter"
+              data-attempt={error.id}
+              role="alert"
+            >
+              {error.message}
+            </p>
+          ) : null}
           <button className="btn" type="submit">
             Ingresar
           </button>
@@ -147,24 +196,63 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
 
 type RemateEditorProps = {
   initialRemate: AdminRemate;
+  existingRemates: AdminRemate[];
   onSave: (remate: AdminRemate) => void;
   onCancel: () => void;
 };
 
-function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
+function RemateEditor({
+  initialRemate,
+  existingRemates,
+  onSave,
+  onCancel,
+}: RemateEditorProps) {
   const [form, setForm] = useState(initialRemate);
   const [requisitosText, setRequisitosText] = useState(initialRemate.requisitos.join("\n"));
   const [condicionesText, setCondicionesText] = useState(initialRemate.condiciones.join("\n"));
   const [errors, setErrors] = useState<PublishValidationErrors>({});
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState<{ id: number; message: string } | null>(null);
+  const [lotUploadNotice, setLotUploadNotice] = useState<{ id: number; message: string } | null>(null);
+  const [isDraggingLotImages, setIsDraggingLotImages] = useState(false);
+  const noticeSequence = useRef(0);
+  const lotUploadNoticeSequence = useRef(0);
+  const lotSequence = useRef(0);
+  const dragDepth = useRef(0);
 
   useEffect(() => {
     setForm(initialRemate);
     setRequisitosText(initialRemate.requisitos.join("\n"));
     setCondicionesText(initialRemate.condiciones.join("\n"));
     setErrors({});
-    setNotice("");
+    setNotice(null);
+    setLotUploadNotice(null);
+    setIsDraggingLotImages(false);
+    dragDepth.current = 0;
   }, [initialRemate]);
+
+  useEffect(() => {
+    if (!notice) return;
+
+    const timeoutId = window.setTimeout(() => setNotice(null), 10_000);
+    return () => window.clearTimeout(timeoutId);
+  }, [notice]);
+
+  useEffect(() => {
+    if (!lotUploadNotice) return;
+
+    const timeoutId = window.setTimeout(() => setLotUploadNotice(null), 10_000);
+    return () => window.clearTimeout(timeoutId);
+  }, [lotUploadNotice]);
+
+  const showNotice = (message: string) => {
+    noticeSequence.current += 1;
+    setNotice({ id: noticeSequence.current, message });
+  };
+
+  const showLotUploadNotice = (message: string) => {
+    lotUploadNoticeSequence.current += 1;
+    setLotUploadNotice({ id: lotUploadNoticeSequence.current, message });
+  };
 
   const updateTextField = (field: keyof AdminRemate, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -177,7 +265,8 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
 
   const normalizedForm = (status: RemateEstadoAdmin): AdminRemate => ({
     ...form,
-    slug: slugify(form.slug || form.titulo),
+    slug: createUniqueRemateSlug(form.titulo, existingRemates, form.id),
+    fechaCompleta: form.fechaPorConfirmar ? "" : form.fechaCompleta.trim(),
     requisitos: requisitosText
       .split("\n")
       .map((item) => item.trim())
@@ -192,29 +281,24 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
 
   const saveWithStatus = (status: RemateEstadoAdmin) => {
     const nextRemate = normalizedForm(status);
+    const validationErrors =
+      status === "publicado"
+        ? validateRemateForPublish(nextRemate)
+        : validateHighlightedLotNames(nextRemate);
 
-    if (status === "publicado") {
-      const publishErrors = validateRemateForPublish(nextRemate);
-      setErrors(publishErrors);
+    setErrors(validationErrors);
 
-      if (Object.keys(publishErrors).length > 0) {
-        setNotice("El remate no puede publicarse hasta completar todos los campos obligatorios.");
-        return;
-      }
+    if (Object.keys(validationErrors).length > 0) {
+      showNotice(
+        status === "publicado"
+          ? "El remate no puede publicarse hasta completar todos los campos obligatorios."
+          : "Poné un nombre a cada foto antes de guardar el remate."
+      );
+      return;
     }
 
     setErrors({});
     onSave(nextRemate);
-  };
-
-  const addHighlightedLot = () => {
-    const lot: HighlightedLot = {
-      id: `lote-${Date.now()}`,
-      nombre: "",
-      imagen: { url: "", alt: "" },
-    };
-
-    setForm((current) => ({ ...current, destacados: [...current.destacados, lot] }));
   };
 
   const updateHighlightedLot = (
@@ -232,51 +316,85 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
       ...current,
       destacados: current.destacados.filter((lot) => lot.id !== id),
     }));
+    setErrors((current) => {
+      const next = { ...current };
+      delete next[highlightedLotNameErrorKey(id)];
+      return next;
+    });
   };
 
-  const handlePdfUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const addHighlightedLotsFromFiles = async (files: File[]) => {
+    if (files.length === 0) return;
 
-    try {
-      const url = await readFileAsDataUrl(file, 1_500_000);
+    // Cada archivo válido se convierte en una tarjeta independiente para nombrarlo.
+    const results = await Promise.all(
+      files.map(async (file): Promise<LotFileResult> => {
+        if (!LOT_IMAGE_TYPES.has(file.type)) {
+          return { error: `${file.name}: formato no admitido.` };
+        }
+
+        try {
+          const url = await readFileAsDataUrl(file, LOT_IMAGE_MAX_BYTES);
+          lotSequence.current += 1;
+
+          return {
+            lot: {
+              id: `lote-${Date.now()}-${lotSequence.current}`,
+              nombre: "",
+              imagen: { url, alt: `Vista previa de ${file.name}` },
+            } satisfies HighlightedLot,
+          };
+        } catch (uploadError) {
+          const message =
+            uploadError instanceof Error ? uploadError.message : "No se pudo leer el archivo.";
+          return { error: `${file.name}: ${message}` };
+        }
+      })
+    );
+
+    const addedLots: HighlightedLot[] = [];
+    const failedFiles: string[] = [];
+
+    results.forEach((result) => {
+      if ("lot" in result) {
+        addedLots.push(result.lot);
+      } else {
+        failedFiles.push(result.error);
+      }
+    });
+
+    if (addedLots.length > 0) {
       setForm((current) => ({
         ...current,
-        catalogoPdf: {
-          ...current.catalogoPdf,
-          url,
-          fileName: file.name,
-        },
+        destacados: [...current.destacados, ...addedLots],
       }));
-      setErrors((current) => {
-        const next = { ...current };
-        delete next.catalogoPdfUrl;
-        delete next.catalogoPdfFileName;
-        return next;
-      });
-    } catch (uploadError) {
-      setNotice(uploadError instanceof Error ? uploadError.message : "No se pudo cargar el PDF.");
+    }
+
+    if (failedFiles.length > 0) {
+      showLotUploadNotice(failedFiles.join(" "));
+    } else {
+      setLotUploadNotice(null);
     }
   };
 
-  const handleLotImageUpload = async (
-    lotId: string,
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const handleLotImagesDrop = (event: DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    dragDepth.current = 0;
+    setIsDraggingLotImages(false);
+    void addHighlightedLotsFromFiles(Array.from(event.dataTransfer.files));
+  };
 
-    try {
-      const url = await readFileAsDataUrl(file, 700_000);
-      updateHighlightedLot(lotId, (lot) => ({
-        ...lot,
-        imagen: {
-          url,
-          alt: lot.imagen.alt || `Imagen de ${lot.nombre || "lote destacado"}`,
-        },
-      }));
-    } catch (uploadError) {
-      setNotice(uploadError instanceof Error ? uploadError.message : "No se pudo cargar la imagen.");
+  const handleLotImagesDragEnter = (event: DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    dragDepth.current += 1;
+    setIsDraggingLotImages(true);
+  };
+
+  const handleLotImagesDragLeave = (event: DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) {
+      setIsDraggingLotImages(false);
     }
   };
 
@@ -297,11 +415,22 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
         enviarla a revisión. El sistema solo exige todos los campos al publicar.
       </div>
 
-      {notice ? <p className="form-status form-status-error">{notice}</p> : null}
+      {notice ? (
+        <p
+          key={notice.id}
+          className="form-status form-status-error transient-message-enter"
+          data-attempt={notice.id}
+          role="alert"
+        >
+          {notice.message}
+        </p>
+      ) : null}
 
       <div className="admin-form-grid">
         <label>
-          Título *
+          <FieldTitle description="Nombre principal con el que se mostrará el remate en toda la web.">
+            Título *
+          </FieldTitle>
           <input
             value={form.titulo}
             onChange={(event) => {
@@ -309,7 +438,7 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
               setForm((current) => ({
                 ...current,
                 titulo: title,
-                slug: current.slug ? current.slug : slugify(title),
+                slug: createUniqueRemateSlug(title, existingRemates, current.id),
               }));
             }}
             aria-invalid={Boolean(errors.titulo)}
@@ -317,39 +446,58 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
           {errors.titulo ? <span className="admin-field-error">{errors.titulo}</span> : null}
         </label>
         <label>
-          Ruta o slug *
+          <FieldTitle description="Se genera siempre desde el título. Si ya existe, el sistema agrega un número para mantener una dirección única.">
+            Ruta o slug *
+          </FieldTitle>
           <input
             value={form.slug}
-            onChange={(event) => updateTextField("slug", slugify(event.target.value))}
             placeholder="maquinaria-y-herramientas"
+            readOnly
+            aria-readonly="true"
             aria-invalid={Boolean(errors.slug)}
           />
           {errors.slug ? <span className="admin-field-error">{errors.slug}</span> : null}
         </label>
         <label>
-          Fecha resumida *
-          <input
-            value={form.fecha}
-            onChange={(event) => updateTextField("fecha", event.target.value)}
-            placeholder="22 MAR · 17:00"
-            aria-invalid={Boolean(errors.fecha)}
-          />
-          {errors.fecha ? <span className="admin-field-error">{errors.fecha}</span> : null}
-        </label>
-        <label>
-          Fecha y hora completas *
+          <FieldTitle description="Fecha y hora exactas en formato dd/mm/yyyy HH:mm. El lugar se carga en sus campos específicos.">
+            Fecha y hora completas *
+          </FieldTitle>
           <input
             value={form.fechaCompleta}
             onChange={(event) => updateTextField("fechaCompleta", event.target.value)}
-            placeholder="Viernes 22 de marzo · 17:00"
+            placeholder="22/03/2026 17:00"
+            inputMode="numeric"
+            disabled={form.fechaPorConfirmar}
             aria-invalid={Boolean(errors.fechaCompleta)}
           />
           {errors.fechaCompleta ? (
             <span className="admin-field-error">{errors.fechaCompleta}</span>
           ) : null}
         </label>
+        <label className="admin-checkbox-field">
+          <input
+            type="checkbox"
+            checked={form.fechaPorConfirmar}
+            onChange={(event) => {
+              const checked = event.target.checked;
+              setForm((current) => ({
+                ...current,
+                fechaPorConfirmar: checked,
+                fechaCompleta: checked ? "" : current.fechaCompleta,
+              }));
+              setErrors((current) => {
+                const next = { ...current };
+                delete next.fechaCompleta;
+                return next;
+              });
+            }}
+          />
+          <span>Fecha a confirmar</span>
+        </label>
         <label className="admin-span-two">
-          Subtítulo *
+          <FieldTitle description="Frase breve que complementa el título y explica qué tipo de remate es.">
+            Subtítulo *
+          </FieldTitle>
           <input
             value={form.subtitulo}
             onChange={(event) => updateTextField("subtitulo", event.target.value)}
@@ -358,7 +506,9 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
           {errors.subtitulo ? <span className="admin-field-error">{errors.subtitulo}</span> : null}
         </label>
         <label>
-          Lugar resumido *
+          <FieldTitle description="Nombre corto del local o predio, pensado para las tarjetas y encabezados.">
+            Lugar resumido *
+          </FieldTitle>
           <input
             value={form.lugar}
             onChange={(event) => updateTextField("lugar", event.target.value)}
@@ -367,7 +517,9 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
           {errors.lugar ? <span className="admin-field-error">{errors.lugar}</span> : null}
         </label>
         <label>
-          Estado visible del catálogo *
+          <FieldTitle description="Indica al público si el catálogo todavía no está publicado, es preliminar o ya está disponible.">
+            Estado visible del catálogo *
+          </FieldTitle>
           <select
             value={form.catalogoPublicacionEstado}
             onChange={(event) =>
@@ -384,7 +536,9 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
           </select>
         </label>
         <label className="admin-span-two">
-          Ubicación detallada *
+          <FieldTitle description="Dirección completa y cualquier indicación necesaria para llegar o coordinar una inspección.">
+            Ubicación detallada *
+          </FieldTitle>
           <input
             value={form.ubicacionDetalle}
             onChange={(event) => updateTextField("ubicacionDetalle", event.target.value)}
@@ -395,7 +549,9 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
           ) : null}
         </label>
         <label className="admin-span-two">
-          Descripción breve *
+          <FieldTitle description="Resumen de una o dos líneas que se muestra en la tarjeta del remate.">
+            Descripción breve *
+          </FieldTitle>
           <textarea
             rows={2}
             value={form.detalle}
@@ -405,7 +561,9 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
           {errors.detalle ? <span className="admin-field-error">{errors.detalle}</span> : null}
         </label>
         <label className="admin-span-two">
-          Descripción completa *
+          <FieldTitle description="Presentación extensa del remate para su página de detalle: contenido, público objetivo e información relevante.">
+            Descripción completa *
+          </FieldTitle>
           <textarea
             rows={5}
             value={form.descripcionLarga}
@@ -417,7 +575,9 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
           ) : null}
         </label>
         <label className="admin-span-two">
-          Texto sobre el catálogo *
+          <FieldTitle description="Mensaje público que describe qué contiene el catálogo o cuándo estará disponible.">
+            Texto sobre el catálogo *
+          </FieldTitle>
           <textarea
             rows={2}
             value={form.catalogoEstado}
@@ -430,54 +590,11 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
         </label>
       </div>
 
-      <div className="admin-subsection">
-        <h3>Catálogo PDF *</h3>
-        <p>
-          Podés ingresar una ruta o URL. Para esta demostración también se admite un PDF de hasta 1,5 MB.
-        </p>
-        <div className="admin-form-grid">
-          <label>
-            URL o ruta del PDF
-            <input
-              value={form.catalogoPdf.url}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  catalogoPdf: { ...current.catalogoPdf, url: event.target.value },
-                }))
-              }
-              aria-invalid={Boolean(errors.catalogoPdfUrl)}
-            />
-            {errors.catalogoPdfUrl ? (
-              <span className="admin-field-error">{errors.catalogoPdfUrl}</span>
-            ) : null}
-          </label>
-          <label>
-            Nombre del archivo
-            <input
-              value={form.catalogoPdf.fileName}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  catalogoPdf: { ...current.catalogoPdf, fileName: event.target.value },
-                }))
-              }
-              aria-invalid={Boolean(errors.catalogoPdfFileName)}
-            />
-            {errors.catalogoPdfFileName ? (
-              <span className="admin-field-error">{errors.catalogoPdfFileName}</span>
-            ) : null}
-          </label>
-          <label className="admin-span-two">
-            Cargar archivo PDF
-            <input type="file" accept="application/pdf" onChange={handlePdfUpload} />
-          </label>
-        </div>
-      </div>
-
       <div className="admin-form-grid admin-subsection">
         <label>
-          Requisitos para participar *
+          <FieldTitle description="Condiciones que una persona debe cumplir para participar. Escribí un requisito por línea.">
+            Requisitos para participar *
+          </FieldTitle>
           <textarea
             rows={6}
             value={requisitosText}
@@ -488,7 +605,9 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
           {errors.requisitos ? <span className="admin-field-error">{errors.requisitos}</span> : null}
         </label>
         <label>
-          Condiciones del remate *
+          <FieldTitle description="Reglas de pago, entrega, retiro u otras condiciones. Escribí una condición por línea.">
+            Condiciones del remate *
+          </FieldTitle>
           <textarea
             rows={6}
             value={condicionesText}
@@ -506,11 +625,8 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
         <div className="admin-subsection-heading">
           <div>
             <h3>Lotes destacados</h3>
-            <p>Son opcionales. Podés agregar la cantidad que necesites.</p>
+            <p>Son opcionales. Arrastrá una o varias fotos y asignale un nombre a cada una.</p>
           </div>
-          <button className="btn btn-outline btn-small" type="button" onClick={addHighlightedLot}>
-            Agregar lote
-          </button>
         </div>
         <div className="admin-lots-list">
           {form.destacados.map((lot, index) => (
@@ -525,54 +641,86 @@ function RemateEditor({ initialRemate, onSave, onCancel }: RemateEditorProps) {
                   Quitar
                 </button>
               </div>
-              <label>
-                Nombre
+              <div className="admin-lot-preview">
+                {lot.imagen.url ? (
+                  <img src={lot.imagen.url} alt={lot.imagen.alt || `Vista previa del lote ${index + 1}`} />
+                ) : (
+                  <span>Imagen no disponible</span>
+                )}
+              </div>
+              <div className="admin-lot-details">
+                <label htmlFor={`lot-name-${lot.id}`}>
+                  <FieldTitle description="Nombre breve y reconocible que se mostrará debajo de esta foto.">
+                    Nombre de la foto *
+                  </FieldTitle>
+                </label>
                 <input
+                  id={`lot-name-${lot.id}`}
                   value={lot.nombre}
-                  onChange={(event) =>
+                  required
+                  aria-label={`Nombre de la foto ${index + 1}`}
+                  aria-invalid={Boolean(errors[highlightedLotNameErrorKey(lot.id)])}
+                  onChange={(event) => {
+                    const name = event.target.value;
                     updateHighlightedLot(lot.id, (current) => ({
                       ...current,
-                      nombre: event.target.value,
-                    }))
-                  }
+                      nombre: name,
+                      imagen: {
+                        ...current.imagen,
+                        alt: name.trim() ? `Imagen de ${name.trim()}` : current.imagen.alt,
+                      },
+                    }));
+                    setErrors((current) => {
+                      const next = { ...current };
+                      delete next[highlightedLotNameErrorKey(lot.id)];
+                      return next;
+                    });
+                  }}
                 />
-              </label>
-              <label>
-                URL de imagen
-                <input
-                  value={lot.imagen.url}
-                  onChange={(event) =>
-                    updateHighlightedLot(lot.id, (current) => ({
-                      ...current,
-                      imagen: { ...current.imagen, url: event.target.value },
-                    }))
-                  }
-                />
-              </label>
-              <label>
-                Texto alternativo
-                <input
-                  value={lot.imagen.alt}
-                  onChange={(event) =>
-                    updateHighlightedLot(lot.id, (current) => ({
-                      ...current,
-                      imagen: { ...current.imagen, alt: event.target.value },
-                    }))
-                  }
-                />
-              </label>
-              <label>
-                Cargar imagen
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={(event) => handleLotImageUpload(lot.id, event)}
-                />
-              </label>
+                {errors[highlightedLotNameErrorKey(lot.id)] ? (
+                  <span className="admin-field-error">
+                    {errors[highlightedLotNameErrorKey(lot.id)]}
+                  </span>
+                ) : null}
+                <p>Este nombre también se usa como descripción accesible de la imagen.</p>
+              </div>
             </article>
           ))}
-          {form.destacados.length === 0 ? (
-            <p className="admin-empty-state">Todavía no hay lotes destacados.</p>
+          <label
+            className={`admin-lot-dropzone${isDraggingLotImages ? " is-dragging" : ""}`}
+            onDragEnter={handleLotImagesDragEnter}
+            onDragLeave={handleLotImagesDragLeave}
+            onDragOver={(event) => {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "copy";
+            }}
+            onDrop={handleLotImagesDrop}
+          >
+            <input
+              className="admin-lot-file-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              aria-label="Agregar fotos de lotes destacados"
+              onChange={(event) => {
+                void addHighlightedLotsFromFiles(Array.from(event.target.files ?? []));
+                event.target.value = "";
+              }}
+            />
+            <span className="admin-lot-drop-icon" aria-hidden="true">+</span>
+            <strong>Arrastrá las fotos acá</strong>
+            <span>o hacé clic para elegir varias desde tu dispositivo</span>
+            <small>JPG, PNG o WebP. Hasta 700 KB por foto en esta demostración.</small>
+          </label>
+          {lotUploadNotice ? (
+            <p
+              key={lotUploadNotice.id}
+              className="form-status form-status-error transient-message-enter"
+              data-attempt={lotUploadNotice.id}
+              role="alert"
+            >
+              {lotUploadNotice.message}
+            </p>
           ) : null}
         </div>
       </div>
@@ -928,6 +1076,7 @@ export function AdminPage() {
           {editingRemate ? (
             <RemateEditor
               initialRemate={editingRemate}
+              existingRemates={remates}
               onSave={handleSaveRemate}
               onCancel={() => setEditingRemate(null)}
             />
@@ -1011,7 +1160,12 @@ export function AdminPage() {
                           <strong>{remate.titulo || "Sin título"}</strong>
                           <span>{remate.lugar || "Lugar pendiente"}</span>
                         </td>
-                        <td>{remate.fecha || "Pendiente"}</td>
+                        <td>
+                          {formatRemateDateSummary(
+                            remate.fechaCompleta,
+                            remate.fechaPorConfirmar
+                          ) || "Pendiente"}
+                        </td>
                         <td>
                           <span className={`admin-status admin-status-${remate.estadoAdmin}`}>
                             {statusLabels[remate.estadoAdmin]}

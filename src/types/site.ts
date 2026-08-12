@@ -1,9 +1,3 @@
-export type PdfAsset = {
-  url: string;
-  fileName: string;
-  label: string;
-};
-
 export type ImageAsset = {
   url: string;
   alt: string;
@@ -27,8 +21,8 @@ export type RemateEstadoAdmin =
 export type Remate = {
   id: string;
   slug: string;
-  fecha: string;
   fechaCompleta: string;
+  fechaPorConfirmar: boolean;
   titulo: string;
   subtitulo: string;
   lugar: string;
@@ -40,7 +34,6 @@ export type Remate = {
   destacados: HighlightedLot[];
   requisitos: string[];
   condiciones: string[];
-  catalogoPdf: PdfAsset;
 };
 
 export type AdminRemate = Remate & {
@@ -55,10 +48,7 @@ export type Catalogo = {
   remateId: string;
   titulo: string;
   detalle: string;
-  accion: string;
-  secundaria: string;
   estado: CatalogoEstado;
-  pdf: PdfAsset;
 };
 
 export type Paso = {

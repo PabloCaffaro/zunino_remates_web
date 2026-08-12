@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { formatRemateDateSummary } from "../../data/remateFormatting";
 import type { Remate } from "../../types/site";
 
 type UpcomingRematesSectionProps = {
@@ -17,7 +18,9 @@ export function UpcomingRematesSection({ remates }: UpcomingRematesSectionProps)
         <div className="cards-grid">
           {remates.map((remate) => (
             <article key={remate.id} className="card reveal">
-              <p className="card-date">{remate.fecha}</p>
+              <p className="card-date">
+                {formatRemateDateSummary(remate.fechaCompleta, remate.fechaPorConfirmar)}
+              </p>
               <h3>{remate.titulo}</h3>
               <p className="card-location">{remate.lugar}</p>
               <p>{remate.detalle}</p>

@@ -8,7 +8,7 @@ import type {
   RemateEstadoAdmin,
 } from "../types/site";
 
-const STORAGE_KEY = "zunino-remates-admin-data-v1";
+const STORAGE_KEY = "zunino-remates-admin-data-v2";
 
 type StoredSiteData = {
   remates: AdminRemate[];
@@ -21,8 +21,8 @@ function createPendingRemate(): AdminRemate {
   return {
     id: "precarga-remate-especial",
     slug: "remate-especial-activos-varios",
-    fecha: "",
     fechaCompleta: "",
+    fechaPorConfirmar: true,
     titulo: "Remate especial de activos varios",
     subtitulo: "Carga inicial pendiente de verificación",
     lugar: "",
@@ -34,11 +34,6 @@ function createPendingRemate(): AdminRemate {
     destacados: [],
     requisitos: [],
     condiciones: [],
-    catalogoPdf: {
-      url: "",
-      fileName: "",
-      label: "Descargar catálogo PDF",
-    },
     estadoAdmin: "en_revision",
     catalogoPublicacionEstado: "proximamente",
     creadoEn: now,

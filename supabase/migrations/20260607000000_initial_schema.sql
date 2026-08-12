@@ -47,18 +47,14 @@ create table public.remates (
   estado public.remate_estado not null default 'borrador',
   titulo text not null default '',
   subtitulo text not null default '',
-  fecha_resumen text not null default '',
   fecha_hora timestamptz,
-  fecha_texto text not null default '',
+  fecha_por_confirmar boolean not null default true,
   lugar text not null default '',
   ubicacion_detalle text not null default '',
   detalle text not null default '',
   descripcion_larga text not null default '',
   catalogo_descripcion text not null default '',
   catalogo_estado public.catalogo_estado not null default 'proximamente',
-  catalogo_storage_path text not null default '',
-  catalogo_file_name text not null default '',
-  catalogo_label text not null default 'Descargar catálogo PDF',
   destacado boolean not null default false,
   orden integer not null default 0 check (orden >= 0),
   publicado_en timestamptz,
@@ -247,6 +243,46 @@ begin
 end;
 $$;
 
+create or replace function private.ensure_active_administrator()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  removes_active_administrator boolean;
+begin
+  if tg_op = 'DELETE' then
+    removes_active_administrator := old.rol = 'administrador' and old.activo;
+  else
+    removes_active_administrator := old.rol = 'administrador'
+      and old.activo
+      and (new.rol <> 'administrador' or not new.activo);
+  end if;
+
+  if removes_active_administrator then
+    -- Serializa bajas concurrentes para que dos operaciones no eliminen al último administrador.
+    perform pg_catalog.pg_advisory_xact_lock(1185657202::bigint);
+
+    if not exists (
+      select 1
+      from public.admin_profiles profile
+      where profile.user_id <> old.user_id
+        and profile.rol = 'administrador'
+        and profile.activo = true
+    ) then
+      raise exception 'Debe existir al menos un administrador activo.'
+        using errcode = '23514';
+    end if;
+  end if;
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+
+  return new;
+end;
+$$;
+
 create or replace function private.set_remate_actor()
 returns trigger
 language plpgsql
@@ -308,8 +344,7 @@ begin
       using errcode = '23514';
   end if;
 
-  if nullif(btrim(new.fecha_resumen), '') is null or new.fecha_hora is null
-    or nullif(btrim(new.fecha_texto), '') is null then
+  if not new.fecha_por_confirmar and new.fecha_hora is null then
     raise exception 'La fecha y hora son obligatorias para publicar.'
       using errcode = '23514';
   end if;
@@ -326,10 +361,8 @@ begin
       using errcode = '23514';
   end if;
 
-  if nullif(btrim(new.catalogo_descripcion), '') is null
-    or nullif(btrim(new.catalogo_storage_path), '') is null
-    or nullif(btrim(new.catalogo_file_name), '') is null then
-    raise exception 'El catálogo PDF y su descripción son obligatorios para publicar.'
+  if nullif(btrim(new.catalogo_descripcion), '') is null then
+    raise exception 'La descripción del catálogo es obligatoria para publicar.'
       using errcode = '23514';
   end if;
 
@@ -423,7 +456,38 @@ declare
 begin
   old_data := case when tg_op in ('UPDATE', 'DELETE') then to_jsonb(old) else null end;
   new_data := case when tg_op in ('INSERT', 'UPDATE') then to_jsonb(new) else null end;
-  record_id := coalesce(new_data ->> 'id', old_data ->> 'id');
+
+  -- Las consultas contienen datos personales que no deben duplicarse en auditoría.
+  if tg_table_schema = 'public' and tg_table_name = 'consultas_contacto' then
+    if old_data is not null then
+      old_data := old_data - array[
+        'nombre',
+        'email',
+        'mensaje',
+        'notas_internas',
+        'user_agent',
+        'ip_hash'
+      ]::text[];
+    end if;
+
+    if new_data is not null then
+      new_data := new_data - array[
+        'nombre',
+        'email',
+        'mensaje',
+        'notas_internas',
+        'user_agent',
+        'ip_hash'
+      ]::text[];
+    end if;
+  end if;
+
+  record_id := coalesce(
+    new_data ->> 'id',
+    old_data ->> 'id',
+    new_data ->> 'user_id',
+    old_data ->> 'user_id'
+  );
 
   insert into public.audit_log (
     entidad,
@@ -483,14 +547,8 @@ begin
   if nullif(btrim(remate.subtitulo), '') is null then
     return query select 'subtitulo'::text, 'El subtítulo es obligatorio.'::text;
   end if;
-  if nullif(btrim(remate.fecha_resumen), '') is null then
-    return query select 'fecha_resumen'::text, 'La fecha resumida es obligatoria.'::text;
-  end if;
-  if remate.fecha_hora is null then
+  if not remate.fecha_por_confirmar and remate.fecha_hora is null then
     return query select 'fecha_hora'::text, 'La fecha y hora son obligatorias.'::text;
-  end if;
-  if nullif(btrim(remate.fecha_texto), '') is null then
-    return query select 'fecha_texto'::text, 'El texto de fecha es obligatorio.'::text;
   end if;
   if nullif(btrim(remate.lugar), '') is null then
     return query select 'lugar'::text, 'El lugar es obligatorio.'::text;
@@ -506,12 +564,6 @@ begin
   end if;
   if nullif(btrim(remate.catalogo_descripcion), '') is null then
     return query select 'catalogo_descripcion'::text, 'La descripción del catálogo es obligatoria.'::text;
-  end if;
-  if nullif(btrim(remate.catalogo_storage_path), '') is null then
-    return query select 'catalogo_storage_path'::text, 'El PDF del catálogo es obligatorio.'::text;
-  end if;
-  if nullif(btrim(remate.catalogo_file_name), '') is null then
-    return query select 'catalogo_file_name'::text, 'El nombre del PDF es obligatorio.'::text;
   end if;
   if not exists (
     select 1 from public.remate_requisitos where remate_id = p_remate_id
@@ -532,6 +584,14 @@ grant execute on function public.validate_remate_for_publication(uuid) to authen
 create trigger admin_profiles_set_updated_at
 before update on public.admin_profiles
 for each row execute function private.set_updated_at();
+
+create trigger admin_profiles_keep_active_administrator
+before update or delete on public.admin_profiles
+for each row execute function private.ensure_active_administrator();
+
+create trigger admin_profiles_audit
+after insert or update or delete on public.admin_profiles
+for each row execute function private.write_audit_log();
 
 create trigger remates_set_actor
 before insert or update on public.remates
@@ -740,8 +800,8 @@ on public.configuracion_sitio for select
 to anon, authenticated
 using (id = 'principal');
 
-create policy "Equipo gestiona configuración"
-on public.configuracion_sitio for all
+create policy "Equipo actualiza configuración"
+on public.configuracion_sitio for update
 to authenticated
 using (public.is_active_admin())
 with check (public.is_active_admin() and id = 'principal');
@@ -762,10 +822,25 @@ on public.consultas_contacto for delete
 to authenticated
 using (public.is_full_admin());
 
-create policy "Equipo ve auditoría"
+create policy "Administradores ven auditoría"
 on public.audit_log for select
 to authenticated
-using (public.is_active_admin());
+using (public.is_full_admin());
+
+-- Supabase puede definir privilegios amplios por defecto en el esquema público.
+-- Se revocan para que los permisos siguientes sean deterministas y mínimos.
+revoke all privileges on table
+  public.admin_profiles,
+  public.remates,
+  public.remate_requisitos,
+  public.remate_condiciones,
+  public.lotes_destacados,
+  public.preguntas_frecuentes,
+  public.pasos_participacion,
+  public.configuracion_sitio,
+  public.consultas_contacto,
+  public.audit_log
+from anon, authenticated;
 
 grant select on public.remates to anon, authenticated;
 grant select on public.remate_requisitos to anon, authenticated;
@@ -781,8 +856,10 @@ grant select, insert, update, delete on public.remate_condiciones to authenticat
 grant select, insert, update, delete on public.lotes_destacados to authenticated;
 grant select, insert, update, delete on public.preguntas_frecuentes to authenticated;
 grant select, insert, update, delete on public.pasos_participacion to authenticated;
-grant select, insert, update, delete on public.configuracion_sitio to authenticated;
-grant select, update, delete on public.consultas_contacto to authenticated;
+grant select, update on public.configuracion_sitio to authenticated;
+grant select, delete on public.consultas_contacto to authenticated;
+grant update (estado, notas_internas, atendida_por, atendida_en)
+  on public.consultas_contacto to authenticated;
 grant select on public.audit_log to authenticated;
 grant select, insert, update, delete on public.admin_profiles to authenticated;
 
@@ -819,15 +896,7 @@ insert into storage.buckets (
   file_size_limit,
   allowed_mime_types
 )
-values
-  (
-    'catalogos-remates',
-    'catalogos-remates',
-    false,
-    15728640,
-    array['application/pdf']
-  ),
-  (
+values (
     'lotes-remates',
     'lotes-remates',
     false,
@@ -843,7 +912,7 @@ create policy "Público descarga archivos publicados"
 on storage.objects for select
 to anon, authenticated
 using (
-  bucket_id in ('catalogos-remates', 'lotes-remates')
+  bucket_id = 'lotes-remates'
   and exists (
     select 1
     from public.remates
@@ -856,7 +925,7 @@ create policy "Equipo lista archivos de remates"
 on storage.objects for select
 to authenticated
 using (
-  bucket_id in ('catalogos-remates', 'lotes-remates')
+  bucket_id = 'lotes-remates'
   and public.is_active_admin()
 );
 
@@ -864,7 +933,7 @@ create policy "Equipo sube archivos de remates"
 on storage.objects for insert
 to authenticated
 with check (
-  bucket_id in ('catalogos-remates', 'lotes-remates')
+  bucket_id = 'lotes-remates'
   and public.is_active_admin()
   and exists (
     select 1
@@ -877,11 +946,11 @@ create policy "Equipo actualiza archivos de remates"
 on storage.objects for update
 to authenticated
 using (
-  bucket_id in ('catalogos-remates', 'lotes-remates')
+  bucket_id = 'lotes-remates'
   and public.is_active_admin()
 )
 with check (
-  bucket_id in ('catalogos-remates', 'lotes-remates')
+  bucket_id = 'lotes-remates'
   and public.is_active_admin()
   and exists (
     select 1
@@ -894,6 +963,6 @@ create policy "Equipo elimina archivos de remates"
 on storage.objects for delete
 to authenticated
 using (
-  bucket_id in ('catalogos-remates', 'lotes-remates')
+  bucket_id = 'lotes-remates'
   and public.is_active_admin()
 );

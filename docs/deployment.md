@@ -8,7 +8,7 @@ dominio definitivo todavía no fueron elegidos.
 - Contenido y datos de contacto reales.
 - Supabase conectado y migración aplicada.
 - Usuario administrador definitivo.
-- PDFs e imágenes migrados a Storage.
+- Imágenes migradas a Storage.
 - Variables de producción configuradas.
 - Dominio y URL canónica definidos.
 
@@ -95,7 +95,7 @@ contacto realmente utilizado.
 - Refrescar una ruta de detalle.
 - Iniciar y cerrar sesión.
 - Crear un borrador y verificar que no sea público.
-- Publicar un remate y abrir su catálogo.
+- Publicar un remate y abrir su página de detalle.
 - Probar formulario y emails.
 - Revisar consola, errores de red y logs.
 
@@ -108,4 +108,3 @@ falla:
 2. Desactivar contenido problemático desde el panel.
 3. Revisar logs.
 4. Corregir y repetir pruebas antes de desplegar nuevamente.
-

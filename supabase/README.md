@@ -19,9 +19,12 @@ cardinalidades y referencias lógicas de archivos.
 - Preguntas frecuentes, pasos de participación y configuración general.
 - Consultas de contacto preparadas para una Edge Function.
 - Auditoría de modificaciones.
-- Buckets privados para catálogos PDF e imágenes.
+- Bucket privado para imágenes.
 - Row Level Security en todas las tablas expuestas.
 - Validación en PostgreSQL antes de publicar un remate.
+
+La distribución exacta de permisos está documentada en
+[`ACCESS_CONTROL.md`](ACCESS_CONTROL.md).
 
 ## Aplicar por primera vez
 
@@ -54,8 +57,16 @@ values (
 
 Los siguientes usuarios pueden tener rol `administrador` o `editor`.
 
-- `administrador`: puede eliminar remates, consultas y gestionar usuarios.
-- `editor`: puede crear, editar, revisar y publicar contenido.
+- `administrador`: puede eliminar remates y consultas, gestionar usuarios y
+  leer la auditoría.
+- `editor`: puede crear, editar, revisar y publicar contenido, actualizar la
+  configuración y atender consultas sin eliminarlas.
+
+Ninguno de estos roles puede insertar ni eliminar la fila de configuración
+principal desde la aplicación.
+
+La base tampoco permite desactivar, degradar ni eliminar al último administrador
+activo.
 
 ## Reglas de publicación
 
@@ -64,10 +75,10 @@ Un remate puede guardarse incompleto como `borrador` o `en_revision`.
 Para pasar a `publicado`, PostgreSQL exige:
 
 - Título, subtítulo y slug.
-- Fecha resumida, fecha real y texto visible de fecha.
+- Fecha real o estado `Fecha a confirmar`.
 - Lugar y ubicación detallada.
 - Descripción breve y completa.
-- Descripción, ruta y nombre del PDF del catálogo.
+- Descripción y estado del catálogo.
 - Al menos un requisito.
 - Al menos una condición.
 
@@ -85,30 +96,50 @@ publicación incompleta.
 
 Los buckets creados son:
 
-- `catalogos-remates`: PDF, hasta 15 MB.
 - `lotes-remates`: JPEG, PNG o WebP, hasta 5 MB.
 
 Cada archivo debe guardarse dentro de una carpeta cuyo nombre sea el UUID del
 remate:
 
 ```text
-catalogos-remates/<remate-id>/catalogo.pdf
 lotes-remates/<remate-id>/<lote-id>.webp
 ```
 
-Los buckets son privados. La web puede descargar archivos únicamente cuando la
+El bucket es privado. La web puede descargar imágenes únicamente cuando la
 carpeta pertenece a un remate publicado. Los borradores y remates en revisión no
 exponen sus documentos aunque alguien conozca la ruta.
 
 Solo los usuarios administrativos activos pueden subir, reemplazar o eliminar
 objetos. En React usaremos `download()` o URLs firmadas; `getPublicUrl()` no
-corresponde para estos buckets.
+corresponde para este bucket.
 
 ## Formulario de contacto
 
 La tabla `consultas_contacto` no permite inserciones directas desde el navegador.
 La futura Edge Function validará captcha, límites de frecuencia y contenido, y
 usará la clave de servicio únicamente del lado servidor.
+
+La auditoría registra cambios de estado sin duplicar los datos personales de la
+consulta. Solamente los administradores activos pueden leerla.
+
+El nombre, email, mensaje, origen y datos técnicos de una consulta son
+inmutables desde la aplicación. El equipo puede cambiar únicamente el estado,
+las notas internas y los datos de atención.
+
+## Pruebas de base de datos
+
+Las pruebas pgTAP están en `tests/database` y verifican RLS, separación de roles,
+protección de la configuración, auditoría y minimización de datos personales.
+
+Cuando adoptemos Supabase CLI y tengamos la base local preparada, se ejecutarán
+con:
+
+```powershell
+supabase test db
+```
+
+Estas pruebas no aplican cambios al proyecto remoto. Deben ejecutarse contra una
+base local creada desde las migraciones.
 
 ## Variables futuras del frontend
 

@@ -1,6 +1,6 @@
 # Zunino Remates Web
 
-Sitio web para promocionar remates presenciales, publicar catálogos PDF y
+Sitio web para promocionar remates presenciales, presentar sus catálogos y
 administrar el contenido de la empresa.
 
 El proyecto incluye una web pública, páginas de detalle por remate y un panel
@@ -91,7 +91,7 @@ Pendiente antes de producción:
 
 - Aplicar la migración y conectar React con Supabase.
 - Sustituir login y `localStorage` de demostración.
-- Migrar PDFs, imágenes y datos reales.
+- Migrar imágenes y datos reales.
 - Implementar el formulario seguro con una Edge Function.
 - Configurar hosting, dominio, variables, rutas SPA y headers.
 - Completar contenido, SEO y pruebas finales.
@@ -106,4 +106,3 @@ Pendiente antes de producción:
 - [Supabase](supabase/README.md)
 - [Modelo de datos](supabase/SCHEMA.md)
 - [Diagrama editable](supabase/Zunino-Remates-ER.drawio)
-

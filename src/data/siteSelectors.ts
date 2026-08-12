@@ -33,10 +33,7 @@ export function createCatalogosFromRemates(remates: Remate[]): Catalogo[] {
       remateId: remate.id,
       titulo: remate.titulo,
       detalle: remate.catalogoEstado,
-      accion: "Descargar PDF",
-      secundaria: "Ver detalle",
       estado,
-      pdf: remate.catalogoPdf,
     };
   });
 }

@@ -21,7 +21,7 @@
           <mxGeometry x="60" y="410" width="280" height="210" as="geometry"/>
         </mxCell>
 
-        <mxCell id="remates" value="&lt;b&gt;public.remates&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : uuid&lt;br&gt;&lt;b&gt;UK&lt;/b&gt; slug : text&lt;br&gt;estado : remate_estado&lt;br&gt;titulo / subtitulo : text&lt;br&gt;fecha_resumen : text&lt;br&gt;fecha_hora : timestamptz&lt;br&gt;fecha_texto : text&lt;br&gt;lugar / ubicacion_detalle : text&lt;br&gt;detalle / descripcion_larga : text&lt;br&gt;catalogo_descripcion : text&lt;br&gt;catalogo_estado : catalogo_estado&lt;br&gt;catalogo_storage_path : text&lt;br&gt;catalogo_file_name / label : text&lt;br&gt;destacado : boolean&lt;br&gt;orden : integer&lt;br&gt;publicado_en : timestamptz&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; created_by → auth.users.id&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; updated_by → auth.users.id&lt;br&gt;created_at / updated_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#dff4e7;strokeColor=#1b6a3b;fontColor=#0d3b23;fontSize=13;" vertex="1" parent="1">
+        <mxCell id="remates" value="&lt;b&gt;public.remates&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : uuid&lt;br&gt;&lt;b&gt;UK&lt;/b&gt; slug : text&lt;br&gt;estado : remate_estado&lt;br&gt;titulo / subtitulo : text&lt;br&gt;fecha_hora : timestamptz&lt;br&gt;fecha_por_confirmar : boolean&lt;br&gt;lugar / ubicacion_detalle : text&lt;br&gt;detalle / descripcion_larga : text&lt;br&gt;catalogo_descripcion : text&lt;br&gt;catalogo_estado : catalogo_estado&lt;br&gt;destacado : boolean&lt;br&gt;orden : integer&lt;br&gt;publicado_en : timestamptz&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; created_by → auth.users.id&lt;br&gt;&lt;b&gt;FK&lt;/b&gt; updated_by → auth.users.id&lt;br&gt;created_at / updated_at" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#dff4e7;strokeColor=#1b6a3b;fontColor=#0d3b23;fontSize=13;" vertex="1" parent="1">
           <mxGeometry x="470" y="170" width="350" height="450" as="geometry"/>
         </mxCell>
 
@@ -57,7 +57,7 @@
           <mxGeometry x="60" y="1100" width="300" height="240" as="geometry"/>
         </mxCell>
 
-        <mxCell id="storage_objects" value="&lt;b&gt;storage.objects&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : uuid&lt;br&gt;bucket_id : text&lt;br&gt;name : text&lt;br&gt;owner_id : text&lt;br&gt;metadata : jsonb&lt;br&gt;&lt;br&gt;&lt;i&gt;Buckets privados:&lt;/i&gt;&lt;br&gt;• catalogos-remates&lt;br&gt;• lotes-remates" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#e0f0f3;strokeColor=#317b87;fontColor=#174a52;fontSize=13;" vertex="1" parent="1">
+        <mxCell id="storage_objects" value="&lt;b&gt;storage.objects&lt;/b&gt;&lt;br&gt;&lt;hr&gt;&lt;b&gt;PK&lt;/b&gt; id : uuid&lt;br&gt;bucket_id : text&lt;br&gt;name : text&lt;br&gt;owner_id : text&lt;br&gt;metadata : jsonb&lt;br&gt;&lt;br&gt;&lt;i&gt;Buckets privados:&lt;/i&gt;&lt;br&gt;• lotes-remates" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=12;fillColor=#e0f0f3;strokeColor=#317b87;fontColor=#174a52;fontSize=13;" vertex="1" parent="1">
           <mxGeometry x="1430" y="720" width="300" height="255" as="geometry"/>
         </mxCell>
 
@@ -88,10 +88,6 @@
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="edge_remates_lotes" value="1 : N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;startArrow=ERone;startFill=0;endArrow=ERmany;endFill=0;strokeWidth=2;strokeColor=#1b6a3b;fontColor=#1b6a3b;" edge="1" parent="1" source="remates" target="lotes">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-
-        <mxCell id="edge_remates_storage" value="catálogo PDF" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;dashed=1;dashPattern=8 6;strokeWidth=2;strokeColor=#317b87;fontColor=#317b87;" edge="1" parent="1" source="remates" target="storage_objects">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <mxCell id="edge_lotes_storage" value="imagen" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endFill=0;dashed=1;dashPattern=8 6;strokeWidth=2;strokeColor=#317b87;fontColor=#317b87;" edge="1" parent="1" source="lotes" target="storage_objects">

@@ -42,7 +42,7 @@ Flujo recomendado:
 1. Crear el remate.
 2. Completar la información disponible.
 3. Guardar como `Borrador`.
-4. Cargar catálogo y condiciones.
+4. Cargar la información del catálogo y las condiciones.
 5. Enviar a `En revisión`.
 6. Verificar la información y los archivos.
 7. Publicar.
@@ -51,27 +51,33 @@ Una carga en borrador o revisión no aparece en la web pública.
 
 ## Datos obligatorios para publicar
 
-- Título, subtítulo y slug.
-- Fecha resumida y fecha completa.
+- Título y subtítulo. El slug se genera automáticamente desde el título.
+- Fecha y hora en formato `dd/mm/yyyy HH:mm`, o la opción `Fecha a confirmar`.
 - Lugar y ubicación detallada.
 - Descripción breve y completa.
 - Texto sobre el catálogo.
-- Ruta y nombre del PDF.
 - Al menos un requisito.
 - Al menos una condición.
 
-Los lotes destacados son opcionales.
+Los lotes destacados son opcionales. Si se agrega una foto, su nombre es
+obligatorio incluso al guardar como borrador.
 
 ## Catálogos e imágenes
 
-En la demostración, el navegador admite archivos pequeños mediante Data URL:
+En esta versión, el catálogo se describe mediante texto y estado de publicación.
+No se cargan archivos de catálogo. Los lotes destacados y sus imágenes son
+opcionales.
 
-- PDF de hasta aproximadamente 1,5 MB.
-- Imagen de hasta aproximadamente 700 KB.
+En la demostración, el navegador admite imágenes de hasta aproximadamente 700 KB
+mediante Data URL.
+
+Se pueden arrastrar varias fotos juntas a la zona de carga o seleccionarlas desde
+el dispositivo. Cada archivo crea una tarjeta con miniatura y un campo de nombre.
+La zona permanece visible debajo de las tarjetas para agregar más fotos en
+cualquier momento.
 
 Al conectar Supabase Storage, los límites previstos serán:
 
-- PDF de hasta 15 MB.
 - JPEG, PNG o WebP de hasta 5 MB.
 
 Los archivos se organizarán dentro de una carpeta identificada por el UUID del
@@ -93,9 +99,8 @@ reservarse para duplicados o cargas erróneas.
 Antes de publicar:
 
 - Revisar fecha, hora y ubicación.
-- Abrir el PDF cargado.
+- Comprobar el estado y la descripción del catálogo.
 - Comprobar requisitos y condiciones.
 - Revisar ortografía y datos de contacto.
 - Confirmar que el evento debe quedar visible.
 - Abrir la página pública del remate después de publicar.
-

@@ -1,31 +1,18 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { Link, useParams } from "react-router-dom";
 import { Seo } from "../components/Seo";
 import { useSiteData } from "../context/siteDataContextValue";
+import { formatRemateDateDisplay } from "../data/remateFormatting";
 import {
-  createCatalogosFromRemates,
-  getCatalogoByRemateId,
-  getRemateBySlug,
-} from "../data/siteSelectors";
+  createCarouselStep,
+  getVisibleLotIndices,
+  getWrappedCarouselIndex,
+  type CarouselStep,
+} from "../data/lotCarousel";
+import { getRemateBySlug } from "../data/siteSelectors";
 
-const CAROUSEL_ANIMATION_MS = 420;
-
-type CarouselDirection = "left" | "right";
-
-type CarouselAnimation = {
-  direction: CarouselDirection;
-  trackIndices: number[];
-  nextIndex: number;
-};
-
-function getWrappedIndex(index: number, total: number) {
-  // La navegación circular mantiene el carrusel funcionando en ambos extremos sin casos especiales.
-  if (total === 0) {
-    return 0;
-  }
-
-  return (index + total) % total;
-}
+const CAROUSEL_ANIMATION_MS = 560;
 
 function getCardsPerView(width: number) {
   // El carrusel cambia cuántas tarjetas muestra según el ancho de pantalla.
@@ -40,25 +27,31 @@ function getCardsPerView(width: number) {
   return 3;
 }
 
-function getSlideDistance(cardsPerView: number) {
-  // Un paso del movimiento equivale a una tarjeta visible más el espacio entre tarjetas.
-  return `calc(((100% - (${cardsPerView} - 1) * var(--carousel-gap)) / ${cardsPerView}) + var(--carousel-gap))`;
+function getSlideDistance(track: HTMLDivElement) {
+  // Medir la tarjeta evita desajustes por píxeles fraccionarios y cambios responsive.
+  const firstCard = track.firstElementChild;
+  if (!(firstCard instanceof HTMLElement)) {
+    return 0;
+  }
+
+  const trackStyles = window.getComputedStyle(track);
+  const gap = Number.parseFloat(trackStyles.columnGap || trackStyles.gap) || 0;
+  return firstCard.getBoundingClientRect().width + gap;
 }
 
 export function RemateDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const { publishedRemates } = useSiteData();
-  const catalogos = createCatalogosFromRemates(publishedRemates);
   const remate = getRemateBySlug(publishedRemates, slug);
-  const catalogo = remate ? getCatalogoByRemateId(catalogos, remate.id) : undefined;
   const [currentLotIndex, setCurrentLotIndex] = useState(0);
   const [cardsPerView, setCardsPerView] = useState(() => getCardsPerView(window.innerWidth));
   const [selectedLotIndex, setSelectedLotIndex] = useState<number | null>(null);
   // Mientras el carrusel se mueve, mantenemos una pista temporal separada del estado ya asentado.
-  const [carouselAnimation, setCarouselAnimation] = useState<CarouselAnimation | null>(null);
+  const [carouselAnimation, setCarouselAnimation] = useState<CarouselStep | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
 
   const totalLots = remate?.destacados.length ?? 0;
+  const visibleLotCount = Math.min(cardsPerView, totalLots);
 
   useEffect(() => {
     // Reinicia el estado del carrusel y del lightbox cuando la persona abre otra página de detalle.
@@ -88,11 +81,15 @@ export function RemateDetailPage() {
       }
 
       if (event.key === "ArrowRight") {
-        setSelectedLotIndex((current) => getWrappedIndex((current ?? 0) + 1, totalLots));
+        setSelectedLotIndex((current) =>
+          getWrappedCarouselIndex((current ?? 0) + 1, totalLots)
+        );
       }
 
       if (event.key === "ArrowLeft") {
-        setSelectedLotIndex((current) => getWrappedIndex((current ?? 0) - 1, totalLots));
+        setSelectedLotIndex((current) =>
+          getWrappedCarouselIndex((current ?? 0) - 1, totalLots)
+        );
       }
     };
 
@@ -111,10 +108,8 @@ export function RemateDetailPage() {
     }
 
     // Estas son las tarjetas que deberían verse una vez que el carrusel termina de asentarse.
-    return Array.from({ length: Math.min(cardsPerView, totalLots) }, (_, offset) =>
-      getWrappedIndex(currentLotIndex + offset, totalLots)
-    );
-  }, [cardsPerView, currentLotIndex, remate, totalLots]);
+    return getVisibleLotIndices(currentLotIndex, totalLots, visibleLotCount);
+  }, [currentLotIndex, remate, totalLots, visibleLotCount]);
 
   // Durante la animación renderizamos una pista temporal; si no, mostramos la ventana visible ya asentada.
   const displayedIndices = carouselAnimation ? carouselAnimation.trackIndices : visibleIndices;
@@ -130,69 +125,72 @@ export function RemateDetailPage() {
       return;
     }
 
-    // Primero se posiciona la pista sin transición y recién en el siguiente frame se anima.
     const track = trackRef.current;
-    const slideDistance = getSlideDistance(cardsPerView);
+    const slideDistance = getSlideDistance(track);
+    const initialTransform =
+      carouselAnimation.direction === "left"
+        ? `translate3d(${-slideDistance}px, 0, 0)`
+        : "translate3d(0, 0, 0)";
+    const finalTransform =
+      carouselAnimation.direction === "left"
+        ? "translate3d(0, 0, 0)"
+        : `translate3d(${-slideDistance}px, 0, 0)`;
+    let settled = false;
 
     track.style.transition = "none";
-    track.style.transform =
-      carouselAnimation.direction === "left" ? `translateX(calc(-1 * ${slideDistance}))` : "translateX(0)";
+    track.style.transform = initialTransform;
+    track.style.willChange = "transform";
+    track.getBoundingClientRect();
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!trackRef.current) {
-          return;
-        }
+    const settleAnimation = () => {
+      if (settled) return;
+      settled = true;
 
-        trackRef.current.style.transition = `transform ${CAROUSEL_ANIMATION_MS}ms linear`;
-        trackRef.current.style.transform =
-          carouselAnimation.direction === "left" ? "translateX(0)" : `translateX(calc(-1 * ${slideDistance}))`;
+      track.style.transition = "none";
+      // React confirma primero el nuevo orden; el transform se limpia en la misma pintura.
+      flushSync(() => {
+        setCurrentLotIndex(carouselAnimation.nextIndex);
+        setCarouselAnimation(null);
       });
+
+      track.style.transform = "translate3d(0, 0, 0)";
+      track.style.willChange = "auto";
+    };
+
+    const animationFrame = window.requestAnimationFrame(() => {
+      track.style.transition = `transform ${CAROUSEL_ANIMATION_MS}ms linear`;
+      track.style.transform = finalTransform;
     });
 
     const handleTransitionEnd = (event: TransitionEvent) => {
-      if (event.propertyName !== "transform") {
+      if (event.target !== track || event.propertyName !== "transform") {
         return;
       }
 
-      if (!trackRef.current) {
-        return;
-      }
-
-      trackRef.current.style.transition = "none";
-      trackRef.current.style.transform = "translateX(0)";
-      // Recién cuando termina el movimiento se confirma el nuevo índice inicial.
-      setCurrentLotIndex(carouselAnimation.nextIndex);
-      setCarouselAnimation(null);
+      settleAnimation();
     };
 
-    track.addEventListener("transitionend", handleTransitionEnd, { once: true });
+    track.addEventListener("transitionend", handleTransitionEnd);
+    const fallbackTimeout = window.setTimeout(
+      settleAnimation,
+      CAROUSEL_ANIMATION_MS + 120
+    );
 
     return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.clearTimeout(fallbackTimeout);
       track.removeEventListener("transitionend", handleTransitionEnd);
     };
-  }, [cardsPerView, carouselAnimation]);
+  }, [carouselAnimation, visibleLotCount]);
 
-  const moveCarousel = (direction: CarouselDirection) => {
-    if (!remate || totalLots === 0 || carouselAnimation) {
+  const moveCarousel = (direction: CarouselStep["direction"]) => {
+    if (!remate || totalLots <= 1 || carouselAnimation) {
       return;
     }
 
-    // Arma una pista temporal con una tarjeta extra para que el movimiento ocurra como un deslizamiento real.
-    const nextIndex =
-      direction === "right"
-        ? getWrappedIndex(currentLotIndex + 1, totalLots)
-        : getWrappedIndex(currentLotIndex - 1, totalLots);
-
-    const trackIndices =
-      direction === "right"
-        ? [
-            ...visibleIndices,
-            getWrappedIndex(currentLotIndex + Math.min(cardsPerView, totalLots), totalLots),
-          ]
-        : [getWrappedIndex(currentLotIndex - 1, totalLots), ...visibleIndices];
-
-    setCarouselAnimation({ direction, trackIndices, nextIndex });
+    setCarouselAnimation(
+      createCarouselStep(currentLotIndex, totalLots, visibleLotCount, direction)
+    );
   };
 
   const goToPreviousLot = () => moveCarousel("left");
@@ -237,7 +235,9 @@ export function RemateDetailPage() {
             <div className="detail-meta-grid">
               <div className="detail-meta-card">
                 <p className="card-tag">Fecha y hora</p>
-                <p>{remate.fechaCompleta}</p>
+                <p>
+                  {formatRemateDateDisplay(remate.fechaCompleta, remate.fechaPorConfirmar)}
+                </p>
               </div>
               <div className="detail-meta-card">
                 <p className="card-tag">Ubicacion</p>
@@ -253,19 +253,6 @@ export function RemateDetailPage() {
 
         <section className="section alt">
           <div className="container detail-grid">
-            <article className="detail-card">
-              <h2>Documentos del remate</h2>
-              <p>
-                Cada remate cuenta con su catalogo en PDF para que puedas revisar lotes, condiciones y
-                notas del organizador antes de asistir.
-              </p>
-              {catalogo ? <p className="detail-doc-note">{catalogo.detalle}</p> : null}
-              <div className="detail-docs">
-                <a className="btn" href={remate.catalogoPdf.url} target="_blank" rel="noreferrer">
-                  {remate.catalogoPdf.label}
-                </a>
-              </div>
-            </article>
             <article className="detail-card">
               <h2>Requisitos para participar</h2>
               <ul className="detail-list">
@@ -295,17 +282,26 @@ export function RemateDetailPage() {
 
             {displayedLots.length > 0 ? (
               <div className="lot-carousel-strip reveal">
-                <button type="button" className="lot-strip-arrow" onClick={goToPreviousLot} aria-label="Ver lotes anteriores">
+                <button
+                  type="button"
+                  className="lot-strip-arrow"
+                  onClick={goToPreviousLot}
+                  aria-label="Ver lotes anteriores"
+                  disabled={totalLots <= 1 || Boolean(carouselAnimation)}
+                >
                   &lsaquo;
                 </button>
 
                 <div
                   className="lot-strip-viewport"
-                  style={{ ["--cards-per-view" as string]: String(Math.min(cardsPerView, totalLots)) }}
+                  style={{ ["--cards-per-view" as string]: String(visibleLotCount) }}
                 >
                   <div ref={trackRef} className="lot-strip-track">
                     {displayedLots.map((lote, index) => (
-                      <article key={`${displayedIndices[index]}-${lote.id}`} className="lot-highlight-card">
+                      <article
+                        key={`${index}-${displayedIndices[index]}-${lote.id}`}
+                        className="lot-highlight-card"
+                      >
                         <button
                           type="button"
                           className="lot-highlight-button"
@@ -323,7 +319,13 @@ export function RemateDetailPage() {
                   </div>
                 </div>
 
-                <button type="button" className="lot-strip-arrow" onClick={goToNextLot} aria-label="Ver lotes siguientes">
+                <button
+                  type="button"
+                  className="lot-strip-arrow"
+                  onClick={goToNextLot}
+                  aria-label="Ver lotes siguientes"
+                  disabled={totalLots <= 1 || Boolean(carouselAnimation)}
+                >
                   &rsaquo;
                 </button>
               </div>
@@ -370,23 +372,33 @@ export function RemateDetailPage() {
             >
               ×
             </button>
-            <button
-              type="button"
-              className="lightbox-nav lightbox-nav-left"
-              onClick={() => setSelectedLotIndex((current) => getWrappedIndex((current ?? 0) - 1, totalLots))}
-              aria-label="Ver imagen anterior"
-            >
-              &lsaquo;
-            </button>
-            <button
-              type="button"
-              className="lightbox-nav lightbox-nav-right"
-              onClick={() => setSelectedLotIndex((current) => getWrappedIndex((current ?? 0) + 1, totalLots))}
-              aria-label="Ver imagen siguiente"
-            >
-              &rsaquo;
-            </button>
-            <img className="lightbox-image" src={activeLot.imagen.url} alt={activeLot.imagen.alt} />
+            <div className="lightbox-media">
+              <button
+                type="button"
+                className="lightbox-nav lightbox-nav-left"
+                onClick={() =>
+                  setSelectedLotIndex((current) =>
+                    getWrappedCarouselIndex((current ?? 0) - 1, totalLots)
+                  )
+                }
+                aria-label="Ver imagen anterior"
+              >
+                &lsaquo;
+              </button>
+              <img className="lightbox-image" src={activeLot.imagen.url} alt={activeLot.imagen.alt} />
+              <button
+                type="button"
+                className="lightbox-nav lightbox-nav-right"
+                onClick={() =>
+                  setSelectedLotIndex((current) =>
+                    getWrappedCarouselIndex((current ?? 0) + 1, totalLots)
+                  )
+                }
+                aria-label="Ver imagen siguiente"
+              >
+                &rsaquo;
+              </button>
+            </div>
             <div className="lightbox-copy">
               <p className="card-tag">Lote destacado</p>
               <h3>{activeLot.nombre}</h3>
