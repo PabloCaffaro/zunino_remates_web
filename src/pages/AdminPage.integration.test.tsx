@@ -89,6 +89,22 @@ describe("panel administrador", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  it("abre el menú lateral y lo cierra al cambiar de sección", async () => {
+    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
+    const user = userEvent.setup();
+    renderAdmin();
+
+    const menuButton = screen.getByRole("button", { name: "Abrir menú" });
+    expect(menuButton).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(menuButton);
+    expect(menuButton).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(within(screen.getByRole("navigation")).getByRole("button", { name: "Remates" }));
+    expect(menuButton).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("heading", { name: "Todos los remates" })).toBeInTheDocument();
+  });
+
   it("bloquea la publicación de la precarga mientras falten datos obligatorios", async () => {
     window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();

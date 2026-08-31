@@ -41,6 +41,11 @@ type AdminTab = "resumen" | "remates" | "contenido";
 
 const LOT_IMAGE_MAX_BYTES = 700_000;
 const LOT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const ADMIN_NAVIGATION: Array<{ id: AdminTab; label: string }> = [
+  { id: "resumen", label: "Resumen" },
+  { id: "remates", label: "Remates" },
+  { id: "contenido", label: "Contenido general" },
+];
 
 type LotFileResult = { lot: HighlightedLot } | { error: string };
 
@@ -1056,6 +1061,7 @@ export function AdminPage() {
     () => window.sessionStorage.getItem(ADMIN_SESSION_KEY) === "active"
   );
   const [tab, setTab] = useState<AdminTab>("resumen");
+  const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false);
   const [editingRemate, setEditingRemate] = useState<AdminRemate | null>(null);
   const [pageNotice, setPageNotice] = useState<{ id: number; message: string } | null>(null);
   const pageNoticeSequence = useRef(0);
@@ -1089,6 +1095,17 @@ export function AdminPage() {
       ),
     [remates]
   );
+
+  useEffect(() => {
+    if (!isMobileNavigationOpen) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsMobileNavigationOpen(false);
+    };
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [isMobileNavigationOpen]);
 
   if (!authenticated) {
     return <AdminLogin onLogin={() => setAuthenticated(true)} />;
@@ -1140,11 +1157,27 @@ export function AdminPage() {
     setAuthenticated(false);
   };
 
+  const selectTab = (nextTab: AdminTab) => {
+    setTab(nextTab);
+    setEditingRemate(null);
+    setIsMobileNavigationOpen(false);
+  };
+
   return (
     <main id="contenido-principal" className="admin-page">
       <header className="admin-topbar">
-        <div>
-          <p className="eyebrow">Zunino Remates</p>
+        <button
+          className="admin-menu-toggle"
+          type="button"
+          aria-controls="admin-navigation"
+          aria-expanded={isMobileNavigationOpen}
+          aria-label={isMobileNavigationOpen ? "Cerrar menú" : "Abrir menú"}
+          onClick={() => setIsMobileNavigationOpen((current) => !current)}
+        >
+          <span aria-hidden="true">☰</span>
+        </button>
+        <div className="admin-brand">
+          <span className="admin-brand-name">Zunino Remates</span>
           <h1>Panel administrador</h1>
         </div>
         <div className="admin-topbar-actions">
@@ -1157,38 +1190,54 @@ export function AdminPage() {
         </div>
       </header>
 
+      <button
+        className={`admin-sidebar-backdrop${isMobileNavigationOpen ? " is-open" : ""}`}
+        type="button"
+        aria-label="Cerrar menú"
+        tabIndex={isMobileNavigationOpen ? 0 : -1}
+        onClick={() => setIsMobileNavigationOpen(false)}
+      />
+
       <div className="admin-layout">
-        <nav className="admin-sidebar" aria-label="Navegación administrativa">
-          <button
-            className={tab === "resumen" ? "active" : ""}
-            type="button"
-            onClick={() => {
-              setTab("resumen");
-              setEditingRemate(null);
-            }}
-          >
-            Resumen
-          </button>
-          <button
-            className={tab === "remates" ? "active" : ""}
-            type="button"
-            onClick={() => {
-              setTab("remates");
-              setEditingRemate(null);
-            }}
-          >
-            Remates
-          </button>
-          <button
-            className={tab === "contenido" ? "active" : ""}
-            type="button"
-            onClick={() => {
-              setTab("contenido");
-              setEditingRemate(null);
-            }}
-          >
-            Contenido general
-          </button>
+        <nav
+          id="admin-navigation"
+          className={`admin-sidebar${isMobileNavigationOpen ? " is-open" : ""}`}
+          aria-label="Navegación administrativa"
+        >
+          <div className="admin-sidebar-header">
+            <div>
+              <strong>Zunino Remates</strong>
+              <span>Administración</span>
+            </div>
+            <button
+              className="admin-sidebar-close"
+              type="button"
+              aria-label="Cerrar menú"
+              onClick={() => setIsMobileNavigationOpen(false)}
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <div className="admin-sidebar-navigation">
+            {ADMIN_NAVIGATION.map((item) => (
+              <button
+                className={tab === item.id ? "active" : ""}
+                key={item.id}
+                type="button"
+                onClick={() => selectTab(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <div className="admin-sidebar-actions">
+            <a href="/" target="_blank" rel="noreferrer">
+              Ver sitio público
+            </a>
+            <button type="button" onClick={logout}>
+              Cerrar sesión
+            </button>
+          </div>
         </nav>
 
         <div className="admin-content">
@@ -1288,22 +1337,22 @@ export function AdminPage() {
                   <tbody>
                     {remates.map((remate) => (
                       <tr key={remate.id}>
-                        <td>
+                        <td className="admin-remate-cell">
                           <strong>{remate.titulo || "Sin título"}</strong>
                           <span>{remate.lugar || "Lugar pendiente"}</span>
                         </td>
-                        <td>
+                        <td data-label="Fecha">
                           {formatRemateDateSummary(
                             remate.fechaHora,
                             remate.fechaPorConfirmar
                           ) || "Pendiente"}
                         </td>
-                        <td>
+                        <td data-label="Estado">
                           <span className={`admin-status admin-status-${remate.estadoAdmin}`}>
                             {remateStatusLabels[remate.estadoAdmin]}
                           </span>
                         </td>
-                        <td>
+                        <td data-label="Acciones">
                           <div className="admin-row-actions">
                             <button type="button" onClick={() => setEditingRemate(remate)}>
                               Editar

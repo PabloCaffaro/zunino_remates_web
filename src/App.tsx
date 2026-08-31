@@ -5,6 +5,7 @@ import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
 import { AdminPage } from "./pages/AdminPage";
 import { HomePage } from "./pages/HomePage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 import { RemateDetailPage } from "./pages/RemateDetailPage";
 
 function ScrollManager() {
@@ -75,6 +76,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/remates/:slug" element={<RemateDetailPage />} />
         <Route path={ADMIN_PATH} element={<AdminPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {!isAdminRoute ? <SiteFooter /> : null}
     </>
