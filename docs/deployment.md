@@ -1,18 +1,17 @@
 # Despliegue
 
-Esta guía describe el procedimiento previsto. El proveedor de hosting y el
-dominio definitivo todavía no fueron elegidos.
+Esta versión se puede desplegar en Vercel como demostración. Vercel detecta
+Vite, ejecuta `npm run build` y publica el directorio `dist/`.
 
 ## Requisitos previos
 
 - Contenido y datos de contacto reales.
-- Supabase conectado y migración aplicada.
-- Usuario administrador definitivo.
-- Imágenes migradas a Storage.
-- Variables de producción configuradas.
-- Dominio y URL canónica definidos.
+- No se requieren variables de entorno para la demostración actual.
+- Revisar contenido y datos de contacto antes de compartir la URL.
 
-No debe publicarse el login ni la persistencia local de demostración.
+La sesión administrativa y los datos se guardan localmente en el navegador.
+Por eso esta publicación sirve para presentar la web, pero no para administrar
+remates reales desde varias personas.
 
 ## Control de calidad
 
@@ -29,14 +28,16 @@ El resultado de producción se genera en `dist/`.
 
 ## Variables
 
-Configurar en el hosting:
+La demostración actual no consume variables de entorno. Cuando se conecte
+Supabase, configurar en Vercel:
 
 ```env
 VITE_SUPABASE_URL=https://TU-PROYECTO.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
 ```
 
-No configurar `service_role` como variable del frontend.
+No configurar `SUPABASE_SERVICE_ROLE_KEY`, contraseñas ni otros secretos como
+variables `VITE_*`: esos valores quedan disponibles en el navegador.
 
 ## Rutas SPA
 
@@ -47,14 +48,7 @@ El servidor debe devolver `index.html` para rutas como:
 /admin12345
 ```
 
-La regla exacta depende del hosting:
-
-- Vercel: rewrite en `vercel.json`.
-- Netlify: regla en `_redirects`.
-- Apache: regla en `.htaccess`.
-- Nginx: `try_files`.
-
-Se agregará solamente la configuración del proveedor elegido.
+El archivo [`vercel.json`](../vercel.json) ya contiene el rewrite necesario.
 
 ## Supabase
 
