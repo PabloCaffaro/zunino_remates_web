@@ -1,7 +1,7 @@
 import type { RemateEstadoAdmin } from "../types/site";
 
 const allowedTransitions: Record<RemateEstadoAdmin, readonly RemateEstadoAdmin[]> = {
-  borrador: ["en_revision"],
+  borrador: ["en_revision", "publicado"],
   en_revision: ["borrador", "publicado"],
   publicado: ["oculto", "finalizado", "cancelado"],
   oculto: ["publicado", "finalizado", "cancelado"],

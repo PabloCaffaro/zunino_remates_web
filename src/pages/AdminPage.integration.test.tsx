@@ -161,6 +161,32 @@ describe("panel administrador", () => {
     expect(within(updatedRow as HTMLTableRowElement).getByText("Borrador")).toBeInTheDocument();
   });
 
+  it("permite publicar directamente un borrador completo", async () => {
+    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
+    const user = userEvent.setup();
+    const completeDraft = createCompleteRemate({ estadoAdmin: "borrador" });
+    window.localStorage.setItem(
+      "zunino-remates-admin-data-v3",
+      JSON.stringify({
+        remates: [completeDraft],
+        content: {
+          contacto: siteContent.contacto,
+          pasos: siteContent.pasos,
+          faqs: siteContent.faqs,
+          copy: defaultSiteCopy,
+        },
+      })
+    );
+    renderAdmin();
+
+    await user.click(screen.getByRole("button", { name: "Remates" }));
+    const draftRow = screen.getByText("Remate de prueba").closest("tr");
+    await user.click(within(draftRow as HTMLTableRowElement).getByRole("button", { name: "Editar" }));
+    await user.click(screen.getByRole("button", { name: "Publicar remate" }));
+
+    expect(screen.getByText("Publicado")).toBeInTheDocument();
+  });
+
   it("agrega varias fotos y exige un nombre para cada una", async () => {
     window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();
@@ -239,31 +265,50 @@ describe("panel administrador", () => {
     expect(within(row).getByText("Publicado")).toBeInTheDocument();
   });
 
-  it("no finaliza ni cancela un remate si se rechaza la confirmación", async () => {
+  it("no finaliza ni cancela un remate si se cierra el modal", async () => {
     window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
-    const confirmMock = vi.spyOn(window, "confirm").mockReturnValue(false);
     const user = userEvent.setup();
     renderAdmin();
 
     await user.click(screen.getByRole("button", { name: "Remates" }));
     const row = screen.getByText("Maquinaria y herramientas").closest("tr")!;
     await user.click(within(row).getByRole("button", { name: "Finalizar" }));
-    await user.click(within(row).getByRole("button", { name: "Cancelar" }));
+    const finalizeDialog = screen.getByRole("dialog", { name: "Finalizar remate" });
+    expect(within(finalizeDialog).getByText(/forma permanente/i)).toBeInTheDocument();
+    await user.click(within(finalizeDialog).getByRole("button", { name: "Volver" }));
 
-    expect(confirmMock).toHaveBeenNthCalledWith(
-      1,
-      '¿Seguro que querés finalizar "Maquinaria y herramientas"? Este cambio no se puede deshacer.'
+    await user.click(within(row).getByRole("button", { name: "Cancelar" }));
+    const cancelDialog = screen.getByRole("dialog", { name: "Cancelar remate" });
+    await user.click(
+      within(cancelDialog).getByRole("button", { name: "Cerrar confirmación" })
     );
-    expect(confirmMock).toHaveBeenNthCalledWith(
-      2,
-      '¿Seguro que querés cancelar "Maquinaria y herramientas"? Este cambio no se puede deshacer.'
-    );
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(within(row).getByText("Publicado")).toBeInTheDocument();
   });
 
-  it("finaliza y cancela remates cuando se acepta la confirmación", async () => {
+  it("muestra el modal propio al eliminar y restablecer datos", async () => {
     window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
-    vi.spyOn(window, "confirm").mockReturnValue(true);
+    const user = userEvent.setup();
+    renderAdmin();
+
+    await user.click(screen.getByRole("button", { name: "Remates" }));
+    const row = screen.getByText("Maquinaria y herramientas").closest("tr")!;
+    await user.click(within(row).getByRole("button", { name: "Eliminar" }));
+
+    expect(screen.getByRole("dialog", { name: "Eliminar remate" })).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText("Maquinaria y herramientas")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Restablecer datos de demostración" }));
+    const resetDialog = screen.getByRole("dialog", { name: "Restablecer demostración" });
+    expect(within(resetDialog).getByText(/datos iniciales/i)).toBeInTheDocument();
+    await user.click(within(resetDialog).getByRole("button", { name: "Volver" }));
+  });
+
+  it("finaliza y cancela remates desde el modal de confirmación", async () => {
+    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();
     renderAdmin();
 
@@ -272,7 +317,17 @@ describe("panel administrador", () => {
     const cancelledRow = screen.getByText("Vehículos utilitarios").closest("tr")!;
 
     await user.click(within(finalizedRow).getByRole("button", { name: "Finalizar" }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Finalizar remate" })).getByRole("button", {
+        name: "Finalizar remate",
+      })
+    );
     await user.click(within(cancelledRow).getByRole("button", { name: "Cancelar" }));
+    await user.click(
+      within(screen.getByRole("dialog", { name: "Cancelar remate" })).getByRole("button", {
+        name: "Cancelar remate",
+      })
+    );
 
     expect(within(finalizedRow).getByText("Finalizado")).toBeInTheDocument();
     expect(within(cancelledRow).getByText("Cancelado")).toBeInTheDocument();

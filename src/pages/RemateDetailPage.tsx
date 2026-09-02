@@ -329,7 +329,14 @@ export function RemateDetailPage() {
                   &rsaquo;
                 </button>
               </div>
-            ) : null}
+            ) : (
+              <article className="detail-card" role="status">
+                <h3>Próximamente habrá lotes destacados</h3>
+                <p className="detail-doc-note">
+                  Este remate todavía no tiene fotos de lotes destacados cargadas.
+                </p>
+              </article>
+            )}
           </div>
         </section>
 
