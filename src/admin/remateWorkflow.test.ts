@@ -17,7 +17,7 @@ describe("flujo de estados de un remate", () => {
       "cancelado",
     ];
     const expectedTransitions: Record<RemateEstadoAdmin, RemateEstadoAdmin[]> = {
-      borrador: ["borrador", "en_revision"],
+      borrador: ["borrador", "en_revision", "publicado"],
       en_revision: ["borrador", "en_revision", "publicado"],
       publicado: ["publicado", "oculto", "finalizado", "cancelado"],
       oculto: ["publicado", "oculto", "finalizado", "cancelado"],

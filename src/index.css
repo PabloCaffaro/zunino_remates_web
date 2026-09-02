@@ -926,6 +926,78 @@ textarea[aria-invalid="true"] {
   cursor: pointer;
 }
 
+.admin-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(4, 24, 14, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+.admin-confirm-modal {
+  position: relative;
+  width: min(520px, 100%);
+  padding: 30px;
+  border: 1px solid rgba(13, 59, 35, 0.16);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(2, 19, 10, 0.3);
+}
+
+.admin-confirm-modal h2 {
+  margin: 5px 42px 12px 0;
+  color: var(--green-900);
+}
+
+.admin-confirm-modal > p:last-of-type {
+  margin: 0;
+  color: #4d5d53;
+  line-height: 1.6;
+}
+
+.admin-confirm-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid rgba(13, 59, 35, 0.2);
+  border-radius: 50%;
+  background: #f7faf7;
+  color: var(--green-800);
+  font: inherit;
+  font-size: 1.45rem;
+  cursor: pointer;
+}
+
+.admin-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.admin-confirm-danger {
+  border-color: #a12d2d;
+  background: #a12d2d;
+  color: #fff;
+}
+
+.admin-confirm-danger:hover:not(:disabled) {
+  border-color: #7f2020;
+  background: #7f2020;
+}
+
+.admin-confirm-modal button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .admin-row-actions button:hover {
   border-color: var(--green-700);
   background: #eef6ef;
@@ -1053,6 +1125,50 @@ textarea[aria-invalid="true"] {
 .admin-lots-list {
   display: grid;
   gap: 16px;
+}
+
+.admin-faq-list {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-faq-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  padding: 20px;
+  border: 1px solid rgba(13, 59, 35, 0.12);
+  border-radius: 18px;
+  background: #f8faf7;
+}
+
+.admin-faq-card label {
+  min-width: 0;
+}
+
+.admin-faq-card input,
+.admin-faq-card textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.admin-faq-card textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.admin-faq-card .admin-danger-link {
+  justify-self: start;
+  border: 1px solid rgba(161, 45, 45, 0.42);
+  border-radius: 9px;
+  padding: 8px 12px;
+  background: #fff7f7;
+}
+
+.admin-faq-card .admin-danger-link:hover {
+  border-color: #a12d2d;
+  background: #fcecec;
 }
 
 .admin-lot-card {
@@ -1881,6 +1997,24 @@ textarea:focus-visible {
 }
 
 @media (max-width: 640px) {
+  .admin-confirm-overlay {
+    align-items: end;
+    padding: 12px;
+  }
+
+  .admin-confirm-modal {
+    padding: 26px 20px 20px;
+    border-radius: 18px;
+  }
+
+  .admin-confirm-actions {
+    flex-direction: column-reverse;
+  }
+
+  .admin-confirm-actions .btn {
+    width: 100%;
+  }
+
   .logo-mark {
     width: 40px;
     height: 40px;
@@ -1985,12 +2119,14 @@ textarea:focus-visible {
 
   .admin-stats-grid,
   .admin-form-grid,
-  .admin-lot-card {
+  .admin-lot-card,
+  .admin-faq-card {
     grid-template-columns: 1fr;
   }
 
   .admin-span-two,
-  .admin-lot-heading {
+  .admin-lot-heading,
+  .admin-faq-card .admin-danger-link {
     grid-column: auto;
   }
 

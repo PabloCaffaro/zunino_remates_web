@@ -54,6 +54,27 @@ describe("visibilidad del detalle", () => {
 });
 
 describe("carrusel de lotes destacados", () => {
+  it("informa cuando el remate no tiene lotes destacados", () => {
+    const remateWithoutLots = createCompleteRemate({ slug: "maquinaria-y-herramientas" });
+    window.localStorage.setItem(
+      "zunino-remates-admin-data-v3",
+      JSON.stringify({
+        remates: [remateWithoutLots],
+        content: {
+          contacto: siteContent.contacto,
+          pasos: siteContent.pasos,
+          faqs: siteContent.faqs,
+          copy: defaultSiteCopy,
+        },
+      })
+    );
+
+    renderDetailPage();
+
+    expect(screen.getByRole("heading", { name: "Próximamente habrá lotes destacados" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ver lotes siguientes" })).not.toBeInTheDocument();
+  });
+
   it("conserva el nuevo orden cuando termina la transición", async () => {
     const user = userEvent.setup();
     const { container } = renderDetailPage();

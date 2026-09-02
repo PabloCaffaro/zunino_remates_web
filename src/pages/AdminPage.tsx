@@ -23,6 +23,7 @@ import {
 } from "../admin/remateWorkflow";
 import {
   useSiteData,
+  type DataOperationResult,
   type RemateMutationResult,
 } from "../context/siteDataContextValue";
 import {
@@ -36,8 +37,18 @@ import type {
   HighlightedLot,
   RemateEstadoAdmin,
 } from "../types/site";
+import { ConfirmationModal } from "../components/admin/ConfirmationModal";
 
 type AdminTab = "resumen" | "remates" | "contenido";
+
+type PendingConfirmation =
+  | { kind: "delete"; remate: AdminRemate }
+  | {
+      kind: "status";
+      remate: AdminRemate;
+      status: "finalizado" | "cancelado";
+    }
+  | { kind: "reset" };
 
 const LOT_IMAGE_MAX_BYTES = 700_000;
 const LOT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -786,7 +797,7 @@ function RemateEditor({
             {form.estadoAdmin === "borrador" ? "Enviar a revisión" : "Guardar revisión"}
           </button>
         ) : null}
-        {form.estadoAdmin === "en_revision" ? (
+        {form.estadoAdmin === "borrador" || form.estadoAdmin === "en_revision" ? (
           <button
             className="btn"
             type="button"
@@ -997,9 +1008,9 @@ function SiteContentEditor() {
             Agregar pregunta
           </button>
         </div>
-        <div className="admin-lots-list">
+        <div className="admin-faq-list">
           {draft.faqs.map((faq) => (
-            <article className="admin-lot-card" key={faq.id}>
+            <article className="admin-faq-card" key={faq.id}>
               <label>
                 Pregunta
                 <input
@@ -1064,6 +1075,9 @@ export function AdminPage() {
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false);
   const [editingRemate, setEditingRemate] = useState<AdminRemate | null>(null);
   const [pageNotice, setPageNotice] = useState<{ id: number; message: string } | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] =
+    useState<PendingConfirmation | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
   const pageNoticeSequence = useRef(0);
 
   useEffect(() => {
@@ -1115,14 +1129,8 @@ export function AdminPage() {
     return saveRemate(remate);
   };
 
-  const handleDelete = async (remate: AdminRemate) => {
-    const confirmed = window.confirm(
-      `¿Seguro que querés eliminar "${remate.titulo || "este remate"}"? Esta acción no se puede deshacer.`
-    );
-    if (!confirmed) return;
-
-    const result = await deleteRemate(remate.id, remate.version);
-    if (result.status === "error") showPageNotice(result.message);
+  const handleDelete = (remate: AdminRemate) => {
+    setPendingConfirmation({ kind: "delete", remate });
   };
 
   const handleStatusChange = async (
@@ -1130,11 +1138,8 @@ export function AdminPage() {
     status: RemateEstadoAdmin
   ) => {
     if (status === "finalizado" || status === "cancelado") {
-      const action = status === "finalizado" ? "finalizar" : "cancelar";
-      const confirmed = window.confirm(
-        `¿Seguro que querés ${action} "${remate.titulo || "este remate"}"? Este cambio no se puede deshacer.`
-      );
-      if (!confirmed) return;
+      setPendingConfirmation({ kind: "status", remate, status });
+      return;
     }
 
     if (status === "publicado" && Object.keys(validateRemateForPublish(remate)).length > 0) {
@@ -1151,6 +1156,65 @@ export function AdminPage() {
         : result.message
     );
   };
+
+  const confirmPendingAction = async () => {
+    if (!pendingConfirmation || isConfirming) return;
+
+    setIsConfirming(true);
+    let result: RemateMutationResult | DataOperationResult;
+
+    if (pendingConfirmation.kind === "delete") {
+      result = await deleteRemate(
+        pendingConfirmation.remate.id,
+        pendingConfirmation.remate.version
+      );
+    } else if (pendingConfirmation.kind === "status") {
+      result = await changeRemateStatus(
+        pendingConfirmation.remate.id,
+        pendingConfirmation.remate.version,
+        pendingConfirmation.status
+      );
+    } else {
+      result = await resetDemoData();
+    }
+
+    setIsConfirming(false);
+    setPendingConfirmation(null);
+
+    if (result.status === "saved") return;
+    showPageNotice(
+      result.status === "conflict"
+        ? "Otra persona modificó este remate. El listado fue actualizado; revisá la versión actual."
+        : result.message
+    );
+  };
+
+  const confirmationCopy = pendingConfirmation
+    ? pendingConfirmation.kind === "delete"
+      ? {
+          title: "Eliminar remate",
+          description: `Vas a eliminar “${pendingConfirmation.remate.titulo || "este remate"}”. Esta acción no se puede deshacer.`,
+          confirmLabel: "Eliminar remate",
+        }
+      : pendingConfirmation.kind === "status"
+        ? pendingConfirmation.status === "finalizado"
+          ? {
+              title: "Finalizar remate",
+              description: `“${pendingConfirmation.remate.titulo || "Este remate"}” quedará finalizado de forma permanente y no podrá reactivarse.`,
+              confirmLabel: "Finalizar remate",
+            }
+          : {
+              title: "Cancelar remate",
+              description: `“${pendingConfirmation.remate.titulo || "Este remate"}” quedará cancelado de forma permanente y no podrá reactivarse.`,
+              confirmLabel: "Cancelar remate",
+            }
+        : {
+            title: "Restablecer demostración",
+            description:
+              "Se reemplazarán los cambios guardados en este navegador por los datos iniciales de demostración.",
+            confirmLabel: "Restablecer datos",
+          }
+    : null;
 
   const logout = () => {
     window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
@@ -1419,13 +1483,7 @@ export function AdminPage() {
               <button
                 className="admin-danger-link"
                 type="button"
-                onClick={() => {
-                  if (window.confirm("¿Restablecer todos los datos de demostración?")) {
-                    void resetDemoData().then((result) => {
-                      if (result.status === "error") showPageNotice(result.message);
-                    });
-                  }
-                }}
+                onClick={() => setPendingConfirmation({ kind: "reset" })}
               >
                 Restablecer datos de demostración
               </button>
@@ -1433,6 +1491,16 @@ export function AdminPage() {
           ) : null}
         </div>
       </div>
+      {confirmationCopy ? (
+        <ConfirmationModal
+          title={confirmationCopy.title}
+          description={confirmationCopy.description}
+          confirmLabel={confirmationCopy.confirmLabel}
+          isConfirming={isConfirming}
+          onCancel={() => setPendingConfirmation(null)}
+          onConfirm={() => void confirmPendingAction()}
+        />
+      ) : null}
     </main>
   );
 }
