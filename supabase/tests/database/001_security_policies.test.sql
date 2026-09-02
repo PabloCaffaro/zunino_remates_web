@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(41);
+select plan(43);
 
 -- Estos usuarios representan cada nivel de acceso sin depender de datos reales.
 insert into auth.users (id, email)
@@ -65,6 +65,63 @@ values ('20000000-0000-0000-0000-000000000002', 'Presentar documento de identida
 
 insert into public.remate_condiciones (remate_id, contenido)
 values ('20000000-0000-0000-0000-000000000002', 'Aceptar las condiciones del remate');
+
+select throws_ok(
+  $$
+    update public.remates
+    set estado = 'publicado'
+    where id = '20000000-0000-0000-0000-000000000001'
+  $$,
+  '23514',
+  'Debe existir al menos un requisito para publicar.',
+  'Un borrador incompleto no puede publicarse directamente'
+);
+
+insert into public.remates (
+  id,
+  slug,
+  estado,
+  titulo,
+  subtitulo,
+  fecha_por_confirmar,
+  lugar,
+  ubicacion_detalle,
+  detalle,
+  descripcion_larga,
+  catalogo_descripcion
+)
+values (
+  '20000000-0000-0000-0000-000000000003',
+  'remate-publicacion-directa-prueba',
+  'borrador',
+  'Remate para publicación directa',
+  'Borrador completo',
+  true,
+  'Montevideo',
+  'Dirección de prueba',
+  'Descripción breve de prueba',
+  'Descripción completa de prueba',
+  'Catálogo disponible en la página'
+);
+
+insert into public.remate_requisitos (remate_id, contenido)
+values ('20000000-0000-0000-0000-000000000003', 'Presentar documento de identidad');
+
+insert into public.remate_condiciones (remate_id, contenido)
+values ('20000000-0000-0000-0000-000000000003', 'Aceptar las condiciones del remate');
+
+select lives_ok(
+  $$
+    update public.remates
+    set estado = 'publicado'
+    where id = '20000000-0000-0000-0000-000000000003'
+  $$,
+  'Un borrador completo puede publicarse directamente'
+);
+
+-- El dato auxiliar no debe modificar los conteos de las pruebas de RLS posteriores.
+delete from public.remates
+where id = '20000000-0000-0000-0000-000000000003';
 
 update public.remates
 set estado = 'publicado'
