@@ -1,12 +1,14 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { canRegenerateRemateSlug, canTransitionRemateStatus } from "../admin/remateWorkflow";
 import { remateDateTimeInputToIso } from "../data/remateFormatting";
 import { siteContent } from "../data/siteContent";
 import { defaultSiteCopy } from "../data/siteCopy";
+import { fetchPublicSiteData } from "../data/publicSiteApi";
 import { SiteDataContext, type SiteDataContextValue } from "./siteDataContextValue";
 import type {
   AdminRemate,
   EditableSiteContent,
+  Remate,
   RemateEstadoAdmin,
 } from "../types/site";
 
@@ -16,6 +18,12 @@ const LEGACY_STORAGE_KEY = "zunino-remates-admin-data-v2";
 type StoredSiteData = {
   remates: AdminRemate[];
   content: EditableSiteContent;
+};
+
+type PublicSiteDataState = {
+  remates: Remate[];
+  content: EditableSiteContent;
+  status: "loading" | "ready" | "fallback";
 };
 
 type LegacyAdminRemate = Omit<AdminRemate, "fechaHora" | "version"> & {
@@ -117,6 +125,43 @@ function storageErrorMessage() {
 export function SiteDataProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<StoredSiteData>(readStoredData);
   const dataRef = useRef(data);
+  const [publicData, setPublicData] = useState<PublicSiteDataState>(() => ({
+    remates: data.remates.filter((item) => item.estadoAdmin === "publicado"),
+    content: data.content,
+    status: import.meta.env.MODE === "test" ? "fallback" : "loading",
+  }));
+
+  useEffect(() => {
+    if (import.meta.env.MODE === "test") {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    fetchPublicSiteData(controller.signal)
+      .then((remoteData) => {
+        setPublicData({ ...remoteData, status: "ready" });
+      })
+      .catch((error: unknown) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setPublicData((current) => ({ ...current, status: "fallback" }));
+        }
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  const effectivePublicData = useMemo<PublicSiteDataState>(
+    () =>
+      publicData.status === "ready"
+        ? publicData
+        : {
+            remates: data.remates.filter((item) => item.estadoAdmin === "publicado"),
+            content: data.content,
+            status: publicData.status,
+          },
+    [data, publicData],
+  );
 
   const value = useMemo<SiteDataContextValue>(() => {
     const commitData = (nextData: StoredSiteData) => {
@@ -206,13 +251,16 @@ export function SiteDataProvider({ children }: { children: ReactNode }) {
     return {
       ...data,
       publishedRemates: data.remates.filter((item) => item.estadoAdmin === "publicado"),
+      publicContent: effectivePublicData.content,
+      publicRemates: effectivePublicData.remates,
+      publicDataStatus: effectivePublicData.status,
       saveRemate,
       deleteRemate,
       changeRemateStatus,
       saveContent,
       resetDemoData,
     };
-  }, [data]);
+  }, [data, effectivePublicData]);
 
   return <SiteDataContext.Provider value={value}>{children}</SiteDataContext.Provider>;
 }

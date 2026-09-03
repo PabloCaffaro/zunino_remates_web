@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import type {
   AdminRemate,
   EditableSiteContent,
+  Remate,
   RemateEstadoAdmin,
 } from "../types/site";
 
@@ -19,6 +20,9 @@ export type SiteDataContextValue = {
   remates: AdminRemate[];
   content: EditableSiteContent;
   publishedRemates: AdminRemate[];
+  publicContent: EditableSiteContent;
+  publicRemates: Remate[];
+  publicDataStatus: "loading" | "ready" | "fallback";
   saveRemate: (remate: AdminRemate) => Promise<RemateMutationResult>;
   deleteRemate: (id: string, expectedVersion: number) => Promise<DataOperationResult>;
   changeRemateStatus: (

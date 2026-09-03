@@ -12,7 +12,7 @@ import { useSiteData } from "../context/siteDataContextValue";
 import { createCatalogosFromRemates, getFeaturedRemate } from "../data/siteSelectors";
 
 export function HomePage() {
-  const { publishedRemates: remates, content } = useSiteData();
+  const { publicRemates: remates, publicContent: content } = useSiteData();
   const { pasos, faqs, contacto, copy } = content;
   const catalogos = createCatalogosFromRemates(remates);
   // El remate destacado se resuelve con un selector para que la home no dependa directamente del orden del array.

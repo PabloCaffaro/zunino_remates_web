@@ -171,3 +171,16 @@ navegador consumirá solamente `/api/v1/*`.
 - Configurar recuperación de contraseña y política de sesiones.
 - Crear el endpoint de Vercel para el formulario.
 - Migrar los remates existentes desde `localStorage`.
+
+## Datos demostrativos
+
+El archivo [`seed.sql`](seed.sql) carga contenido de desarrollo repetible:
+
+- Configuración pública y contacto de demostración.
+- Cuatro preguntas frecuentes.
+- Cuatro pasos de participación.
+- Tres remates publicados con requisitos y condiciones.
+
+Puede ejecutarse más de una vez porque utiliza identificadores estables y
+actualizaciones por conflicto. No carga imágenes ni usuarios. Está destinado a
+entornos locales y staging; no debe aplicarse automáticamente en producción.

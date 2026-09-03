@@ -78,6 +78,21 @@ puede consultar Supabase. Una respuesta correcta tiene estado HTTP `200`:
 Si Supabase o la configuración no están disponibles, responde con HTTP `503`
 sin exponer URLs, claves ni detalles internos del error.
 
+## Lectura pública
+
+La página pública obtiene los datos mediante funciones del mismo dominio:
+
+- `GET /api/v1/public/content`: configuración visible, pasos y preguntas frecuentes.
+- `GET /api/v1/public/remates`: remates publicados, requisitos y condiciones.
+
+La API consulta Supabase con la clave publicable y queda limitada por permisos de
+columnas y RLS. No utiliza `service_role`. Si la API no está disponible, el
+frontend conserva temporalmente el contenido demostrativo local para no mostrar
+una página vacía.
+
+Las imágenes de lotes todavía no se entregan desde estos endpoints. Se
+incorporarán junto con URLs firmadas cuando se implemente Supabase Storage.
+
 ## Supabase
 
 1. Aplicar las migraciones pendientes.

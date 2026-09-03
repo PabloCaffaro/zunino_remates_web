@@ -345,7 +345,15 @@ describe("panel administrador", () => {
     const contextValue: SiteDataContextValue = {
       remates: [remate],
       publishedRemates: [remate],
+      publicRemates: [remate],
+      publicDataStatus: "ready",
       content: {
+        contacto: siteContent.contacto,
+        pasos: siteContent.pasos,
+        faqs: siteContent.faqs,
+        copy: defaultSiteCopy,
+      },
+      publicContent: {
         contacto: siteContent.contacto,
         pasos: siteContent.pasos,
         faqs: siteContent.faqs,

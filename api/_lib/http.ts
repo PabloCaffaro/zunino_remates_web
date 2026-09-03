@@ -9,8 +9,8 @@ export type HealthResponseBody = {
   requestId: string;
 };
 
-export const jsonResponse = (
-  body: HealthResponseBody,
+export const jsonResponse = <Body extends { requestId: string }>(
+  body: Body,
   status: number,
 ): Response =>
   Response.json(body, {

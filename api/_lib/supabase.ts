@@ -1,9 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { getServerEnvironment } from "./env.js";
 
-export const checkSupabaseConnection = async (): Promise<void> => {
+export const createServerSupabaseClient = () => {
   const environment = getServerEnvironment();
-  const supabase = createClient(
+
+  return createClient(
     environment.supabaseUrl,
     environment.supabasePublishableKey,
     {
@@ -14,6 +15,10 @@ export const checkSupabaseConnection = async (): Promise<void> => {
       },
     },
   );
+};
+
+export const checkSupabaseConnection = async (): Promise<void> => {
+  const supabase = createServerSupabaseClient();
 
   // Consulta una fila pública mínima para verificar red, clave, Data API y RLS.
   const { error } = await supabase

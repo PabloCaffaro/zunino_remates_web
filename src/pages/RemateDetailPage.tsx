@@ -41,8 +41,8 @@ function getSlideDistance(track: HTMLDivElement) {
 
 export function RemateDetailPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { publishedRemates } = useSiteData();
-  const remate = getRemateBySlug(publishedRemates, slug);
+  const { publicRemates } = useSiteData();
+  const remate = getRemateBySlug(publicRemates, slug);
   const [currentLotIndex, setCurrentLotIndex] = useState(0);
   const [cardsPerView, setCardsPerView] = useState(() => getCardsPerView(window.innerWidth));
   const [selectedLotIndex, setSelectedLotIndex] = useState<number | null>(null);

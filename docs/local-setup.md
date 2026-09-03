@@ -53,6 +53,10 @@ probar en una misma dirección la interfaz y la API será necesario usar el
 entorno local de Vercel. Esa herramienta no forma parte todavía de las
 dependencias del proyecto y su instalación debe acordarse antes de realizarla.
 
+Mientras se usa solamente `npm run dev`, las solicitudes a `/api/v1/public/*`
+no estarán disponibles y la página mostrará el respaldo demostrativo. Esto no
+permite validar cambios realizados en Supabase.
+
 ## Datos de demostración
 
 Mientras Supabase no esté conectado:
@@ -92,6 +96,10 @@ La conexión se implementa por etapas:
 3. Crear la API de Vercel y comprobar la conexión con `/api/v1/health`.
 4. Reemplazar la autenticación de demostración.
 5. Reemplazar las lecturas y escrituras de `localStorage` por endpoints.
+
+Los puntos 1 a 3 ya están implementados para la lectura pública. El panel
+administrativo sigue utilizando `localStorage` hasta completar autenticación y
+endpoints de escritura.
 
 Las instalaciones se realizan manualmente y deben acordarse antes de modificar
 dependencias.
