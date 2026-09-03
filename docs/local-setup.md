@@ -28,7 +28,7 @@ La instalación solo es necesaria al descargar el proyecto o cuando cambia
 
 ## Variables de entorno
 
-Copiar `.env.example` como `.env.local` cuando comience la conexión con Supabase:
+Copiar `.env.example` como `.env.local`:
 
 ```powershell
 Copy-Item .env.example .env.local
@@ -42,10 +42,16 @@ SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
 SESSION_SECRET=UN_SECRETO_ALEATORIO_LARGO
 ```
 
-Actualmente estas variables están documentadas, pero la aplicación todavía no
-las utiliza. React consumirá `/api/v1/*` y no recibirá configuración de
-Supabase. Todo valor que comienza con `VITE_` queda disponible en el navegador,
-por lo que no se usará para esta integración.
+La API utiliza `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` para el endpoint de
+salud. `SESSION_SECRET` queda pendiente hasta implementar la autenticación real.
+React consumirá `/api/v1/*` y no recibirá configuración de Supabase. Todo valor
+que comienza con `VITE_` queda disponible en el navegador, por lo que no se
+usará para esta integración.
+
+`npm run dev` inicia solamente Vite y no ejecuta las funciones de `api/`. Para
+probar en una misma dirección la interfaz y la API será necesario usar el
+entorno local de Vercel. Esa herramienta no forma parte todavía de las
+dependencias del proyecto y su instalación debe acordarse antes de realizarla.
 
 ## Datos de demostración
 
@@ -76,16 +82,16 @@ npm run test:watch
 
 ## Supabase
 
-El esquema aún no debe asumirse aplicado. Las instrucciones están en
-[`supabase/README.md`](../supabase/README.md).
+El esquema de staging está aplicado. Las instrucciones y el estado de las
+migraciones están en [`supabase/README.md`](../supabase/README.md).
 
-Cuando se conecte:
+La conexión se implementa por etapas:
 
-1. Aplicar la migración.
-2. Crear el primer usuario administrativo.
-3. Configurar `.env.local`.
-4. Instalar el cliente oficial de Supabase para el código servidor.
-5. Crear la API de Vercel y reemplazar autenticación y persistencia local.
+1. Configurar `.env.local`.
+2. Instalar el cliente oficial de Supabase para el código servidor.
+3. Crear la API de Vercel y comprobar la conexión con `/api/v1/health`.
+4. Reemplazar la autenticación de demostración.
+5. Reemplazar las lecturas y escrituras de `localStorage` por endpoints.
 
 Las instalaciones se realizan manualmente y deben acordarse antes de modificar
 dependencias.

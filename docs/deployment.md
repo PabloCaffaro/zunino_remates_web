@@ -6,7 +6,8 @@ Vite, ejecuta `npm run build` y publica el directorio `dist/`.
 ## Requisitos previos
 
 - Contenido y datos de contacto reales.
-- No se requieren variables de entorno para la demostración actual.
+- La interfaz pública todavía puede funcionar sin variables de entorno porque
+  conserva los datos de demostración en el navegador.
 - Revisar contenido y datos de contacto antes de compartir la URL.
 
 La sesión administrativa y los datos se guardan localmente en el navegador.
@@ -28,15 +29,17 @@ El resultado de producción se genera en `dist/`.
 
 ## Variables
 
-La demostración actual no consume variables de entorno. Cuando se conecte
-Supabase mediante la API de Vercel, configurar variables de servidor sin el
-prefijo `VITE_`:
+La API de Vercel consume variables de servidor sin el prefijo `VITE_`:
 
 ```env
 SUPABASE_URL=https://TU-PROYECTO.supabase.co
 SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
 SESSION_SECRET=UN_SECRETO_ALEATORIO_LARGO
 ```
+
+`SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` son necesarias para comprobar la
+conexión. `SESSION_SECRET` se utilizará cuando se implemente la autenticación
+real y todavía no es necesaria para el endpoint de salud.
 
 No configurar `SUPABASE_SERVICE_ROLE_KEY`, contraseñas ni otros secretos como
 variables `VITE_*`: esos valores quedan disponibles en el navegador.
@@ -55,6 +58,25 @@ El servidor debe devolver `index.html` para rutas como:
 ```
 
 El archivo [`vercel.json`](../vercel.json) ya contiene el rewrite necesario.
+
+## Comprobación de la API
+
+La ruta `GET /api/v1/health` verifica que la función de Vercel está activa y que
+puede consultar Supabase. Una respuesta correcta tiene estado HTTP `200`:
+
+```json
+{
+  "status": "ok",
+  "checks": {
+    "api": "ok",
+    "database": "ok"
+  },
+  "requestId": "identificador-de-la-solicitud"
+}
+```
+
+Si Supabase o la configuración no están disponibles, responde con HTTP `503`
+sin exponer URLs, claves ni detalles internos del error.
 
 ## Supabase
 
