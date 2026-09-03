@@ -29,15 +29,21 @@ El resultado de producción se genera en `dist/`.
 ## Variables
 
 La demostración actual no consume variables de entorno. Cuando se conecte
-Supabase, configurar en Vercel:
+Supabase mediante la API de Vercel, configurar variables de servidor sin el
+prefijo `VITE_`:
 
 ```env
-VITE_SUPABASE_URL=https://TU-PROYECTO.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
+SUPABASE_URL=https://TU-PROYECTO.supabase.co
+SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
+SESSION_SECRET=UN_SECRETO_ALEATORIO_LARGO
 ```
 
 No configurar `SUPABASE_SERVICE_ROLE_KEY`, contraseñas ni otros secretos como
 variables `VITE_*`: esos valores quedan disponibles en el navegador.
+
+El proyecto Supabase actual se utiliza como desarrollo/staging. Producción debe
+tener un proyecto separado y solo recibe migraciones ya verificadas en la rama
+`desarrollo`.
 
 ## Rutas SPA
 

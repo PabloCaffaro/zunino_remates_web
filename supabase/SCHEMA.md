@@ -92,7 +92,7 @@ La matriz detallada de operaciones permitidas está en
 - El slug queda inmutable después de la primera publicación.
 - Las transiciones de estado se validan en PostgreSQL y `version` aumenta en
   cada actualización aceptada.
-- Las consultas públicas entrarán mediante una Edge Function.
+- Las consultas públicas entrarán mediante la API de Vercel del mismo origen.
 - Los cambios administrativos importantes quedan registrados en `audit_log`.
 - Solo los administradores pueden leer la auditoría; editores y visitantes no
   tienen acceso.

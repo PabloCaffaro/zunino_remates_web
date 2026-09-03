@@ -18,7 +18,7 @@ cardinalidades y referencias lógicas de archivos.
   `finalizado` y `cancelado`.
 - Requisitos, condiciones y lotes destacados relacionados.
 - Preguntas frecuentes, pasos de participación y configuración general.
-- Consultas de contacto preparadas para una Edge Function.
+- Consultas de contacto preparadas para la API de Vercel.
 - Auditoría de modificaciones.
 - Bucket privado para imágenes.
 - Row Level Security en todas las tablas expuestas.
@@ -111,19 +111,21 @@ remate:
 lotes-remates/<remate-id>/<lote-id>.webp
 ```
 
-El bucket es privado. La web puede descargar imágenes únicamente cuando la
-carpeta pertenece a un remate publicado. Los borradores y remates en revisión no
-exponen sus documentos aunque alguien conozca la ruta.
+El bucket es privado. La API puede descargar una imagen únicamente cuando está
+vinculada a un lote visible de un remate publicado. Los archivos ocultos,
+huérfanos o pertenecientes a remates no publicados no se exponen aunque alguien
+conozca la ruta.
 
 Solo los usuarios administrativos activos pueden subir, reemplazar o eliminar
-objetos. En React usaremos `download()` o URLs firmadas; `getPublicUrl()` no
-corresponde para este bucket.
+objetos. La API generará capacidades o URLs firmadas de corta duración;
+`getPublicUrl()` no corresponde para este bucket.
 
 ## Formulario de contacto
 
 La tabla `consultas_contacto` no permite inserciones directas desde el navegador.
-La futura Edge Function validará captcha, límites de frecuencia y contenido, y
-usará la clave de servicio únicamente del lado servidor.
+El futuro endpoint de Vercel validará captcha, límites de frecuencia y contenido.
+Una credencial privilegiada, si fuera imprescindible, quedará aislada en ese
+endpoint y únicamente del lado servidor.
 
 La auditoría registra cambios de estado sin duplicar los datos personales de la
 consulta. Solamente los administradores activos pueden leerla.
@@ -134,29 +136,32 @@ las notas internas y los datos de atención.
 
 ## Pruebas de base de datos
 
-Las pruebas pgTAP están en `tests/database` y verifican RLS, separación de roles,
-protección de la configuración, auditoría y minimización de datos personales.
+Las 55 pruebas pgTAP están en `tests/database` y verifican RLS, separación de
+roles, protección de la configuración, auditoría, Storage y minimización de
+datos personales.
 
-Cuando adoptemos Supabase CLI y tengamos la base local preparada, se ejecutarán
-con:
+Se ejecutaron contra el entorno de staging dentro de una transacción con
+`rollback`. Cuando la base local esté disponible, el comando habitual será:
 
 ```powershell
 supabase test db
 ```
 
-Estas pruebas no aplican cambios al proyecto remoto. Deben ejecutarse contra una
-base local creada desde las migraciones.
+La ejecución de pruebas no conserva sus datos. En CI deberán ejecutarse contra
+una base temporal creada desde las migraciones.
 
-## Variables futuras del frontend
+## Variables futuras del servidor
 
-Cuando conectemos React se necesitarán:
+Cuando conectemos la API de Vercel se necesitarán:
 
 ```env
-VITE_SUPABASE_URL=https://TU-PROYECTO.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
+SUPABASE_URL=https://TU-PROYECTO.supabase.co
+SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
+SESSION_SECRET=UN_SECRETO_ALEATORIO_LARGO
 ```
 
-Nunca se debe incluir `service_role` en React ni en variables `VITE_*`.
+Nunca se debe incluir `service_role` en React ni en variables `VITE_*`. El
+navegador consumirá solamente `/api/v1/*`.
 
 ## Datos pendientes antes de producción
 
@@ -164,5 +169,5 @@ Nunca se debe incluir `service_role` en React ni en variables `VITE_*`.
 - Definir dominio, SEO e imagen Open Graph.
 - Crear el usuario administrador definitivo.
 - Configurar recuperación de contraseña y política de sesiones.
-- Crear la Edge Function del formulario.
+- Crear el endpoint de Vercel para el formulario.
 - Migrar los remates existentes desde `localStorage`.

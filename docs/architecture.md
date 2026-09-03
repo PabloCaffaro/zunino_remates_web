@@ -24,12 +24,11 @@ producción.
 flowchart LR
   Visitor["Visitante"] --> React["React + Vite"]
   Admin["Administrador"] --> React
-  React --> Auth["Supabase Auth"]
-  React --> DB["Supabase PostgreSQL + RLS"]
-  React --> Storage["Supabase Storage"]
-  React --> Contact["Edge Function de contacto"]
-  Contact --> DB
-  Contact --> Email["Servicio de email"]
+  React --> API["/api/v1 - Vercel Functions"]
+  API --> Auth["Supabase Auth"]
+  API --> DB["Supabase PostgreSQL + RLS"]
+  API --> Storage["Supabase Storage privado"]
+  API --> Email["Servicio de email"]
 ```
 
 Supabase será responsable de:
@@ -40,8 +39,13 @@ Supabase será responsable de:
 - Guardar imágenes de lotes y del sitio.
 - Registrar consultas y auditoría.
 
-El navegador utilizará únicamente la clave publicable. Las operaciones sensibles
-y secretos permanecerán del lado servidor.
+El navegador consumirá solamente la API del mismo origen y no recibirá claves,
+tokens, nombres de tablas ni rutas internas de Storage. La API utilizará la
+identidad del usuario administrativo al consultar PostgreSQL para conservar RLS
+como autorización definitiva. El CRUD habitual no utilizará `service_role`.
+
+La decisión completa, incluyendo sesiones, entornos y rollback, está en
+[`ADR-0001`](adr/0001-bff-vercel-supabase.md).
 
 ## Rutas principales
 
@@ -90,8 +94,8 @@ para detectar ediciones simultáneas antes de sobrescribir datos.
 - `supabase`: esquema de base, RLS, Storage y documentación.
 
 Al conectar Supabase, la interfaz pública debería cambiar lo mínimo posible. La
-capa de contexto será reemplazada por un repositorio o servicio que consulte la
-API.
+capa de contexto será reemplazada por servicios separados para datos públicos y
+administrativos que consulten DTO explícitos de la API.
 
 ## Modelo de datos
 

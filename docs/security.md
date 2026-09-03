@@ -19,17 +19,16 @@ La ruta `/admin12345` no es una medida de seguridad.
 - RLS para autorizar cada operación.
 - Storage privado con acceso según el estado del remate.
 - Validación de publicación en React y PostgreSQL.
-- Edge Function para procesar consultas de contacto.
+- API del mismo origen en Vercel para autenticación, datos y contacto.
 - Auditoría para registrar modificaciones.
 
 El esquema está en [`supabase/migrations`](../supabase/migrations).
 
 ## Secretos y variables
 
-Puede estar en el frontend:
-
-- URL pública de Supabase.
-- Clave publicable de Supabase.
+React no recibirá la URL, la clave publicable ni los tokens de Supabase. La API
+de Vercel utilizará la clave publicable del lado servidor y conservará RLS al
+propagar la identidad del usuario.
 
 Nunca debe estar en React, Git ni variables `VITE_*`:
 
@@ -39,8 +38,8 @@ Nunca debe estar en React, Git ni variables `VITE_*`:
 - Credenciales SMTP.
 - Tokens de servicios externos.
 
-Los secretos del servidor se configurarán en Supabase Edge Functions o en el
-proveedor correspondiente.
+Los secretos del servidor se configurarán como variables de Vercel sin prefijo
+`VITE_`. El CRUD habitual no utilizará una clave que omita RLS.
 
 ## Roles
 
@@ -84,7 +83,8 @@ La versión de producción debe:
 - No revelar detalles internos en mensajes de error.
 - Registrar solamente los datos necesarios.
 
-La clave de servicio solo podrá utilizarse dentro de la Edge Function.
+Si una operación futura necesita una clave privilegiada, deberá quedar aislada
+en un endpoint específico y nunca reutilizarse para el CRUD habitual.
 
 Los cambios de estado se auditan sin copiar nombre, email, mensaje, notas
 internas, agente de usuario ni hash de IP. Solo un administrador activo puede

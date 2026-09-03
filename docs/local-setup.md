@@ -34,18 +34,18 @@ Copiar `.env.example` como `.env.local` cuando comience la conexión con Supabas
 Copy-Item .env.example .env.local
 ```
 
-Completar:
+Completar con variables de servidor, sin prefijo `VITE_`:
 
 ```env
-VITE_SUPABASE_URL=https://TU-PROYECTO.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
+SUPABASE_URL=https://TU-PROYECTO.supabase.co
+SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
+SESSION_SECRET=UN_SECRETO_ALEATORIO_LARGO
 ```
 
 Actualmente estas variables están documentadas, pero la aplicación todavía no
-las utiliza.
-
-Todo valor que comienza con `VITE_` queda disponible en el navegador. Nunca
-colocar allí claves de servicio, contraseñas ni secretos.
+las utiliza. React consumirá `/api/v1/*` y no recibirá configuración de
+Supabase. Todo valor que comienza con `VITE_` queda disponible en el navegador,
+por lo que no se usará para esta integración.
 
 ## Datos de demostración
 
@@ -84,8 +84,8 @@ Cuando se conecte:
 1. Aplicar la migración.
 2. Crear el primer usuario administrativo.
 3. Configurar `.env.local`.
-4. Instalar el cliente oficial de Supabase.
-5. Reemplazar autenticación y persistencia local.
+4. Instalar el cliente oficial de Supabase para el código servidor.
+5. Crear la API de Vercel y reemplazar autenticación y persistencia local.
 
 Las instalaciones se realizan manualmente y deben acordarse antes de modificar
 dependencias.
@@ -96,4 +96,3 @@ dependencias.
 - Si los cambios del panel desaparecen, revisar el almacenamiento del navegador.
 - Si npm reporta certificados, probar `npm ping` desde la terminal local.
 - Si aparecen caracteres incorrectos, confirmar que el archivo esté en UTF-8.
-

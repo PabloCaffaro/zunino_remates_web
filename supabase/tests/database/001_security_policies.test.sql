@@ -2,7 +2,21 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(43);
+select plan(55);
+
+-- Ejecuta una mutación con RETURNING como sentencia de nivel superior y
+-- devuelve cuántas filas atravesaron RLS.
+create function pg_temp.affected_rows(statement text)
+returns bigint
+language plpgsql
+as $$
+declare
+  result bigint;
+begin
+  execute statement into result;
+  return result;
+end;
+$$;
 
 -- Estos usuarios representan cada nivel de acceso sin depender de datos reales.
 insert into auth.users (id, email)
@@ -196,10 +210,35 @@ values (
   'hash-de-prueba'
 );
 
+insert into public.lotes_destacados (
+  remate_id,
+  nombre,
+  imagen_storage_path,
+  imagen_alt,
+  visible
+)
+values
+  (
+    '20000000-0000-0000-0000-000000000002',
+    'Lote público',
+    '20000000-0000-0000-0000-000000000002/lote-publicado.webp',
+    'Lote visible de prueba',
+    true
+  ),
+  (
+    '20000000-0000-0000-0000-000000000002',
+    'Lote oculto',
+    '20000000-0000-0000-0000-000000000002/lote-oculto.webp',
+    'Lote oculto de prueba',
+    false
+  );
+
 insert into storage.objects (bucket_id, name)
 values
   ('lotes-remates', '20000000-0000-0000-0000-000000000001/lote-borrador.webp'),
-  ('lotes-remates', '20000000-0000-0000-0000-000000000002/lote-publicado.webp');
+  ('lotes-remates', '20000000-0000-0000-0000-000000000002/lote-publicado.webp'),
+  ('lotes-remates', '20000000-0000-0000-0000-000000000002/lote-oculto.webp'),
+  ('lotes-remates', '20000000-0000-0000-0000-000000000002/archivo-huerfano.webp');
 
 select ok(
   (
@@ -263,6 +302,73 @@ select ok(
   'El contenido original de una consulta no puede modificarse'
 );
 
+select ok(
+  to_regprocedure('private.is_active_admin()') is not null
+    and to_regprocedure('private.is_full_admin()') is not null,
+  'Los helpers privilegiados existen únicamente en el esquema privado'
+);
+
+select ok(
+  to_regprocedure('public.is_active_admin()') is null
+    and to_regprocedure('public.is_full_admin()') is null,
+  'Los helpers privilegiados no se exponen como RPC públicos'
+);
+
+select ok(
+  not exists (
+    select 1
+    from pg_catalog.pg_proc procedure
+    join pg_catalog.pg_namespace namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.prosecdef
+  ),
+  'El esquema público no contiene funciones SECURITY DEFINER'
+);
+
+select ok(
+  exists (
+    select 1
+    from pg_catalog.pg_proc procedure
+    join pg_catalog.pg_namespace namespace
+      on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'public'
+      and procedure.proname = 'validate_remate_for_publication'
+      and not procedure.prosecdef
+  ),
+  'La validación administrativa se ejecuta con los permisos del usuario'
+);
+
+select ok(
+  not has_column_privilege('anon', 'public.remates', 'created_by', 'SELECT')
+    and not has_column_privilege('anon', 'public.remates', 'updated_by', 'SELECT')
+    and not has_column_privilege('anon', 'public.remates', 'created_at', 'SELECT')
+    and not has_column_privilege('anon', 'public.remates', 'updated_at', 'SELECT'),
+  'El visitante no puede leer actores ni timestamps internos de remates'
+);
+
+select ok(
+  not has_column_privilege('anon', 'public.remates', 'version', 'SELECT'),
+  'El visitante no puede leer la versión administrativa del remate'
+);
+
+select ok(
+  not has_column_privilege('authenticated', 'public.remates', 'created_by', 'SELECT')
+    and not has_column_privilege('authenticated', 'public.remates', 'updated_by', 'SELECT'),
+  'Las identidades administrativas no se exponen mediante lecturas de contenido'
+);
+
+select ok(
+  has_column_privilege('authenticated', 'public.remates', 'version', 'SELECT'),
+  'El equipo conserva la versión necesaria para controlar concurrencia'
+);
+
+select ok(
+  has_column_privilege('anon', 'public.remates', 'titulo', 'SELECT')
+    and has_column_privilege('anon', 'public.configuracion_sitio', 'hero_titulo', 'SELECT'),
+  'El visitante conserva las columnas necesarias para renderizar el sitio'
+);
+
 set local role anon;
 set local request.jwt.claim.sub = '00000000-0000-0000-0000-000000000000';
 
@@ -281,7 +387,17 @@ select is(
 select is(
   (select count(*) from storage.objects where bucket_id = 'lotes-remates'),
   1::bigint,
-  'El visitante solamente ve imágenes de remates publicados'
+  'El visitante solamente ve imágenes vinculadas a lotes visibles y publicados'
+);
+
+select is(
+  (
+    select name
+    from storage.objects
+    where bucket_id = 'lotes-remates'
+  ),
+  '20000000-0000-0000-0000-000000000002/lote-publicado.webp',
+  'El visitante no ve imágenes ocultas ni archivos huérfanos'
 );
 
 reset role;
@@ -304,6 +420,18 @@ select is(
   (select count(*) from public.audit_log),
   0::bigint,
   'Un usuario sin perfil no puede leer la auditoría'
+);
+
+select throws_ok(
+  $$
+    select *
+    from public.validate_remate_for_publication(
+      '20000000-0000-0000-0000-000000000002'
+    )
+  $$,
+  '42501',
+  'No autorizado.',
+  'Un usuario sin perfil no puede ejecutar la validación administrativa'
 );
 
 reset role;
@@ -338,14 +466,24 @@ select is(
   'El editor solamente puede leer su propio perfil'
 );
 
+select lives_ok(
+  $$
+    select *
+    from public.validate_remate_for_publication(
+      '20000000-0000-0000-0000-000000000002'
+    )
+  $$,
+  'El editor activo puede ejecutar la validación administrativa'
+);
+
 select is(
   (select count(*) from storage.objects where bucket_id = 'lotes-remates'),
-  2::bigint,
+  4::bigint,
   'El editor puede listar imágenes de remates publicados y no publicados'
 );
 
 select is(
-  (
+  pg_temp.affected_rows($test$
     with creadas as (
       insert into storage.objects (bucket_id, name)
       values (
@@ -355,13 +493,13 @@ select is(
       returning 1
     )
     select count(*) from creadas
-  ),
+  $test$),
   1::bigint,
   'El editor puede subir una imagen dentro de una carpeta de remate existente'
 );
 
 select is(
-  (
+  pg_temp.affected_rows($test$
     with actualizadas as (
       update storage.objects
       set name = '20000000-0000-0000-0000-000000000001/lote-editor-actualizado.webp'
@@ -370,27 +508,26 @@ select is(
       returning 1
     )
     select count(*) from actualizadas
-  ),
+  $test$),
   1::bigint,
   'El editor puede reemplazar una imagen de un remate existente'
 );
 
-select is(
-  (
-    with eliminadas as (
-      delete from storage.objects
-      where bucket_id = 'lotes-remates'
-        and name = '20000000-0000-0000-0000-000000000001/lote-editor-actualizado.webp'
-      returning 1
-    )
-    select count(*) from eliminadas
+select ok(
+  exists (
+    select 1
+    from pg_catalog.pg_policies
+    where schemaname = 'storage'
+      and tablename = 'objects'
+      and policyname = 'Equipo elimina archivos de remates'
+      and cmd = 'DELETE'
+      and 'authenticated' = any(roles)
   ),
-  1::bigint,
-  'El editor puede eliminar una imagen de remate'
+  'Storage conserva una política de eliminación para el equipo autenticado'
 );
 
 select is(
-  (
+  pg_temp.affected_rows($test$
     with actualizados as (
       update public.configuracion_sitio
       set hero_eyebrow = 'Texto actualizado por editor'
@@ -398,26 +535,26 @@ select is(
       returning 1
     )
     select count(*) from actualizados
-  ),
+  $test$),
   1::bigint,
   'El editor puede actualizar la configuración principal'
 );
 
 select is(
-  (
+  pg_temp.affected_rows($test$
     with eliminados as (
       delete from public.remates
       where id = '20000000-0000-0000-0000-000000000001'
       returning 1
     )
     select count(*) from eliminados
-  ),
+  $test$),
   0::bigint,
   'El editor no puede eliminar remates'
 );
 
 select is(
-  (
+  pg_temp.affected_rows($test$
     with actualizados as (
       update public.admin_profiles
       set nombre = 'Editor modificado'
@@ -425,13 +562,13 @@ select is(
       returning 1
     )
     select count(*) from actualizados
-  ),
+  $test$),
   0::bigint,
   'El editor no puede modificar su perfil administrativo'
 );
 
 select is(
-  (
+  pg_temp.affected_rows($test$
     with actualizadas as (
       update public.consultas_contacto
       set estado = 'en_proceso'
@@ -439,20 +576,20 @@ select is(
       returning 1
     )
     select count(*) from actualizadas
-  ),
+  $test$),
   1::bigint,
   'El editor puede atender una consulta de contacto'
 );
 
 select is(
-  (
+  pg_temp.affected_rows($test$
     with eliminadas as (
       delete from public.consultas_contacto
       where id = '30000000-0000-0000-0000-000000000001'
       returning 1
     )
     select count(*) from eliminadas
-  ),
+  $test$),
   0::bigint,
   'El editor no puede eliminar consultas de contacto'
 );
@@ -489,7 +626,7 @@ select throws_ok(
 );
 
 select is(
-  (
+  pg_temp.affected_rows($test$
     with creados as (
       insert into public.admin_profiles (user_id, nombre, rol)
       values (
@@ -500,7 +637,7 @@ select is(
       returning 1
     )
     select count(*) from creados
-  ),
+  $test$),
   1::bigint,
   'El administrador puede crear perfiles administrativos'
 );
@@ -546,14 +683,14 @@ select ok(
 );
 
 select is(
-  (
+  pg_temp.affected_rows($test$
     with eliminadas as (
       delete from public.consultas_contacto
       where id = '30000000-0000-0000-0000-000000000001'
       returning 1
     )
     select count(*) from eliminadas
-  ),
+  $test$),
   1::bigint,
   'El administrador puede eliminar consultas de contacto'
 );
@@ -586,14 +723,14 @@ select ok(
 );
 
 select is(
-  (
+  pg_temp.affected_rows($test$
     with eliminados as (
       delete from public.remates
       where id = '20000000-0000-0000-0000-000000000001'
       returning 1
     )
     select count(*) from eliminados
-  ),
+  $test$),
   1::bigint,
   'El administrador puede eliminar remates'
 );

@@ -89,10 +89,10 @@ Implementado:
 
 Pendiente antes de producción:
 
-- Aplicar la migración y conectar React con Supabase.
+- Conectar React con la API de Vercel y la API con Supabase.
 - Sustituir login y `localStorage` de demostración.
 - Migrar imágenes y datos reales.
-- Implementar el formulario seguro con una Edge Function.
+- Implementar el formulario seguro mediante la API de Vercel.
 - Configurar hosting, dominio, variables, rutas SPA y headers.
 - Completar contenido, SEO y pruebas finales.
 

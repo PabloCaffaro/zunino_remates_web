@@ -35,7 +35,7 @@ realizarse con una migración controlada.
 
 | Acción en `lotes-remates` | Visitante | Editor | Administrador |
 | --- | --- | --- | --- |
-| Descargar | Solo si pertenece a un remate publicado | Sí | Sí |
+| Descargar | Solo si está vinculado a un lote visible de un remate publicado | Sí | Sí |
 | Subir o reemplazar | No | Sí, dentro de una carpeta de remate existente | Sí, dentro de una carpeta de remate existente |
 | Eliminar | No | Sí | Sí |
 
@@ -56,6 +56,7 @@ realizarse con una migración controlada.
 
 ## Implementación y verificación
 
-- Políticas y permisos: [`migrations/20260607000000_initial_schema.sql`](migrations/20260607000000_initial_schema.sql).
+- Esquema inicial: [`migrations/20260607000000_initial_schema.sql`](migrations/20260607000000_initial_schema.sql).
+- Endurecimiento de acceso: [`migrations/20260903014601_harden_public_data_access.sql`](migrations/20260903014601_harden_public_data_access.sql).
 - Pruebas RLS: [`tests/database/001_security_policies.test.sql`](tests/database/001_security_policies.test.sql).
 - Guía general: [`../docs/security.md`](../docs/security.md).
