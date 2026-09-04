@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { Link, useParams } from "react-router-dom";
 import { Seo } from "../components/Seo";
+import { PublicDataStatus } from "../components/PublicDataStatus";
 import { useSiteData } from "../context/siteDataContextValue";
 import { formatRemateDateDisplay } from "../data/remateFormatting";
 import {
@@ -41,7 +42,7 @@ function getSlideDistance(track: HTMLDivElement) {
 
 export function RemateDetailPage() {
   const { slug } = useParams<{ slug: string }>();
-  const { publicRemates } = useSiteData();
+  const { publicRemates, publicDataStatus } = useSiteData();
   const remate = getRemateBySlug(publicRemates, slug);
   const [currentLotIndex, setCurrentLotIndex] = useState(0);
   const [cardsPerView, setCardsPerView] = useState(() => getCardsPerView(window.innerWidth));
@@ -195,6 +196,8 @@ export function RemateDetailPage() {
 
   const goToPreviousLot = () => moveCarousel("left");
   const goToNextLot = () => moveCarousel("right");
+
+  if (publicDataStatus !== "ready") return <PublicDataStatus />;
 
   if (!remate) {
     return (

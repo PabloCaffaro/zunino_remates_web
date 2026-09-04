@@ -1,15 +1,22 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Remate } from "../types/site";
 import { SiteDataProvider } from "../context/SiteDataContext";
 import { defaultSiteCopy } from "../data/siteCopy";
 import { siteContent } from "../data/siteContent";
 import { createCompleteRemate } from "../test/fixtures";
 import { RemateDetailPage } from "./RemateDetailPage";
 
-function renderDetailPage() {
-  return render(
+async function renderDetailPage(remates: Remate[] = siteContent.remates) {
+  vi.mocked(fetch).mockImplementation(async (url) => new Response(JSON.stringify({
+    data: String(url).endsWith("/remates") ? remates : {
+      contacto: siteContent.contacto, pasos: siteContent.pasos,
+      faqs: siteContent.faqs, copy: defaultSiteCopy,
+    },
+  })));
+  const result = render(
     <SiteDataProvider>
       <MemoryRouter
         initialEntries={["/remates/maquinaria-y-herramientas"]}
@@ -21,6 +28,8 @@ function renderDetailPage() {
       </MemoryRouter>
     </SiteDataProvider>
   );
+  await waitFor(() => expect(screen.queryByText("Cargando…")).not.toBeInTheDocument());
+  return result;
 }
 
 beforeEach(() => {
@@ -28,7 +37,7 @@ beforeEach(() => {
 });
 
 describe("visibilidad del detalle", () => {
-  it("no permite abrir por URL un remate oculto", () => {
+  it("no permite abrir por URL un remate oculto", async () => {
     const hiddenRemate = createCompleteRemate({
       slug: "maquinaria-y-herramientas",
       estadoAdmin: "oculto",
@@ -46,7 +55,7 @@ describe("visibilidad del detalle", () => {
       })
     );
 
-    renderDetailPage();
+    await renderDetailPage([]);
 
     expect(screen.getByRole("heading", { name: "No encontramos ese evento." })).toBeInTheDocument();
     expect(screen.queryByText(hiddenRemate.subtitulo)).not.toBeInTheDocument();
@@ -54,7 +63,7 @@ describe("visibilidad del detalle", () => {
 });
 
 describe("carrusel de lotes destacados", () => {
-  it("informa cuando el remate no tiene lotes destacados", () => {
+  it("informa cuando el remate no tiene lotes destacados", async () => {
     const remateWithoutLots = createCompleteRemate({ slug: "maquinaria-y-herramientas" });
     window.localStorage.setItem(
       "zunino-remates-admin-data-v3",
@@ -69,7 +78,7 @@ describe("carrusel de lotes destacados", () => {
       })
     );
 
-    renderDetailPage();
+    await renderDetailPage([remateWithoutLots]);
 
     expect(screen.getByRole("heading", { name: "Próximamente habrá lotes destacados" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Ver lotes siguientes" })).not.toBeInTheDocument();
@@ -77,7 +86,7 @@ describe("carrusel de lotes destacados", () => {
 
   it("conserva el nuevo orden cuando termina la transición", async () => {
     const user = userEvent.setup();
-    const { container } = renderDetailPage();
+    const { container } = await renderDetailPage();
     const nextButton = screen.getByRole("button", { name: "Ver lotes siguientes" });
     const carousel = nextButton.closest(".lot-carousel-strip") as HTMLElement;
     const track = container.querySelector(".lot-strip-track") as HTMLElement;
@@ -108,7 +117,7 @@ describe("carrusel de lotes destacados", () => {
 
   it("ubica las flechas ampliadas alrededor del marco de la imagen", async () => {
     const user = userEvent.setup();
-    renderDetailPage();
+    await renderDetailPage();
 
     await user.click(
       screen.getByRole("button", { name: "Ver Compresor industrial de alto caudal en grande" })

@@ -1,6 +1,11 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
+
+beforeEach(() => {
+  // Las pruebas que no verifican la API no hacen peticiones reales.
+  vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
+});
 
 class IntersectionObserverMock implements IntersectionObserver {
   readonly root = null;
@@ -27,6 +32,7 @@ Object.defineProperty(window, "scrollTo", {
 
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
   window.localStorage.clear();
   window.sessionStorage.clear();
 });

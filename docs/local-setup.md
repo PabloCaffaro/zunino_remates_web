@@ -54,7 +54,7 @@ entorno local de Vercel. Esa herramienta no forma parte todavía de las
 dependencias del proyecto y su instalación debe acordarse antes de realizarla.
 
 Mientras se usa solamente `npm run dev`, las solicitudes a `/api/v1/public/*`
-no estarán disponibles y la página mostrará el respaldo demostrativo. Esto no
+no estarán disponibles y la página mostrará un error con opción de reintentar. Esto no
 permite validar cambios realizados en Supabase.
 
 ## Datos de demostración

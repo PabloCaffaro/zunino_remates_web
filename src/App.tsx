@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
+import { SiteDataContext } from "./context/siteDataContextValue";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { ADMIN_PATH } from "./admin/adminConfig";
 import { SiteFooter } from "./components/SiteFooter";
@@ -10,6 +11,7 @@ import { RemateDetailPage } from "./pages/RemateDetailPage";
 
 function ScrollManager() {
   const location = useLocation();
+  const publicDataStatus = useContext(SiteDataContext)?.publicDataStatus;
 
   useEffect(() => {
     // Si la URL incluye un hash, hace scroll a esa sección cuando la ruta ya terminó de renderizar.
@@ -27,13 +29,14 @@ function ScrollManager() {
 
     // Las rutas sin hash vuelven arriba para que cada página arranque en una posición predecible.
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [location.hash, location.pathname]);
+  }, [location.hash, location.pathname, publicDataStatus]);
 
   return null;
 }
 
 function RevealManager() {
   const location = useLocation();
+  const publicDataStatus = useContext(SiteDataContext)?.publicDataStatus;
 
   useEffect(() => {
     // Los elementos marcados como "reveal" se animan solo la primera vez que entran al viewport.
@@ -54,7 +57,7 @@ function RevealManager() {
 
     // Reconstruye el observer al cambiar de ruta porque el DOM renderizado cambia entre páginas.
     return () => observer.disconnect();
-  }, [location.pathname, location.hash]);
+  }, [location.pathname, location.hash, publicDataStatus]);
 
   return null;
 }

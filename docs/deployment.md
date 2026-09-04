@@ -5,9 +5,13 @@ Vite, ejecuta `npm run build` y publica el directorio `dist/`.
 
 ## Requisitos previos
 
+Consultar también [Pendientes para producción](production-checklist.md), el
+registro de decisiones temporales y verificaciones detectadas durante el trabajo.
+
 - Contenido y datos de contacto reales.
-- La interfaz pública todavía puede funcionar sin variables de entorno porque
-  conserva los datos de demostración en el navegador.
+- La interfaz pública requiere que la API y sus variables de entorno estén
+  configuradas. Mientras consulta muestra carga; ante fallos ofrece reintentar,
+  sin sustituir los datos remotos por datos de demostración.
 - Revisar contenido y datos de contacto antes de compartir la URL.
 
 La sesión administrativa y los datos se guardan localmente en el navegador.

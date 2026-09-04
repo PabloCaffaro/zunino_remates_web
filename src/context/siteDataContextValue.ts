@@ -20,9 +20,10 @@ export type SiteDataContextValue = {
   remates: AdminRemate[];
   content: EditableSiteContent;
   publishedRemates: AdminRemate[];
-  publicContent: EditableSiteContent;
+  publicContent: EditableSiteContent | null;
   publicRemates: Remate[];
-  publicDataStatus: "loading" | "ready" | "fallback";
+  publicDataStatus: "loading" | "ready" | "error";
+  retryPublicData: () => void;
   saveRemate: (remate: AdminRemate) => Promise<RemateMutationResult>;
   deleteRemate: (id: string, expectedVersion: number) => Promise<DataOperationResult>;
   changeRemateStatus: (

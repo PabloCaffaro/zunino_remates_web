@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { canRegenerateRemateSlug, canTransitionRemateStatus } from "../admin/remateWorkflow";
 import { remateDateTimeInputToIso } from "../data/remateFormatting";
 import { siteContent } from "../data/siteContent";
@@ -22,8 +22,8 @@ type StoredSiteData = {
 
 type PublicSiteDataState = {
   remates: Remate[];
-  content: EditableSiteContent;
-  status: "loading" | "ready" | "fallback";
+  content: EditableSiteContent | null;
+  status: "loading" | "ready" | "error";
 };
 
 type LegacyAdminRemate = Omit<AdminRemate, "fechaHora" | "version"> & {
@@ -126,42 +126,39 @@ export function SiteDataProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<StoredSiteData>(readStoredData);
   const dataRef = useRef(data);
   const [publicData, setPublicData] = useState<PublicSiteDataState>(() => ({
-    remates: data.remates.filter((item) => item.estadoAdmin === "publicado"),
-    content: data.content,
-    status: import.meta.env.MODE === "test" ? "fallback" : "loading",
+    remates: [],
+    content: null,
+    status: "loading",
   }));
+  const [requestNumber, setRequestNumber] = useState(0);
+  const retryPublicData = useCallback(() => {
+    setPublicData({ remates: [], content: null, status: "loading" });
+    setRequestNumber((current) => current + 1);
+  }, []);
 
   useEffect(() => {
-    if (import.meta.env.MODE === "test") {
-      return;
-    }
-
     const controller = new AbortController();
+    const timeout = window.setTimeout(() => {
+      controller.abort();
+      setPublicData({ remates: [], content: null, status: "error" });
+    }, 15000);
 
     fetchPublicSiteData(controller.signal)
       .then((remoteData) => {
-        setPublicData({ ...remoteData, status: "ready" });
+        if (!controller.signal.aborted) setPublicData({ ...remoteData, status: "ready" });
       })
-      .catch((error: unknown) => {
-        if (!(error instanceof DOMException && error.name === "AbortError")) {
-          setPublicData((current) => ({ ...current, status: "fallback" }));
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setPublicData({ remates: [], content: null, status: "error" });
         }
-      });
+      })
+      .finally(() => window.clearTimeout(timeout));
 
-    return () => controller.abort();
-  }, []);
-
-  const effectivePublicData = useMemo<PublicSiteDataState>(
-    () =>
-      publicData.status === "ready"
-        ? publicData
-        : {
-            remates: data.remates.filter((item) => item.estadoAdmin === "publicado"),
-            content: data.content,
-            status: publicData.status,
-          },
-    [data, publicData],
-  );
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeout);
+    };
+  }, [requestNumber]);
 
   const value = useMemo<SiteDataContextValue>(() => {
     const commitData = (nextData: StoredSiteData) => {
@@ -251,16 +248,17 @@ export function SiteDataProvider({ children }: { children: ReactNode }) {
     return {
       ...data,
       publishedRemates: data.remates.filter((item) => item.estadoAdmin === "publicado"),
-      publicContent: effectivePublicData.content,
-      publicRemates: effectivePublicData.remates,
-      publicDataStatus: effectivePublicData.status,
+      publicContent: publicData.content,
+      publicRemates: publicData.remates,
+      publicDataStatus: publicData.status,
+      retryPublicData,
       saveRemate,
       deleteRemate,
       changeRemateStatus,
       saveContent,
       resetDemoData,
     };
-  }, [data, effectivePublicData]);
+  }, [data, publicData, retryPublicData]);
 
   return <SiteDataContext.Provider value={value}>{children}</SiteDataContext.Provider>;
 }

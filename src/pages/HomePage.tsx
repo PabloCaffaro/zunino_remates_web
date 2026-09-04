@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { PublicDataStatus } from "../components/PublicDataStatus";
 import { ContactSection } from "../components/ContactSection";
 import { LocationSection } from "../components/LocationSection";
 import { Seo } from "../components/Seo";
@@ -12,8 +13,7 @@ import { useSiteData } from "../context/siteDataContextValue";
 import { createCatalogosFromRemates, getFeaturedRemate } from "../data/siteSelectors";
 
 export function HomePage() {
-  const { publicRemates: remates, publicContent: content } = useSiteData();
-  const { pasos, faqs, contacto, copy } = content;
+  const { publicRemates: remates, publicContent: content, publicDataStatus } = useSiteData();
   const catalogos = createCatalogosFromRemates(remates);
   // El remate destacado se resuelve con un selector para que la home no dependa directamente del orden del array.
   const rematePrincipal = getFeaturedRemate(remates);
@@ -35,7 +35,10 @@ export function HomePage() {
 
     items.forEach((item) => observer.observe(item));
     return () => observer.disconnect();
-  }, []);
+  }, [publicDataStatus]);
+
+  if (publicDataStatus !== "ready" || !content) return <PublicDataStatus />;
+  const { pasos, faqs, contacto, copy } = content;
 
   return (
     <main id="contenido-principal">

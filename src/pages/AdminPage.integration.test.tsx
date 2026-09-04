@@ -347,6 +347,7 @@ describe("panel administrador", () => {
       publishedRemates: [remate],
       publicRemates: [remate],
       publicDataStatus: "ready",
+      retryPublicData: vi.fn(),
       content: {
         contacto: siteContent.contacto,
         pasos: siteContent.pasos,
