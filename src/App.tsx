@@ -4,7 +4,7 @@ import { Route, Routes, useLocation } from "react-router-dom";
 import { ADMIN_PATH } from "./admin/adminConfig";
 import { SiteFooter } from "./components/SiteFooter";
 import { SiteHeader } from "./components/SiteHeader";
-import { AdminPage } from "./pages/AdminPage";
+import { AdminAccess } from "./pages/AdminAccess";
 import { HomePage } from "./pages/HomePage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { RemateDetailPage } from "./pages/RemateDetailPage";
@@ -78,7 +78,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/remates/:slug" element={<RemateDetailPage />} />
-        <Route path={ADMIN_PATH} element={<AdminPage />} />
+        <Route path={ADMIN_PATH} element={<AdminAccess />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       {!isAdminRoute ? <SiteFooter /> : null}

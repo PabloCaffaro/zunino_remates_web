@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getPublicContent } from "../../_lib/publicData.js";
-import handler from "./content.js";
+import { getPublicContent } from "../_lib/publicData.js";
+import handler from "../v1/public/content.js";
 
-vi.mock("../../_lib/publicData.js", () => ({ getPublicContent: vi.fn() }));
+vi.mock("../_lib/publicData.js", () => ({ getPublicContent: vi.fn() }));
 
 const mockedGetPublicContent = vi.mocked(getPublicContent);
 

@@ -1,13 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 import { getServerEnvironment } from "./env.js";
 
-export const createServerSupabaseClient = () => {
+export const createServerSupabaseClient = (accessToken?: string) => {
   const environment = getServerEnvironment();
 
   return createClient(
     environment.supabaseUrl,
     environment.supabasePublishableKey,
     {
+      ...(accessToken ? { global: { headers: { Authorization: `Bearer ${accessToken}` } } } : {}),
       auth: {
         autoRefreshToken: false,
         detectSessionInUrl: false,

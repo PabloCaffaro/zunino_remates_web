@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { checkSupabaseConnection } from "../_lib/supabase.js";
-import handler from "./health.js";
+import handler from "../v1/health.js";
 
 vi.mock("../_lib/supabase.js", () => ({
   checkSupabaseConnection: vi.fn(),

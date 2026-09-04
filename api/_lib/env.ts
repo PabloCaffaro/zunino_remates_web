@@ -16,7 +16,7 @@ export class ServerConfigurationError extends Error {
   }
 }
 
-const readEnvironmentVariable = (name: string): string => {
+export const readEnvironmentVariable = (name: string): string => {
   const value = (globalThis as RuntimeGlobal).process?.env?.[name]?.trim();
 
   if (!value) {

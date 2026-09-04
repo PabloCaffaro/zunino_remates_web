@@ -14,6 +14,34 @@ Anotar un pendiente no autoriza implementarlo ni cambiar producción.
 
 ## Registro
 
-Todavía no hay entradas nuevas registradas desde esta indicación. Esto no
-significa que el proyecto esté listo para producción ni reemplaza los pendientes
-ya documentados en deployment.md, security.md y los demás documentos del proyecto.
+### Autenticación y entornos
+
+- **Pendiente:** crear un proyecto Supabase productivo separado, aplicar sus
+  migraciones y crear allí el primer administrador. El proyecto actual continúa
+  siendo desarrollo/staging. Validar acceso, permisos y cierre de sesión antes de
+  promover `desarrollo` a `main`.
+- **Pendiente:** configurar `SESSION_SECRET` con valores distintos y aleatorios
+  para Preview/Development y Production. Nunca usar prefijo `VITE_`. Confirmar
+  que la cookie sea `HttpOnly`, `Secure` y `SameSite=Strict` en el despliegue.
+- **Pendiente:** revisar límites de intentos de Supabase Auth y agregar protección
+  de fuerza bruta en Vercel si el tráfico real lo requiere.
+- **Pendiente:** habilitar y validar la protección de Supabase Auth contra
+  contraseñas filtradas antes de producción. El asesor de seguridad la reporta
+  actualmente desactivada.
+
+### Funcionalidad todavía diferida
+
+- **Pendiente:** conectar edición de contenido general a la API y PostgreSQL.
+- **Pendiente:** implementar Supabase Storage para imágenes, sus políticas y la
+  limpieza de archivos huérfanos. Hasta entonces la API rechaza imágenes nuevas.
+- **Pendiente:** validar el flujo completo en móvil, incluido el lightbox de lotes
+  destacados a tamaño útil de pantalla.
+
+### Verificación antes de producción
+
+- **Pendiente:** ejecutar pruebas automatizadas, pruebas SQL, lint y build sobre
+  la versión candidata, y repetir el circuito real de login, creación, edición,
+  publicación, conflicto concurrente, cierre de sesión y acceso público.
+- **Pendiente:** revisar y actualizar dependencias con avisos de seguridad antes
+  de producción. La instalación actual reporta avisos que no deben corregirse en
+  bloque sin analizar compatibilidad y alcance.

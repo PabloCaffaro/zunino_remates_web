@@ -7,10 +7,6 @@ import {
   type FormEvent,
 } from "react";
 import {
-  ADMIN_SESSION_KEY,
-  DEMO_ADMIN_CREDENTIALS,
-} from "../admin/adminConfig";
-import {
   highlightedLotNameErrorKey,
   validateHighlightedLotNames,
   validateRemateForPublish,
@@ -86,7 +82,7 @@ function FieldTitle({
 
 function createEmptyRemate(): AdminRemate {
   const now = new Date().toISOString();
-  const id = `remate-${Date.now()}`;
+  const id = crypto.randomUUID();
 
   return {
     id,
@@ -125,12 +121,13 @@ function readFileAsDataUrl(file: File, maxBytes: number): Promise<string> {
   });
 }
 
-function AdminLogin({ onLogin }: { onLogin: () => void }) {
+export function AdminLogin({ onLogin }: { onLogin: (email: string, password: string) => Promise<void> }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<{ id: number; message: string } | null>(null);
   const errorSequence = useRef(0);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!error) return;
@@ -139,23 +136,15 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
     return () => window.clearTimeout(timeoutId);
   }, [error]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
-    if (
-      username === DEMO_ADMIN_CREDENTIALS.username &&
-      password === DEMO_ADMIN_CREDENTIALS.password
-    ) {
-      window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
-      onLogin();
-      return;
-    }
-
-    errorSequence.current += 1;
-    setError({
-      id: errorSequence.current,
-      message: "Usuario o contraseña incorrectos.",
-    });
+    if (submitting) return;
+    setSubmitting(true);
+    try { await onLogin(username.trim(), password); }
+    catch (error) {
+      errorSequence.current += 1;
+      setError({ id: errorSequence.current, message: error instanceof Error ? error.message : "No se pudo ingresar." });
+    } finally { setSubmitting(false); }
   };
 
   return (
@@ -166,9 +155,10 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
         <p>Gestioná remates y contenido visible de Zunino Remates.</p>
         <form onSubmit={handleSubmit}>
           <label>
-            Usuario
+            Email
             <input
               value={username}
+              type="email"
               onChange={(event) => setUsername(event.target.value)}
               autoComplete="username"
               required
@@ -202,12 +192,12 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
               {error.message}
             </p>
           ) : null}
-          <button className="btn" type="submit">
-            Ingresar
+          <button className="btn" type="submit" disabled={submitting}>
+            {submitting ? "Ingresando…" : "Ingresar"}
           </button>
         </form>
         <p className="admin-security-note">
-          Acceso de demostración. Antes de publicar se reemplazará por autenticación segura.
+          Acceso exclusivo para integrantes autorizados. La sesión se verifica en el servidor.
         </p>
       </section>
     </main>
@@ -215,6 +205,7 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
 }
 
 type RemateEditorProps = {
+  storageEnabled: boolean;
   initialRemate: AdminRemate;
   existingRemates: AdminRemate[];
   onSave: (remate: AdminRemate) => Promise<RemateMutationResult>;
@@ -223,6 +214,7 @@ type RemateEditorProps = {
 };
 
 function RemateEditor({
+  storageEnabled,
   initialRemate,
   existingRemates,
   onSave,
@@ -672,7 +664,7 @@ function RemateEditor({
         </label>
       </div>
 
-      <div className="admin-subsection">
+      {storageEnabled ? <div className="admin-subsection">
         <div className="admin-subsection-heading">
           <div>
             <h3>Lotes destacados</h3>
@@ -775,6 +767,8 @@ function RemateEditor({
           ) : null}
         </div>
       </div>
+
+      : <p role="status">Las fotos de lotes destacados se habilitarán al conectar Storage. Podés guardar y publicar el remate sin fotos; las imágenes existentes en la base no se modifican.</p>}
 
       <div className="admin-editor-actions">
         {form.estadoAdmin === "borrador" || form.estadoAdmin === "en_revision" ? (
@@ -1060,7 +1054,11 @@ function SiteContentEditor() {
   );
 }
 
-export function AdminPage() {
+export function AdminPage({ onLogout = () => {}, role = "editor", storageEnabled = false }: {
+  onLogout?: () => void;
+  role?: "administrador" | "editor";
+  storageEnabled?: boolean;
+}) {
   const {
     remates,
     saveRemate,
@@ -1068,9 +1066,6 @@ export function AdminPage() {
     changeRemateStatus,
     resetDemoData,
   } = useSiteData();
-  const [authenticated, setAuthenticated] = useState(
-    () => window.sessionStorage.getItem(ADMIN_SESSION_KEY) === "active"
-  );
   const [tab, setTab] = useState<AdminTab>("resumen");
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false);
   const [editingRemate, setEditingRemate] = useState<AdminRemate | null>(null);
@@ -1121,9 +1116,6 @@ export function AdminPage() {
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [isMobileNavigationOpen]);
 
-  if (!authenticated) {
-    return <AdminLogin onLogin={() => setAuthenticated(true)} />;
-  }
 
   const handleSaveRemate = async (remate: AdminRemate) => {
     return saveRemate(remate);
@@ -1216,10 +1208,7 @@ export function AdminPage() {
           }
     : null;
 
-  const logout = () => {
-    window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
-    setAuthenticated(false);
-  };
+  const logout = onLogout;
 
   const selectTab = (nextTab: AdminTab) => {
     setTab(nextTab);
@@ -1317,6 +1306,7 @@ export function AdminPage() {
           {editingRemate ? (
             <RemateEditor
               initialRemate={editingRemate}
+              storageEnabled={storageEnabled}
               existingRemates={remates}
               onSave={handleSaveRemate}
               onSaved={() => {
@@ -1458,6 +1448,8 @@ export function AdminPage() {
                             <button
                               className="danger"
                               type="button"
+                              disabled={role !== "administrador"}
+                              title={role !== "administrador" ? "Sólo administradores pueden eliminar" : undefined}
                               onClick={() => void handleDelete(remate)}
                             >
                               Eliminar
@@ -1472,9 +1464,12 @@ export function AdminPage() {
             </section>
           ) : null}
 
-          {!editingRemate && tab === "contenido" ? <SiteContentEditor /> : null}
+          {!editingRemate && tab === "contenido" ? <>
+            <p role="status">La edición de contenido general está pendiente de conexión. Por ahora esta sección es de sólo lectura.</p>
+            <fieldset disabled><SiteContentEditor /></fieldset>
+          </> : null}
 
-          {!editingRemate ? (
+          {!editingRemate && storageEnabled ? (
             <div className="admin-demo-reset">
               <p>
                 Los cambios se guardan en este navegador. Esta persistencia es apropiada para la

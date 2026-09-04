@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createCompleteRemate } from "../test/fixtures";
 import type { AdminRemate } from "../types/site";
-import { SiteDataProvider } from "./SiteDataContext";
+import { SiteDataProvider } from "../test/DemoSiteDataProvider";
 import {
   useSiteData,
   type DataOperationResult,

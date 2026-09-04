@@ -2,16 +2,15 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ADMIN_SESSION_KEY, DEMO_ADMIN_CREDENTIALS } from "../admin/adminConfig";
 import { defaultSiteCopy } from "../data/siteCopy";
 import { siteContent } from "../data/siteContent";
-import { SiteDataProvider } from "../context/SiteDataContext";
+import { SiteDataProvider } from "../test/DemoSiteDataProvider";
 import {
   SiteDataContext,
   type SiteDataContextValue,
 } from "../context/siteDataContextValue";
 import { createCompleteRemate } from "../test/fixtures";
-import { AdminPage } from "./AdminPage";
+import { AdminLogin, AdminPage } from "./AdminPage";
 
 function renderAdmin() {
   return render(
@@ -19,7 +18,7 @@ function renderAdmin() {
       <MemoryRouter
         future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
       >
-        <AdminPage />
+        <AdminPage role="administrador" storageEnabled />
       </MemoryRouter>
     </SiteDataProvider>
   );
@@ -31,7 +30,7 @@ function renderAdminWithContext(value: SiteDataContextValue) {
       <MemoryRouter
         future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
       >
-        <AdminPage />
+        <AdminPage role="administrador" storageEnabled />
       </MemoryRouter>
     </SiteDataContext.Provider>
   );
@@ -48,49 +47,31 @@ describe("panel administrador", () => {
     vi.useRealTimers();
   });
 
-  it("rechaza credenciales incorrectas y permite ingresar con las válidas", async () => {
+  it("envía credenciales al servidor y muestra sus errores", async () => {
+    const login = vi.fn().mockRejectedValueOnce(new Error("Email o contraseña incorrectos.")).mockResolvedValue(undefined);
     const user = userEvent.setup();
-    renderAdmin();
-
-    await user.type(screen.getByLabelText("Usuario"), "incorrecto");
-    await user.type(screen.getByLabelText("Contraseña"), "incorrecta");
+    render(<AdminLogin onLogin={login} />);
+    await user.type(screen.getByLabelText("Email"), "admin@example.test");
+    await user.type(screen.getByLabelText("Contraseña"), "clave-de-prueba");
     await user.click(screen.getByRole("button", { name: "Ingresar" }));
-
-    const firstError = screen.getByRole("alert");
-    expect(firstError).toHaveAttribute("data-attempt", "1");
-    expect(screen.getByRole("button", { name: "Mostrar contraseña" })).toBeInTheDocument();
-
+    expect(await screen.findByRole("alert")).toHaveTextContent("Email o contraseña incorrectos.");
     await user.click(screen.getByRole("button", { name: "Ingresar" }));
-    expect(screen.getByRole("alert")).toHaveAttribute("data-attempt", "2");
-    expect(screen.getByRole("button", { name: "Mostrar contraseña" })).toBeInTheDocument();
-
-    await user.clear(screen.getByLabelText("Usuario"));
-    await user.clear(screen.getByLabelText("Contraseña"));
-    await user.type(screen.getByLabelText("Usuario"), DEMO_ADMIN_CREDENTIALS.username);
-    await user.type(screen.getByLabelText("Contraseña"), DEMO_ADMIN_CREDENTIALS.password);
-    await user.click(screen.getByRole("button", { name: "Ingresar" }));
-
-    expect(screen.getByRole("heading", { name: "Panel administrador" })).toBeInTheDocument();
-    expect(window.sessionStorage.getItem(ADMIN_SESSION_KEY)).toBe("active");
+    expect(login).toHaveBeenLastCalledWith("admin@example.test", "clave-de-prueba");
+    expect(window.sessionStorage.length).toBe(0);
   });
 
-  it("retira el error de inicio de sesión luego de diez segundos", () => {
+  it("retira el error de inicio de sesión luego de diez segundos", async () => {
     vi.useFakeTimers();
-    renderAdmin();
-
-    fireEvent.change(screen.getByLabelText("Usuario"), { target: { value: "incorrecto" } });
-    fireEvent.change(screen.getByLabelText("Contraseña"), {
-      target: { value: "incorrecta" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Ingresar" }));
-
+    render(<AdminLogin onLogin={async () => { throw new Error("Credenciales incorrectas."); }} />);
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "admin@example.test" } });
+    fireEvent.change(screen.getByLabelText("Contraseña"), { target: { value: "incorrecta" } });
+    await act(async () => { fireEvent.submit(screen.getByRole("button", { name: "Ingresar" }).closest("form")!); });
     expect(screen.getByRole("alert")).toBeInTheDocument();
     act(() => vi.advanceTimersByTime(10_000));
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("abre el menú lateral y lo cierra al cambiar de sección", async () => {
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();
     renderAdmin();
 
@@ -106,7 +87,6 @@ describe("panel administrador", () => {
   });
 
   it("bloquea la publicación de la precarga mientras falten datos obligatorios", async () => {
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();
     renderAdmin();
 
@@ -127,7 +107,6 @@ describe("panel administrador", () => {
 
   it("retira el aviso de publicación luego de diez segundos", () => {
     vi.useFakeTimers();
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     renderAdmin();
 
     fireEvent.click(screen.getByRole("button", { name: "Remates" }));
@@ -143,7 +122,6 @@ describe("panel administrador", () => {
   });
 
   it("permite guardar una carga incompleta como borrador", async () => {
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();
     renderAdmin();
 
@@ -162,7 +140,6 @@ describe("panel administrador", () => {
   });
 
   it("permite publicar directamente un borrador completo", async () => {
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();
     const completeDraft = createCompleteRemate({ estadoAdmin: "borrador" });
     window.localStorage.setItem(
@@ -188,7 +165,6 @@ describe("panel administrador", () => {
   });
 
   it("agrega varias fotos y exige un nombre para cada una", async () => {
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();
     renderAdmin();
 
@@ -223,7 +199,6 @@ describe("panel administrador", () => {
   });
 
   it("muestra los errores de imagen debajo de la zona de carga", async () => {
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();
     renderAdmin();
 
@@ -250,7 +225,6 @@ describe("panel administrador", () => {
   });
 
   it("oculta y vuelve a publicar un remate", async () => {
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();
     renderAdmin();
 
@@ -266,7 +240,6 @@ describe("panel administrador", () => {
   });
 
   it("no finaliza ni cancela un remate si se cierra el modal", async () => {
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();
     renderAdmin();
 
@@ -288,7 +261,6 @@ describe("panel administrador", () => {
   });
 
   it("muestra el modal propio al eliminar y restablecer datos", async () => {
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();
     renderAdmin();
 
@@ -308,7 +280,6 @@ describe("panel administrador", () => {
   });
 
   it("finaliza y cancela remates desde el modal de confirmación", async () => {
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();
     renderAdmin();
 
@@ -336,7 +307,6 @@ describe("panel administrador", () => {
   });
 
   it("mantiene abierto el editor y conserva los datos locales ante un conflicto", async () => {
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const remate = createCompleteRemate();
     const saveRemate = vi.fn<SiteDataContextValue["saveRemate"]>().mockResolvedValue({
       status: "conflict",
@@ -383,7 +353,6 @@ describe("panel administrador", () => {
   });
 
   it("mantiene fijo el slug cuando cambia el título de un remate publicado", async () => {
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, "active");
     const user = userEvent.setup();
     renderAdmin();
 
