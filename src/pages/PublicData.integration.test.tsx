@@ -42,6 +42,7 @@ describe("carga pública sin respaldo local", () => {
     await userEvent.setup().click(screen.getByRole("button", { name: "Reintentar" }));
     expect(await screen.findByRole("heading", { name: "Contenido remoto verificado" })).toBeInTheDocument();
     expect(screen.getAllByText("Remate remoto verificado").length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: "Ver detalle del remate" })).toHaveClass("btn", "btn-outline");
     expect(screen.queryByText("Maquinaria y herramientas")).not.toBeInTheDocument();
   });
 

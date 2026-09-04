@@ -231,6 +231,7 @@ function RemateEditor({
   const [isDraggingLotImages, setIsDraggingLotImages] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const noticeSequence = useRef(0);
+  const noticeRef = useRef<HTMLParagraphElement>(null);
   const lotUploadNoticeSequence = useRef(0);
   const lotSequence = useRef(0);
   const dragDepth = useRef(0);
@@ -249,6 +250,9 @@ function RemateEditor({
 
   useEffect(() => {
     if (!notice) return;
+
+    noticeRef.current?.focus();
+    noticeRef.current?.scrollIntoView?.({ behavior: "smooth", block: "center" });
 
     const timeoutId = window.setTimeout(() => setNotice(null), 10_000);
     return () => window.clearTimeout(timeoutId);
@@ -452,10 +456,12 @@ function RemateEditor({
 
       {notice ? (
         <p
+          ref={noticeRef}
           key={notice.id}
           className="form-status form-status-error transient-message-enter"
           data-attempt={notice.id}
           role="alert"
+          tabIndex={-1}
         >
           {notice.message}
         </p>

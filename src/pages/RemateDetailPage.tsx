@@ -254,27 +254,6 @@ export function RemateDetailPage() {
           </div>
         </section>
 
-        <section className="section alt">
-          <div className="container detail-grid">
-            <article className="detail-card">
-              <h2>Requisitos para participar</h2>
-              <ul className="detail-list">
-                {remate.requisitos.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </article>
-            <article className="detail-card">
-              <h2>Condiciones del remate</h2>
-              <ul className="detail-list">
-                {remate.condiciones.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </article>
-          </div>
-        </section>
-
         <section className="section">
           <div className="container">
             <div className="section-title reveal">
@@ -344,6 +323,27 @@ export function RemateDetailPage() {
         </section>
 
         <section className="section alt">
+          <div className="container detail-grid">
+            <article className="detail-card">
+              <h2>Requisitos para participar</h2>
+              <ul className="detail-list">
+                {remate.requisitos.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+            <article className="detail-card">
+              <h2>Condiciones del remate</h2>
+              <ul className="detail-list">
+                {remate.condiciones.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section className="section">
           <div className="container detail-cta">
             <div>
               <p className="eyebrow">Siguiente paso</p>

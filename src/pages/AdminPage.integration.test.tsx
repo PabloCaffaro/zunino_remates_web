@@ -88,6 +88,8 @@ describe("panel administrador", () => {
 
   it("bloquea la publicación de la precarga mientras falten datos obligatorios", async () => {
     const user = userEvent.setup();
+    const scrollIntoView = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
     renderAdmin();
 
     await user.click(screen.getByRole("button", { name: "Remates" }));
@@ -100,7 +102,9 @@ describe("panel administrador", () => {
     await user.click(within(pendingRow as HTMLTableRowElement).getByRole("button", { name: "Editar" }));
     await user.click(screen.getByRole("button", { name: "Publicar remate" }));
 
-    expect(screen.getByText(/no puede publicarse/i)).toBeInTheDocument();
+    const publicationError = screen.getByText(/no puede publicarse/i);
+    expect(publicationError).toHaveFocus();
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "center" });
     expect(screen.getByRole("checkbox", { name: "Fecha a confirmar" })).toBeChecked();
     expect(screen.getByText(/al menos un requisito/i)).toBeInTheDocument();
   });

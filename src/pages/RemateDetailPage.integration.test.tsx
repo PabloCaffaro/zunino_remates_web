@@ -63,6 +63,16 @@ describe("visibilidad del detalle", () => {
 });
 
 describe("carrusel de lotes destacados", () => {
+  it("muestra los lotes antes que los requisitos y las condiciones", async () => {
+    await renderDetailPage();
+    const lotsHeading = screen.getByText("Lotes destacados");
+    const requirementsHeading = screen.getByRole("heading", { name: "Requisitos para participar" });
+    const conditionsHeading = screen.getByRole("heading", { name: "Condiciones del remate" });
+
+    expect(lotsHeading.compareDocumentPosition(requirementsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(lotsHeading.compareDocumentPosition(conditionsHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("informa cuando el remate no tiene lotes destacados", async () => {
     const remateWithoutLots = createCompleteRemate({ slug: "maquinaria-y-herramientas" });
     window.localStorage.setItem(

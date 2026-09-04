@@ -24,7 +24,7 @@ export function UpcomingRematesSection({ remates }: UpcomingRematesSectionProps)
               <h3>{remate.titulo}</h3>
               <p className="card-location">{remate.lugar}</p>
               <p>{remate.detalle}</p>
-              <Link className="text-link" to={`/remates/${remate.slug}`}>
+              <Link className="btn btn-outline btn-small" to={`/remates/${remate.slug}`}>
                 Ver detalle del remate
               </Link>
             </article>
