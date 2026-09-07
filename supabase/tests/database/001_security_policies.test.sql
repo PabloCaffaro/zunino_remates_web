@@ -370,7 +370,7 @@ select ok(
 );
 
 set local role anon;
-set local request.jwt.claim.sub = '00000000-0000-0000-0000-000000000000';
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000000","role":"authenticated"}', true);
 
 select is(
   (select count(*) from public.remates),
@@ -402,7 +402,7 @@ select is(
 
 reset role;
 set local role authenticated;
-set local request.jwt.claim.sub = '10000000-0000-0000-0000-000000000004';
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000004","role":"authenticated"}', true);
 
 select is(
   (select count(*) from public.remates),
@@ -436,7 +436,7 @@ select throws_ok(
 
 reset role;
 set local role authenticated;
-set local request.jwt.claim.sub = '10000000-0000-0000-0000-000000000003';
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000003","role":"authenticated"}', true);
 
 select is(
   (select count(*) from public.remates),
@@ -452,7 +452,7 @@ select is(
 
 reset role;
 set local role authenticated;
-set local request.jwt.claim.sub = '10000000-0000-0000-0000-000000000002';
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000002","role":"authenticated"}', true);
 
 select is(
   (select count(*) from public.remates),
@@ -488,7 +488,7 @@ select is(
       insert into storage.objects (bucket_id, name)
       values (
         'lotes-remates',
-        '20000000-0000-0000-0000-000000000001/lote-editor.webp'
+        '20000000-0000-0000-0000-000000000001/30000000-0000-4000-8000-000000000001.webp'
       )
       returning 1
     )
@@ -502,9 +502,9 @@ select is(
   pg_temp.affected_rows($test$
     with actualizadas as (
       update storage.objects
-      set name = '20000000-0000-0000-0000-000000000001/lote-editor-actualizado.webp'
+      set name = '20000000-0000-0000-0000-000000000001/30000000-0000-4000-8000-000000000002.webp'
       where bucket_id = 'lotes-remates'
-        and name = '20000000-0000-0000-0000-000000000001/lote-editor.webp'
+        and name = '20000000-0000-0000-0000-000000000001/30000000-0000-4000-8000-000000000001.webp'
       returning 1
     )
     select count(*) from actualizadas
@@ -602,7 +602,7 @@ select is(
 
 reset role;
 set local role authenticated;
-set local request.jwt.claim.sub = '10000000-0000-0000-0000-000000000001';
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
 
 select is(
   (select count(*) from public.admin_profiles),

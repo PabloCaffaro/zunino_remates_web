@@ -34,7 +34,8 @@ export function validateRemate(body: Record<string, unknown>) {
     if (!Array.isArray(items) || items.length > 100 || items.some((value) => typeof value !== "string" || !value.trim() || value.length > 2000)) throw new ApiError(400, `Lista inválida: ${key}.`);
     result[key] = items;
   }
-  if (!Array.isArray(r.destacados) || r.destacados.length) throw new ApiError(400, "La carga de fotos se habilitará en la etapa de Storage.");
+  if (!Array.isArray(r.destacados)) throw new ApiError(400, "Los lotes destacados no son válidos.");
+  result.destacados = r.destacados;
   return { remate: result, version: requireVersion(r.version) };
 }
 

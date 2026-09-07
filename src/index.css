@@ -1013,6 +1013,23 @@ textarea[aria-invalid="true"] {
   padding: clamp(22px, 4vw, 38px);
 }
 
+.admin-remate-editor {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-lots-section {
+  order: 1;
+}
+
+.admin-remate-rules {
+  order: 2;
+}
+
+.admin-remate-editor .admin-editor-actions {
+  order: 3;
+}
+
 .admin-info-box {
   margin-bottom: 24px;
   padding: 15px 17px;
@@ -2069,15 +2086,22 @@ textarea:focus-visible {
   }
 
   .lightbox-overlay {
-    padding: 16px;
+    padding: 0;
   }
 
   .lightbox-content {
-    width: calc(100% - 104px);
+    width: 100%;
+    min-height: 100dvh;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .lightbox-image {
-    max-height: 58vh;
+    max-height: 78dvh;
+    object-fit: contain;
+    border-radius: 0;
   }
 
   .lot-strip-track {
@@ -2092,11 +2116,11 @@ textarea:focus-visible {
   }
 
   .lightbox-nav-left {
-    left: -50px;
+    left: 10px;
   }
 
   .lightbox-nav-right {
-    right: -50px;
+    right: 10px;
   }
 
   .admin-login-card {

@@ -102,7 +102,7 @@ publicación incompleta.
 
 Los buckets creados son:
 
-- `lotes-remates`: JPEG, PNG o WebP, hasta 5 MB.
+- `lotes-remates`: JPEG, PNG o WebP, hasta 700.000 bytes.
 
 Cada archivo debe guardarse dentro de una carpeta cuyo nombre sea el UUID del
 remate:
@@ -117,7 +117,7 @@ huérfanos o pertenecientes a remates no publicados no se exponen aunque alguien
 conozca la ruta.
 
 Solo los usuarios administrativos activos pueden subir, reemplazar o eliminar
-objetos. La API generará capacidades o URLs firmadas de corta duración;
+objetos. La API genera URLs firmadas con una vigencia de una hora;
 `getPublicUrl()` no corresponde para este bucket.
 
 ## Formulario de contacto
@@ -136,9 +136,8 @@ las notas internas y los datos de atención.
 
 ## Pruebas de base de datos
 
-Las 55 pruebas pgTAP están en `tests/database` y verifican RLS, separación de
-roles, protección de la configuración, auditoría, Storage y minimización de
-datos personales.
+Las pruebas pgTAP están en `tests/database` y verifican RLS, separación de
+roles, transacciones administrativas, contenido, Storage y minimización de datos.
 
 Se ejecutaron contra el entorno de staging dentro de una transacción con
 `rollback`. Cuando la base local esté disponible, el comando habitual será:
@@ -150,9 +149,9 @@ supabase test db
 La ejecución de pruebas no conserva sus datos. En CI deberán ejecutarse contra
 una base temporal creada desde las migraciones.
 
-## Variables futuras del servidor
+## Variables del servidor
 
-Cuando conectemos la API de Vercel se necesitarán:
+La API de Vercel utiliza:
 
 ```env
 SUPABASE_URL=https://TU-PROYECTO.supabase.co
@@ -170,7 +169,7 @@ navegador consumirá solamente `/api/v1/*`.
 - Crear el usuario administrador definitivo.
 - Configurar recuperación de contraseña y política de sesiones.
 - Crear el endpoint de Vercel para el formulario.
-- Migrar los remates existentes desde `localStorage`.
+- Migrar y revisar los datos reales en el proyecto productivo separado.
 
 ## Datos demostrativos
 

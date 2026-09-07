@@ -36,7 +36,7 @@ type PublicRemate = {
   catalogoEstado: string;
   catalogoPublicacionEstado: "disponible" | "proximamente" | "preliminar";
   descripcionLarga: string;
-  destacados: never[];
+  destacados: Array<{ id: string; nombre: string; imagen: { url: string; alt: string } }>;
   requisitos: string[];
   condiciones: string[];
 };
@@ -112,7 +112,7 @@ export const getPublicContent = async (): Promise<PublicContent> => {
 
 export const getPublishedRemates = async (): Promise<PublicRemate[]> => {
   const supabase = createServerSupabaseClient();
-  const [rematesResult, requirementsResult, conditionsResult] = await Promise.all([
+  const [rematesResult, requirementsResult, conditionsResult, lotsResult] = await Promise.all([
     supabase
       .from("remates")
       .select(
@@ -129,6 +129,11 @@ export const getPublishedRemates = async (): Promise<PublicRemate[]> => {
       .from("remate_condiciones")
       .select("remate_id, contenido, orden")
       .order("orden", { ascending: true }),
+    supabase
+      .from("lotes_destacados")
+      .select("id, remate_id, nombre, imagen_storage_path, imagen_alt, orden")
+      .eq("visible", true)
+      .order("orden", { ascending: true }),
   ]);
 
   const remates = requireData(rematesResult.data, rematesResult.error);
@@ -137,6 +142,14 @@ export const getPublishedRemates = async (): Promise<PublicRemate[]> => {
     requirementsResult.error,
   );
   const conditions = requireData(conditionsResult.data, conditionsResult.error);
+  const lots = requireData(lotsResult.data, lotsResult.error);
+
+  const paths = lots.map((lot) => lot.imagen_storage_path);
+  const signedResult = paths.length
+    ? await supabase.storage.from("lotes-remates").createSignedUrls(paths, 3600)
+    : { data: [], error: null };
+  const signedUrls = requireData(signedResult.data, signedResult.error);
+  if (signedUrls.some((item) => item.error || !item.signedUrl)) throw new Error("No se pudieron firmar las imágenes públicas.");
 
   return remates.map((remate) => ({
     id: remate.id,
@@ -155,8 +168,10 @@ export const getPublishedRemates = async (): Promise<PublicRemate[]> => {
     catalogoEstado: remate.catalogo_descripcion,
     catalogoPublicacionEstado: remate.catalogo_estado,
     descripcionLarga: remate.descripcion_larga,
-    // Las imágenes se conectarán cuando se implemente el bloque de Storage.
-    destacados: [],
+    destacados: lots
+      .map((lot, index) => ({ ...lot, signedUrl: signedUrls[index]?.signedUrl }))
+      .filter((lot) => lot.remate_id === remate.id)
+      .map((lot) => ({ id: lot.id, nombre: lot.nombre, imagen: { url: lot.signedUrl!, alt: lot.imagen_alt } })),
     requisitos: requirements
       .filter((item) => item.remate_id === remate.id)
       .map((item) => item.contenido),

@@ -2,11 +2,9 @@
 
 ## Alcance actual
 
-El panel se encuentra en `/admin12345`. El acceso y los datos actuales son de
-demostración y no deben utilizarse en una publicación real.
-
-Las credenciales temporales están centralizadas en `src/admin/adminConfig.ts`.
-Antes de producción serán reemplazadas por Supabase Auth.
+El panel se encuentra en `/admin12345`. En `desarrollo`, el acceso utiliza
+Supabase Auth y los datos se guardan mediante la API de Vercel en PostgreSQL y
+Storage. El proyecto Supabase actual sigue siendo de staging, no de producción.
 
 ## Pantallas
 
@@ -70,17 +68,15 @@ En esta versión, el catálogo se describe mediante texto y estado de publicaci�
 No se cargan archivos de catálogo. Los lotes destacados y sus imágenes son
 opcionales.
 
-En la demostración, el navegador admite imágenes de hasta aproximadamente 700 KB
-mediante Data URL.
+El navegador prepara la carga y la API valida nuevamente formato, firma y peso
+antes de guardar el archivo en Storage privado.
 
 Se pueden arrastrar varias fotos juntas a la zona de carga o seleccionarlas desde
 el dispositivo. Cada archivo crea una tarjeta con miniatura y un campo de nombre.
 La zona permanece visible debajo de las tarjetas para agregar más fotos en
 cualquier momento.
 
-Al conectar Supabase Storage, los límites previstos serán:
-
-- JPEG, PNG o WebP de hasta 5 MB.
+- JPEG, PNG o WebP de hasta 700.000 bytes por archivo.
 
 Los archivos se organizarán dentro de una carpeta identificada por el UUID del
 remate.
@@ -101,7 +97,7 @@ es reversible y conserva el slug para una publicación posterior.
 Las transiciones admitidas son:
 
 ```text
-borrador → en_revision
+borrador → en_revision | publicado
 en_revision → borrador | publicado
 publicado → oculto | finalizado | cancelado
 oculto → publicado | finalizado | cancelado

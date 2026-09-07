@@ -29,13 +29,18 @@ Anotar un pendiente no autoriza implementarlo ni cambiar producción.
   contraseñas filtradas antes de producción. El asesor de seguridad la reporta
   actualmente desactivada.
 
-### Funcionalidad todavía diferida
+### Funcionalidad implementada que debe verificarse en producción
 
-- **Pendiente:** conectar edición de contenido general a la API y PostgreSQL.
-- **Pendiente:** implementar Supabase Storage para imágenes, sus políticas y la
-  limpieza de archivos huérfanos. Hasta entonces la API rechaza imágenes nuevas.
-- **Pendiente:** validar el flujo completo en móvil, incluido el lightbox de lotes
-  destacados a tamaño útil de pantalla.
+- **Verificar:** edición de contenido general mediante API y PostgreSQL.
+- **Verificar:** carga, reemplazo y eliminación de imágenes en Storage privado.
+  La API realiza limpieza compensatoria; revisar periódicamente objetos huérfanos
+  ante fallas externas de red.
+- **Verificar:** flujo completo en móvil. El lightbox ya ocupa el viewport y usa
+  `object-fit: contain`, pero debe probarse en dispositivos reales.
+- **Revisar:** los RPC `admin_content_snapshot` y `admin_save_content` son
+  `SECURITY DEFINER`, tienen `search_path` fijo, permiso sólo para `authenticated`
+  y validan un administrador activo. Supabase los informa como advertencia por
+  diseño; confirmar esta excepción antes de producción.
 
 ### Verificación antes de producción
 

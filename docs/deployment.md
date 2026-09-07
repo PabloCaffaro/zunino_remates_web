@@ -14,9 +14,9 @@ registro de decisiones temporales y verificaciones detectadas durante el trabajo
   sin sustituir los datos remotos por datos de demostración.
 - Revisar contenido y datos de contacto antes de compartir la URL.
 
-La sesión administrativa y los datos se guardan localmente en el navegador.
-Por eso esta publicación sirve para presentar la web, pero no para administrar
-remates reales desde varias personas.
+En `desarrollo`, la sesión se guarda en una cookie cifrada `HttpOnly` y los
+datos se persisten en Supabase, por lo que distintas personas autorizadas pueden
+administrar sin depender de un navegador concreto.
 
 ## Control de calidad
 
@@ -41,9 +41,8 @@ SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
 SESSION_SECRET=UN_SECRETO_ALEATORIO_LARGO
 ```
 
-`SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` son necesarias para comprobar la
-conexión. `SESSION_SECRET` se utilizará cuando se implemente la autenticación
-real y todavía no es necesaria para el endpoint de salud.
+Las tres variables son obligatorias para el panel; `SESSION_SECRET` debe ser
+aleatoria, larga y distinta por entorno.
 
 No configurar `SUPABASE_SERVICE_ROLE_KEY`, contraseñas ni otros secretos como
 variables `VITE_*`: esos valores quedan disponibles en el navegador.
@@ -94,8 +93,8 @@ columnas y RLS. No utiliza `service_role`. Si la API no está disponible, el
 frontend conserva temporalmente el contenido demostrativo local para no mostrar
 una página vacía.
 
-Las imágenes de lotes todavía no se entregan desde estos endpoints. Se
-incorporarán junto con URLs firmadas cuando se implemente Supabase Storage.
+Las imágenes de lotes se guardan en el bucket privado `lotes-remates` y se
+entregan mediante URLs firmadas con una vigencia de una hora.
 
 ## Supabase
 

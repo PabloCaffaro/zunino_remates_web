@@ -42,8 +42,9 @@ SUPABASE_PUBLISHABLE_KEY=TU_CLAVE_PUBLICABLE
 SESSION_SECRET=UN_SECRETO_ALEATORIO_LARGO
 ```
 
-La API utiliza `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` para el endpoint de
-salud. `SESSION_SECRET` queda pendiente hasta implementar la autenticación real.
+La API utiliza `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` para lecturas,
+autenticación y operaciones con la identidad del usuario. `SESSION_SECRET`
+cifra y firma la cookie administrativa.
 React consumirá `/api/v1/*` y no recibirá configuración de Supabase. Todo valor
 que comienza con `VITE_` queda disponible en el navegador, por lo que no se
 usará para esta integración.
@@ -59,14 +60,9 @@ permite validar cambios realizados en Supabase.
 
 ## Datos de demostración
 
-Mientras Supabase no esté conectado:
-
-- El contenido se inicializa desde `src/data/`.
-- Los cambios del panel se guardan en `localStorage`.
-- La sesión administrativa se guarda en `sessionStorage`.
-- La información puede perderse al limpiar los datos del navegador.
-
-El panel incluye una opción para restablecer los datos iniciales.
+El proveedor local de `src/context` se conserva para pruebas automatizadas y
+para `main` mientras no se promueva esta integración. En `desarrollo`, el panel
+real no guarda sesión ni datos administrativos en el almacenamiento del navegador.
 
 ## Calidad
 
@@ -89,17 +85,14 @@ npm run test:watch
 El esquema de staging está aplicado. Las instrucciones y el estado de las
 migraciones están en [`supabase/README.md`](../supabase/README.md).
 
-La conexión se implementa por etapas:
+La conexión implementada incluye:
 
 1. Configurar `.env.local`.
-2. Instalar el cliente oficial de Supabase para el código servidor.
+2. Cliente oficial de Supabase para el código servidor.
 3. Crear la API de Vercel y comprobar la conexión con `/api/v1/health`.
-4. Reemplazar la autenticación de demostración.
-5. Reemplazar las lecturas y escrituras de `localStorage` por endpoints.
-
-Los puntos 1 a 3 ya están implementados para la lectura pública. El panel
-administrativo sigue utilizando `localStorage` hasta completar autenticación y
-endpoints de escritura.
+4. Supabase Auth y sesión de servidor cifrada.
+5. Lecturas y escrituras administrativas mediante endpoints.
+6. Contenido general e imágenes privadas con URLs firmadas temporales.
 
 Las instalaciones se realizan manualmente y deben acordarse antes de modificar
 dependencias.
@@ -107,6 +100,6 @@ dependencias.
 ## Problemas frecuentes
 
 - Si una ruta interna devuelve `404`, falta la regla SPA del servidor.
-- Si los cambios del panel desaparecen, revisar el almacenamiento del navegador.
+- Si el panel no carga, revisar las variables, la sesión y los logs de `/api/v1/admin/*`.
 - Si npm reporta certificados, probar `npm ping` desde la terminal local.
 - Si aparecen caracteres incorrectos, confirmar que el archivo esté en UTF-8.

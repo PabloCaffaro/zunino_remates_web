@@ -29,8 +29,8 @@ describe("protecciones de la API administrativa", () => {
     expect(result.remate).not.toHaveProperty("created_by");
   });
 
-  it("rechaza imágenes hasta habilitar Storage, versiones inválidas y errores de permisos", () => {
-    expect(() => validateRemate({ remate: { ...validRemate, destacados: [{ id: "1" }] } })).toThrow(/Storage/);
+  it("conserva los lotes para validarlos en Storage y rechaza versiones inválidas", () => {
+    expect(validateRemate({ remate: { ...validRemate, destacados: [{ id: "1" }] } }).remate.destacados).toEqual([{ id: "1" }]);
     expect(() => requireVersion(-1)).toThrow(ApiError);
     expect(databaseError({ code: "42501" })).toMatchObject({ status: 403 });
   });

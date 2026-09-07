@@ -4,9 +4,9 @@ Sitio web para promocionar remates presenciales, presentar sus catálogos y
 administrar el contenido de la empresa.
 
 El proyecto incluye una web pública, páginas de detalle por remate y un panel
-administrativo. Actualmente el panel utiliza autenticación y persistencia local
-de demostración. El esquema de producción para Supabase ya está diseñado, pero
-su conexión con React continúa pendiente.
+administrativo. En la rama `desarrollo`, la web pública y el panel utilizan una
+API del mismo origen conectada con Supabase Auth, PostgreSQL y Storage privado.
+`main` conserva por ahora la versión de demostración.
 
 ## Tecnologías
 
@@ -14,7 +14,7 @@ su conexión con React continúa pendiente.
 - Vite.
 - React Router.
 - Vitest y React Testing Library.
-- Supabase, planificado para Auth, PostgreSQL y Storage.
+- Supabase para Auth, PostgreSQL y Storage.
 
 ## Requisitos
 
@@ -53,10 +53,10 @@ npm run build
 
 - `/`: página principal.
 - `/remates/:slug`: detalle de un remate publicado.
-- `/admin12345`: panel administrativo de demostración.
+- `/admin12345`: panel administrativo protegido por sesión de servidor.
 
-La ruta administrativa no es una medida de seguridad. Antes de producción, el
-acceso local debe reemplazarse por Supabase Auth y políticas RLS.
+La ruta administrativa no es una medida de seguridad: el acceso se protege con
+Supabase Auth, cookie cifrada `HttpOnly`, API del mismo origen y políticas RLS.
 
 ## Estructura
 
@@ -82,16 +82,15 @@ Implementado:
 - Diseño responsive y accesibilidad básica.
 - Remates, catálogos y páginas de detalle.
 - Formulario de contacto mediante FormSubmit.
-- Panel administrativo de demostración.
+- Panel administrativo conectado a Supabase en `desarrollo`.
 - Validación previa a la publicación.
 - Pruebas unitarias y de integración.
-- Esquema, RLS y Storage diseñados para Supabase.
+- Lectura pública, CRUD administrativo, contenido general e imágenes mediante Supabase.
 
 Pendiente antes de producción:
 
-- Conectar React con la API de Vercel y la API con Supabase.
-- Sustituir login y `localStorage` de demostración.
-- Migrar imágenes y datos reales.
+- Crear y validar un proyecto Supabase separado para producción.
+- Migrar y revisar los datos reales.
 - Implementar el formulario seguro mediante la API de Vercel.
 - Configurar hosting, dominio, variables, rutas SPA y headers.
 - Completar contenido, SEO y pruebas finales.

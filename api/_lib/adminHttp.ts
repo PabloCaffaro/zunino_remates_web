@@ -14,7 +14,7 @@ export function checkOrigin(request: Request) {
   }
 }
 
-export async function readJson(request: Request): Promise<Record<string, unknown>> {
+export async function readJson(request: Request, maxBytes = 128_000): Promise<Record<string, unknown>> {
   if (request.headers.get("content-type")?.split(";")[0] !== "application/json") {
     throw new ApiError(415, "Se requiere contenido JSON.");
   }
@@ -27,7 +27,7 @@ export async function readJson(request: Request): Promise<Record<string, unknown
     const { done, value } = await reader.read();
     if (done) break;
     size += value.length;
-    if (size > 128_000) {
+    if (size > maxBytes) {
       await reader.cancel();
       throw new ApiError(413, "La solicitud supera el tamaño permitido.");
     }

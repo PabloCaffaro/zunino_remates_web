@@ -8,7 +8,7 @@ insert into auth.users (id, email) values
 insert into public.admin_profiles (user_id, nombre, rol) values
  ('90000000-0000-4000-8000-000000000001', 'QA administrador', 'administrador'),
  ('90000000-0000-4000-8000-000000000002', 'QA editor', 'editor');
-select set_config('test.payload', '{"id":"90000000-0000-4000-8000-000000000003","slug":"qa-transaccion","titulo":"QA remate","subtitulo":"QA subtítulo","fechaHora":null,"fechaPorConfirmar":true,"lugar":"QA lugar","ubicacionDetalle":"QA ubicación","detalle":"QA breve","descripcionLarga":"QA completa","catalogoEstado":"QA catálogo","catalogoPublicacionEstado":"preliminar","estadoAdmin":"borrador","requisitos":["QA requisito"],"condiciones":["QA condición"]}', true);
+select set_config('test.payload', '{"id":"90000000-0000-4000-8000-000000000003","slug":"qa-transaccion","titulo":"QA remate","subtitulo":"QA subtítulo","fechaHora":null,"fechaPorConfirmar":true,"lugar":"QA lugar","ubicacionDetalle":"QA ubicación","detalle":"QA breve","descripcionLarga":"QA completa","catalogoEstado":"QA catálogo","catalogoPublicacionEstado":"preliminar","estadoAdmin":"borrador","destacados":[],"requisitos":["QA requisito"],"condiciones":["QA condición"]}', true);
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"90000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 select is(public.admin_session_active(), false, 'Un JWT sin sesión activa no pasa el control de sesión');

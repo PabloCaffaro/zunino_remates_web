@@ -438,7 +438,7 @@ function RemateEditor({
   };
 
   return (
-    <section className="admin-editor">
+    <section className="admin-editor admin-remate-editor">
       <div className="admin-editor-heading">
         <div>
           <p className="eyebrow">Editor de remate</p>
@@ -639,7 +639,7 @@ function RemateEditor({
         </label>
       </div>
 
-      <div className="admin-form-grid admin-subsection">
+      <div className="admin-form-grid admin-subsection admin-remate-rules">
         <label>
           <FieldTitle description="Condiciones que una persona debe cumplir para participar. Escribí un requisito por línea.">
             Requisitos para participar *
@@ -670,7 +670,7 @@ function RemateEditor({
         </label>
       </div>
 
-      {storageEnabled ? <div className="admin-subsection">
+      {storageEnabled ? <div className="admin-subsection admin-lots-section">
         <div className="admin-subsection-heading">
           <div>
             <h3>Lotes destacados</h3>
@@ -830,11 +830,14 @@ function SiteContentEditor() {
   const [draft, setDraft] = useState<EditableSiteContent>(content);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => setDraft(content), [content]);
 
   const save = async () => {
+    setIsSaving(true);
     const result = await saveContent(draft);
+    setIsSaving(false);
     if (result.status === "error") {
       setSaveError(result.message);
       return;
@@ -852,8 +855,8 @@ function SiteContentEditor() {
           <p className="eyebrow">Contenido general</p>
           <h2>Textos y datos de la empresa</h2>
         </div>
-        <button className="btn" type="button" onClick={() => void save()}>
-          Guardar cambios
+        <button className="btn" type="button" disabled={isSaving} onClick={() => void save()}>
+          {isSaving ? "Guardando…" : "Guardar cambios"}
         </button>
       </div>
       {saved ? <p className="form-status form-status-success">Cambios guardados.</p> : null}
@@ -1470,10 +1473,7 @@ export function AdminPage({ onLogout = () => {}, role = "editor", storageEnabled
             </section>
           ) : null}
 
-          {!editingRemate && tab === "contenido" ? <>
-            <p role="status">La edición de contenido general está pendiente de conexión. Por ahora esta sección es de sólo lectura.</p>
-            <fieldset disabled><SiteContentEditor /></fieldset>
-          </> : null}
+          {!editingRemate && tab === "contenido" ? <SiteContentEditor /> : null}
 
           {!editingRemate && storageEnabled ? (
             <div className="admin-demo-reset">

@@ -2,17 +2,13 @@
 
 ## Estado actual
 
-La aplicación todavía tiene elementos de demostración:
+En `desarrollo`, el panel usa Supabase Auth, una cookie cifrada `HttpOnly`, una
+API del mismo origen y RLS. Los datos administrativos ya no se persisten en el
+navegador. El formulario de contacto todavía utiliza un servicio externo y el
+proyecto Supabase actual es únicamente de staging. La ruta `/admin12345` no es,
+por sí misma, una medida de seguridad.
 
-- Usuario y contraseña dentro del frontend.
-- Sesión almacenada en `sessionStorage`.
-- Contenido persistido en `localStorage`.
-- Formulario enviado mediante un servicio externo.
-
-Estos mecanismos sirven para desarrollo, pero no protegen un entorno público.
-La ruta `/admin12345` no es una medida de seguridad.
-
-## Arquitectura prevista
+## Arquitectura implementada en desarrollo
 
 - Supabase Auth para identidad y sesiones.
 - `admin_profiles` para roles `administrador` y `editor`.
@@ -66,10 +62,10 @@ activo.
 
 ## Archivos
 
-- Las imágenes de lotes se guardarán en un bucket privado.
+- Las imágenes de lotes se guardan en un bucket privado.
 - Solo el equipo autenticado podrá subir o eliminar.
-- Los visitantes accederán a archivos asociados a remates publicados.
-- Se validarán tipo, tamaño y nombre de archivo.
+- Los visitantes acceden mediante URLs firmadas sólo a lotes visibles de remates publicados.
+- La API valida tipo, firma, tamaño y ruta generada por el servidor.
 - No se aceptarán ejecutables ni tipos fuera de la lista permitida.
 
 ## Formulario de contacto

@@ -7,6 +7,7 @@ export type HighlightedLot = {
   id: string;
   nombre: string;
   imagen: ImageAsset;
+  storagePath?: string;
 };
 
 export type CatalogoEstado = "disponible" | "proximamente" | "preliminar";

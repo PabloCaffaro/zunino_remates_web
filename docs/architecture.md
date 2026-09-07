@@ -9,14 +9,11 @@ empresa. También ofrece un panel para preparar, revisar y publicar contenido.
 
 La aplicación es una SPA desarrollada con React y Vite.
 
-- La web pública lee datos desde un contexto compartido.
-- El panel modifica esos mismos datos.
-- La persistencia actual utiliza `localStorage`.
-- El acceso administrativo actual utiliza credenciales incluidas en el frontend.
-- Las imágenes de demostración están en `public/`.
-
-Esta solución permite desarrollar y probar el flujo, pero no es apta para
-producción.
+- React consume contratos explícitos desde `/api/v1/*`.
+- La API de Vercel autentica contra Supabase y entrega una cookie cifrada.
+- PostgreSQL persiste remates y contenido, con RLS y control de versiones.
+- Storage privado guarda lotes y la API entrega URLs firmadas temporales.
+- El proveedor local se conserva únicamente para pruebas y la rama `main` actual.
 
 ## Arquitectura objetivo
 
@@ -31,12 +28,12 @@ flowchart LR
   API --> Email["Servicio de email"]
 ```
 
-Supabase será responsable de:
+Supabase es responsable de:
 
 - Autenticar administradores.
 - Persistir remates y contenido general.
 - Aplicar permisos mediante Row Level Security.
-- Guardar imágenes de lotes y del sitio.
+- Guardar imágenes de lotes.
 - Registrar consultas y auditoría.
 
 El navegador consumirá solamente la API del mismo origen y no recibirá claves,
@@ -93,9 +90,8 @@ para detectar ediciones simultáneas antes de sobrescribir datos.
 - `src/types`: contratos TypeScript.
 - `supabase`: esquema de base, RLS, Storage y documentación.
 
-Al conectar Supabase, la interfaz pública debería cambiar lo mínimo posible. La
-capa de contexto será reemplazada por servicios separados para datos públicos y
-administrativos que consulten DTO explícitos de la API.
+La capa de contexto mantiene separadas las fuentes pública y administrativa, y
+ambas consultan DTO explícitos de la API sin acoplar React al esquema físico.
 
 ## Modelo de datos
 
