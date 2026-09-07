@@ -27,7 +27,7 @@ Anotar un pendiente no autoriza implementarlo ni cambiar producción.
   de fuerza bruta en Vercel si el tráfico real lo requiere.
 - **Pendiente:** habilitar y validar la protección de Supabase Auth contra
   contraseñas filtradas antes de producción. El asesor de seguridad la reporta
-  actualmente desactivada.
+  actualmente desactivada y Supabase la ofrece únicamente en el plan Pro o superior.
 
 ### Funcionalidad implementada que debe verificarse en producción
 
@@ -37,10 +37,8 @@ Anotar un pendiente no autoriza implementarlo ni cambiar producción.
   ante fallas externas de red.
 - **Verificar:** flujo completo en móvil. El lightbox ya ocupa el viewport y usa
   `object-fit: contain`, pero debe probarse en dispositivos reales.
-- **Revisar:** los RPC `admin_content_snapshot` y `admin_save_content` son
-  `SECURITY DEFINER`, tienen `search_path` fijo, permiso sólo para `authenticated`
-  y validan un administrador activo. Supabase los informa como advertencia por
-  diseño; confirmar esta excepción antes de producción.
+- **Resuelto en staging:** los RPC `admin_content_snapshot` y
+  `admin_save_content` utilizan `SECURITY INVOKER`, permisos mínimos y RLS.
 
 ### Verificación antes de producción
 

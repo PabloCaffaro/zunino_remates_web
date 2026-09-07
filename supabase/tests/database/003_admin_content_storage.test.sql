@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(8);
+select plan(10);
 
 insert into auth.users (id, email)
 values ('91000000-0000-4000-8000-000000000001', 'qa-contenido@example.invalid');
@@ -12,6 +12,8 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"91000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 select ok(public.admin_content_snapshot() ? 'contacto', 'El administrador recibe los datos de contacto');
 select ok(public.admin_content_snapshot() ? 'faqs', 'El administrador recibe las preguntas frecuentes');
+select isnt((select prosecdef from pg_catalog.pg_proc where oid = 'public.admin_content_snapshot()'::regprocedure), true, 'La lectura de contenido no eleva privilegios');
+select isnt((select prosecdef from pg_catalog.pg_proc where oid = 'public.admin_save_content(jsonb)'::regprocedure), true, 'La escritura de contenido no eleva privilegios');
 select is(
   public.admin_save_content(jsonb_build_object(
     'contacto', public.admin_content_snapshot()->'contacto',
