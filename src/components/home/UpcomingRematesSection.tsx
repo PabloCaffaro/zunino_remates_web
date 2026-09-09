@@ -12,8 +12,8 @@ export function UpcomingRematesSection({ remates }: UpcomingRematesSectionProps)
       <div className="container">
         <div className="section-title reveal">
           <p className="eyebrow">Agenda abierta</p>
-          <h2>Proximos remates en vivo</h2>
-          <p>Elegi el evento y revisa el catalogo antes de venir.</p>
+          <h2>Próximos remates en vivo</h2>
+          <p>Elegí el evento y revisá el catálogo antes de venir.</p>
         </div>
         <div className="cards-grid">
           {remates.map((remate) => (

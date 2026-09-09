@@ -1,16 +1,22 @@
 export function SiteFooter() {
   return (
     <footer className="site-footer">
-      <div className="container footer-inner">
-        <div>
-          <p className="logo-title">Zunino Remates</p>
-          <p>Remates en vivo con información clara y acompañamiento profesional.</p>
+      <div className="container footer-shell">
+        <div className="footer-inner">
+          <div>
+            <p className="footer-brand">Zunino Remates</p>
+            <p>Remates en vivo con información clara y acompañamiento profesional.</p>
+          </div>
+          <nav className="footer-links" aria-label="Navegación del pie">
+            <a href="/#proximos">Próximos remates</a>
+            <a href="/#catalogos">Catálogos</a>
+            <a href="/#como">Cómo participar</a>
+            <a href="/#contacto">Contacto</a>
+          </nav>
         </div>
-        <div className="footer-links">
-          <a href="/#proximos">Próximos remates</a>
-          <a href="/#catalogos">Catálogos</a>
-          <a href="/#como">Cómo participar</a>
-          <a href="/#contacto">Contacto</a>
+        <div className="footer-bottom">
+          <p>© {new Date().getFullYear()} Zunino Remates. Todos los derechos reservados.</p>
+          <p>Procesos presenciales con respaldo profesional.</p>
         </div>
       </div>
     </footer>

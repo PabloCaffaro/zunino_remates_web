@@ -58,7 +58,10 @@ export function SiteHeader() {
           <a href="/#empresa" onClick={closeMenu}>
             La empresa
           </a>
-          <a href="/#contacto" className="btn btn-small" onClick={closeMenu}>
+          <a href="/#faq" onClick={closeMenu}>
+            Preguntas frecuentes
+          </a>
+          <a href="/#contacto" className="btn btn-small header-contact-button" onClick={closeMenu}>
             Contactar
           </a>
         </nav>

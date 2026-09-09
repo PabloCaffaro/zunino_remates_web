@@ -14,7 +14,7 @@ export function FaqSection({ faqs }: FaqSectionProps) {
         </div>
         <div className="faq-list">
           {faqs.map((faq, index) => (
-            <details key={faq.id} className="faq-detail reveal">
+            <details key={faq.id} className="faq-detail reveal" open={index === 0}>
               <summary id={`faq-trigger-${index}`} className="faq-item">
                 <span>{faq.pregunta}</span>
                 <span className="faq-icon">+</span>

@@ -31,10 +31,10 @@ export function AboutSection({ copy }: { copy: SiteCopy }) {
               Compartimos una selección de remates realizados para mostrar la variedad de jornadas que
               organizamos y el tipo de trabajo que desarrollamos en cada evento.
             </p>
-            <ul className="list">
-              <li>Maquinaria rural · Enero</li>
-              <li>Stock vehículos · Febrero</li>
-              <li>Herramientas de taller · Marzo</li>
+            <ul className="list previous-auctions">
+              <li><span>Maquinaria rural</span><small>Enero</small></li>
+              <li><span>Stock vehículos</span><small>Febrero</small></li>
+              <li><span>Herramientas de taller</span><small>Marzo</small></li>
             </ul>
             <p>
               Si querés conocer resultados o antecedentes de un rubro en particular, podemos enviarte

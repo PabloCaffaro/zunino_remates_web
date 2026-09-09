@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { PublicDataStatus } from "../components/PublicDataStatus";
 import { ContactSection } from "../components/ContactSection";
-import { LocationSection } from "../components/LocationSection";
 import { Seo } from "../components/Seo";
 import { AboutSection } from "../components/home/AboutSection";
 import { CatalogSection } from "../components/home/CatalogSection";
@@ -41,7 +40,7 @@ export function HomePage() {
   const { pasos, faqs, contacto, copy } = content;
 
   return (
-    <main id="contenido-principal">
+    <main id="contenido-principal" className="home-page">
       <Seo
         title="Zunino Remates | Remates en vivo y catálogos"
         description="Remates presenciales con catálogos claros, requisitos visibles y atención cercana para compradores y vendedores."
@@ -53,8 +52,7 @@ export function HomePage() {
       <HowToParticipateSection pasos={pasos} />
       <AboutSection copy={copy} />
       <FaqSection faqs={faqs} />
-      <ContactSection contact={contacto} />
-      <LocationSection contact={contacto} copy={copy} />
+      <ContactSection contact={contacto} copy={copy} />
     </main>
   );
 }

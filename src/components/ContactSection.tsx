@@ -1,12 +1,13 @@
 import type { ChangeEvent, FocusEvent, FormEvent } from "react";
 import { useState } from "react";
-import type { ContactInfo, FormFields } from "../types/site";
+import type { ContactInfo, FormFields, SiteCopy } from "../types/site";
 
 type ContactSectionProps = {
   contact: ContactInfo;
+  copy: SiteCopy;
 };
 
-export function ContactSection({ contact }: ContactSectionProps) {
+export function ContactSection({ contact, copy }: ContactSectionProps) {
   const [formData, setFormData] = useState<FormFields>({ name: "", email: "", message: "" });
   const [formErrors, setFormErrors] = useState<FormFields>({ name: "", email: "", message: "" });
   const [touchedFields, setTouchedFields] = useState({ name: false, email: false, message: false });
@@ -133,6 +134,23 @@ export function ContactSection({ contact }: ContactSectionProps) {
             <p>
               <strong>Horario:</strong> {contact.horario}
             </p>
+          </div>
+          <div className="contact-location-card">
+            <p className="eyebrow">Ubicación</p>
+            <h3>{copy.ubicacionTitle}</h3>
+            <p>{copy.ubicacionDescription}</p>
+            <div className="contact-location-facts">
+              <p><strong>Dirección:</strong> {contact.direccion}</p>
+              <p><strong>Horario de atención:</strong> {contact.horario}</p>
+            </div>
+            <a
+              className="text-link"
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.direccion)}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Ver ubicación en Google Maps <span aria-hidden="true">↗</span>
+            </a>
           </div>
         </div>
         <div className="contact-form reveal">
