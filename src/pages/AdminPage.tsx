@@ -34,6 +34,7 @@ import type {
   RemateEstadoAdmin,
 } from "../types/site";
 import { ConfirmationModal } from "../components/admin/ConfirmationModal";
+import { BrandLockup } from "../components/ui/BrandLockup";
 
 type AdminTab = "resumen" | "remates" | "contenido";
 
@@ -150,6 +151,7 @@ export function AdminLogin({ onLogin }: { onLogin: (email: string, password: str
   return (
     <main id="contenido-principal" className="admin-login-page">
       <section className="admin-login-card">
+        <BrandLockup compact subtitle="Acceso administrativo" />
         <p className="eyebrow">Administración</p>
         <h1>Ingresar al panel</h1>
         <p>Gestioná remates y contenido visible de Zunino Remates.</p>
@@ -1239,8 +1241,7 @@ export function AdminPage({ onLogout = () => {}, role = "editor", storageEnabled
           <span aria-hidden="true">☰</span>
         </button>
         <div className="admin-brand">
-          <span className="admin-brand-name">Zunino Remates</span>
-          <h1>Panel administrador</h1>
+          <BrandLockup inverse compact subtitle="Panel administrador" />
         </div>
         <div className="admin-topbar-actions">
           <a className="btn btn-outline btn-small" href="/" target="_blank" rel="noreferrer">
@@ -1267,10 +1268,7 @@ export function AdminPage({ onLogout = () => {}, role = "editor", storageEnabled
           aria-label="Navegación administrativa"
         >
           <div className="admin-sidebar-header">
-            <div>
-              <strong>Zunino Remates</strong>
-              <span>Administración</span>
-            </div>
+            <BrandLockup inverse compact subtitle="Panel administrador" />
             <button
               className="admin-sidebar-close"
               type="button"

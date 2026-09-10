@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Catalogo, Remate } from "../../types/site";
+import { SectionHeading } from "../ui/SectionHeading";
 
 type CatalogSectionProps = {
   catalogos: Catalogo[];
@@ -10,11 +11,7 @@ export function CatalogSection({ catalogos, remates }: CatalogSectionProps) {
   return (
     <section id="catalogos" className="section alt">
       <div className="container">
-        <div className="section-title reveal">
-          <p className="eyebrow">Documentación</p>
-          <h2>Catálogos por remate</h2>
-          <p>Publicamos listados claros con condiciones, ubicación y detalles de cada lote.</p>
-        </div>
+        <SectionHeading eyebrow="Documentación" title="Catálogos por remate" description="Publicamos listados claros con condiciones, ubicación y detalles de cada lote." />
         <div className="catalog-grid">
           {catalogos.map((catalogo) => {
             const remate = remates.find((item) => item.id === catalogo.remateId);

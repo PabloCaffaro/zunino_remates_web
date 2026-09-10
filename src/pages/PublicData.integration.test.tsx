@@ -53,6 +53,14 @@ describe("carga pública sin respaldo local", () => {
     expect(screen.queryByText("Maquinaria y herramientas")).not.toBeInTheDocument();
   });
 
+  it("muestra el mapa configurado por el backend dentro del bloque de contacto", async () => {
+    respondWithRemoteData();
+    renderPublic();
+
+    const map = await screen.findByTitle("Mapa de ubicación de Zunino Remates");
+    expect(map).toHaveAttribute("src", siteContent.contacto.mapEmbedUrl);
+  });
+
   it("espera la respuesta antes de decidir que el detalle no existe", () => {
     renderPublic("/remates/no-existe");
     expect(screen.queryByText("No encontramos ese evento.")).not.toBeInTheDocument();

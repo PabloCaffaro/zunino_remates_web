@@ -3,6 +3,7 @@ import { flushSync } from "react-dom";
 import { Link, useParams } from "react-router-dom";
 import { Seo } from "../components/Seo";
 import { PublicDataStatus } from "../components/PublicDataStatus";
+import { SectionHeading } from "../components/ui/SectionHeading";
 import { useSiteData } from "../context/siteDataContextValue";
 import { formatRemateDateDisplay } from "../data/remateFormatting";
 import {
@@ -201,17 +202,12 @@ export function RemateDetailPage() {
 
   if (!remate) {
     return (
-      <main id="contenido-principal" className="section">
+      <main id="contenido-principal" className="section public-page detail-page">
         <div className="container">
-          <div className="detail-shell">
-            <p className="eyebrow">Remate no encontrado</p>
-            <h1>No encontramos ese evento.</h1>
-            <p>
-              Es posible que la URL este mal o que el remate ya no este publicado. Desde la agenda podes
-              volver a ver todos los proximos eventos.
-            </p>
+          <div className="detail-shell surface-card">
+            <SectionHeading eyebrow="Remate no encontrado" title="No encontramos ese evento." headingLevel="h1" description="Es posible que la URL esté mal o que el remate ya no esté publicado. Desde la agenda podés volver a ver todos los próximos eventos." className="page-heading" />
             <Link className="btn" to="/#proximos">
-              Volver a proximos remates
+              Volver a próximos remates
             </Link>
           </div>
         </div>
@@ -221,7 +217,7 @@ export function RemateDetailPage() {
 
   return (
     <>
-      <main id="contenido-principal">
+      <main id="contenido-principal" className="public-page detail-page">
         <Seo
           title={`${remate.titulo} | Zunino Remates`}
           description={`${remate.detalle} ${remate.catalogoEstado}`}
@@ -232,9 +228,7 @@ export function RemateDetailPage() {
             <Link className="btn btn-small detail-back-btn" to="/">
               Volver a todos los remates
             </Link>
-            <p className="eyebrow">{remate.subtitulo}</p>
-            <h1>{remate.titulo}</h1>
-            <p className="detail-lead">{remate.descripcionLarga}</p>
+            <SectionHeading eyebrow={remate.subtitulo} title={remate.titulo} headingLevel="h1" description={remate.descripcionLarga} className="page-heading detail-page-heading" />
             <div className="detail-meta-grid">
               <div className="detail-meta-card">
                 <p className="card-tag">Fecha y hora</p>
@@ -243,11 +237,11 @@ export function RemateDetailPage() {
                 </p>
               </div>
               <div className="detail-meta-card">
-                <p className="card-tag">Ubicacion</p>
+                <p className="card-tag">Ubicación</p>
                 <p>{remate.ubicacionDetalle}</p>
               </div>
               <div className="detail-meta-card">
-                <p className="card-tag">Catalogo</p>
+                <p className="card-tag">Catálogo</p>
                 <p>{remate.catalogoEstado}</p>
               </div>
             </div>
@@ -256,11 +250,7 @@ export function RemateDetailPage() {
 
         <section className="section">
           <div className="container">
-            <div className="section-title reveal">
-              <p className="eyebrow">Lotes destacados</p>
-              <h2>Una mirada rapida a algunos lotes del remate</h2>
-              <p>Usa las flechas para recorrer los lotes destacados sin cambiar su tamano de vista.</p>
-            </div>
+            <SectionHeading eyebrow="Lotes destacados" title="Una mirada rápida a algunos lotes del remate" description="Usá las flechas para recorrer los lotes destacados y abrí cada foto para verla en grande." />
 
             {displayedLots.length > 0 ? (
               <div className="lot-carousel-strip reveal">
@@ -312,7 +302,7 @@ export function RemateDetailPage() {
                 </button>
               </div>
             ) : (
-              <article className="detail-card" role="status">
+              <article className="detail-card surface-card" role="status">
                 <h3>Próximamente habrá lotes destacados</h3>
                 <p className="detail-doc-note">
                   Este remate todavía no tiene fotos de lotes destacados cargadas.
@@ -324,7 +314,7 @@ export function RemateDetailPage() {
 
         <section className="section alt">
           <div className="container detail-grid">
-            <article className="detail-card">
+            <article className="detail-card surface-card">
               <h2>Requisitos para participar</h2>
               <ul className="detail-list">
                 {remate.requisitos.map((item) => (
@@ -332,7 +322,7 @@ export function RemateDetailPage() {
                 ))}
               </ul>
             </article>
-            <article className="detail-card">
+            <article className="detail-card surface-card">
               <h2>Condiciones del remate</h2>
               <ul className="detail-list">
                 {remate.condiciones.map((item) => (
@@ -347,10 +337,10 @@ export function RemateDetailPage() {
           <div className="container detail-cta">
             <div>
               <p className="eyebrow">Siguiente paso</p>
-              <h2>Queres recibir el catalogo o hacer una consulta puntual?</h2>
+              <h2>¿Querés recibir el catálogo o hacer una consulta puntual?</h2>
               <p>
-                Escribinos y te enviamos la informacion completa de este remate junto con requisitos,
-                condiciones y estado actualizado de la documentacion.
+                Escribinos y te enviamos la información completa de este remate junto con requisitos,
+                condiciones y estado actualizado de la documentación.
               </p>
             </div>
             <div className="card-actions">

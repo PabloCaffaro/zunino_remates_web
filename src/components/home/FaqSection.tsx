@@ -1,4 +1,5 @@
 import type { FaqItem } from "../../types/site";
+import { SectionHeading } from "../ui/SectionHeading";
 
 type FaqSectionProps = {
   faqs: FaqItem[];
@@ -8,10 +9,7 @@ export function FaqSection({ faqs }: FaqSectionProps) {
   return (
     <section id="faq" className="section">
       <div className="container">
-        <div className="section-title reveal">
-          <p className="eyebrow">Preguntas frecuentes</p>
-          <h2>Todo lo que necesitás saber</h2>
-        </div>
+        <SectionHeading eyebrow="Preguntas frecuentes" title="Todo lo que necesitás saber" />
         <div className="faq-list">
           {faqs.map((faq, index) => (
             <details key={faq.id} className="faq-detail reveal" open={index === 0}>

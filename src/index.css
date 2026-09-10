@@ -10,6 +10,12 @@
   --stone: #5c5c5c;
   --white: #ffffff;
   --shadow: 0 18px 35px rgba(15, 35, 25, 0.18);
+  --surface: #ffffff;
+  --surface-muted: #f4f7f4;
+  --line: rgba(19, 57, 38, 0.1);
+  --shadow-soft: 0 4px 20px -2px rgba(19, 57, 38, 0.08);
+  --shadow-raised: 0 14px 34px -8px rgba(19, 57, 38, 0.18);
+  --danger: #9d2d2d;
 }
 
 * {
@@ -2161,6 +2167,545 @@ textarea:focus-visible {
   .admin-editor-actions {
     position: static;
     flex-direction: column;
+  }
+}
+
+/* Sistema visual compartido por el sitio público y el administrador. */
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand-lockup-copy {
+  display: grid;
+  min-width: 0;
+}
+
+.brand-lockup .logo-title,
+.brand-lockup .logo-subtitle {
+  display: block;
+  margin: 0;
+}
+
+.brand-lockup-inverse .logo-mark {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.brand-lockup-inverse .logo-title {
+  color: #fff;
+}
+
+.brand-lockup-inverse .logo-subtitle {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.brand-lockup-compact .logo-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+}
+
+.surface-card,
+.detail-meta-card,
+.detail-card,
+.detail-cta,
+.lot-highlight-card,
+.admin-stat-card,
+.admin-review-panel,
+.admin-editor,
+.admin-table-wrap,
+.admin-login-card,
+.admin-confirm-modal {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.page-heading {
+  max-width: 760px;
+  margin: 0;
+}
+
+.page-heading h1 {
+  margin-bottom: 16px;
+  font-size: clamp(2.35rem, 5vw, 4.15rem);
+  letter-spacing: -0.025em;
+}
+
+.page-heading > p:last-child {
+  max-width: 68ch;
+  font-size: 1.05rem;
+  line-height: 1.75;
+}
+
+.map-embed {
+  width: 100%;
+  min-height: 280px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface-muted);
+}
+
+.map-embed iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  border: 0;
+}
+
+.contact-location-card .map-embed {
+  margin: 18px 0;
+}
+
+.contact-heading {
+  margin-bottom: 18px;
+}
+
+.contact-heading h2 {
+  font-size: clamp(2rem, 3.4vw, 2.7rem);
+}
+
+.public-page {
+  color: #18241d;
+}
+
+.public-page p {
+  color: #5d6962;
+  font-size: 1rem;
+}
+
+.public-page .eyebrow {
+  color: #1b6a3b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.public-page .btn,
+.admin-page .btn,
+.admin-login-page .btn {
+  background: #133926;
+  border: 1px solid #133926;
+  box-shadow: 0 8px 20px rgba(19, 57, 38, 0.14);
+}
+
+.public-page .btn-outline,
+.public-page .btn-ghost,
+.admin-page .btn-outline,
+.admin-page .btn-ghost {
+  background: transparent;
+  border-color: #cbd5ce;
+  color: #1b4332;
+  box-shadow: none;
+}
+
+.detail-page .detail-hero {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(48px, 7vw, 88px) 0 clamp(58px, 8vw, 96px);
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 8% 10%, rgba(200, 222, 200, 0.46), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(247, 248, 245, 0.9));
+}
+
+.detail-page .detail-shell {
+  gap: 28px;
+}
+
+.detail-page-heading {
+  margin-top: 8px;
+}
+
+.detail-page .detail-meta-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.detail-page .detail-meta-card,
+.detail-page .detail-card,
+.detail-page .detail-cta,
+.detail-page .lot-highlight-card {
+  border-radius: 22px;
+}
+
+.detail-page .detail-meta-card {
+  padding: 22px;
+}
+
+.detail-page .card-tag {
+  border: 1px solid #cce5d4;
+  background: #f0faf3;
+  color: #1b6a3b;
+  font-size: 0.72rem;
+}
+
+.detail-page .lot-strip-arrow,
+.detail-page .lightbox-nav,
+.detail-page .lightbox-close {
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+}
+
+.detail-page .lot-highlight-image {
+  transition: transform 280ms ease;
+}
+
+.detail-page .lot-highlight-button:hover .lot-highlight-image {
+  transform: scale(1.025);
+}
+
+.detail-page .section.alt {
+  border-block: 1px solid var(--line);
+  background: #f7f8f5;
+}
+
+.not-found-page,
+.public-status-page {
+  min-height: calc(100vh - 190px);
+  background:
+    radial-gradient(circle at 12% 12%, rgba(200, 222, 200, 0.42), transparent 34%),
+    #f7f8f5;
+}
+
+.not-found-shell,
+.status-shell {
+  width: min(760px, 100%);
+  padding: clamp(28px, 5vw, 52px);
+  border-radius: 28px;
+}
+
+.status-shell .btn,
+.not-found-shell .btn {
+  justify-self: start;
+}
+
+.admin-login-page {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(179, 213, 187, 0.34), transparent 32%),
+    radial-gradient(circle at 85% 12%, rgba(230, 239, 230, 0.9), transparent 36%),
+    #f4f7f4;
+}
+
+.admin-login-card {
+  border-radius: 28px;
+  padding: clamp(28px, 5vw, 42px);
+}
+
+.admin-login-card > .brand-lockup {
+  margin-bottom: 34px;
+}
+
+.admin-login-card .eyebrow {
+  margin-bottom: 10px;
+  font-size: 0.72rem;
+}
+
+.admin-login-card input,
+.admin-page input,
+.admin-page textarea,
+.admin-page select {
+  border-color: #d6ded8;
+  background: #fbfcfb;
+}
+
+.admin-login-card input:focus,
+.admin-page input:focus,
+.admin-page textarea:focus,
+.admin-page select:focus {
+  border-color: #2d6a4f;
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+}
+
+.admin-page {
+  background: #f4f6f3;
+}
+
+.admin-topbar {
+  min-height: 78px;
+  padding-block: 12px;
+  background: rgba(11, 35, 23, 0.97);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(11, 35, 23, 0.12);
+}
+
+.admin-brand {
+  display: flex;
+}
+
+.admin-layout {
+  grid-template-columns: 252px minmax(0, 1fr);
+  min-height: calc(100vh - 78px);
+}
+
+.admin-sidebar {
+  padding: 26px 18px;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: #102b1d;
+}
+
+.admin-sidebar-navigation button {
+  min-height: 46px;
+  border: 1px solid transparent;
+}
+
+.admin-sidebar-navigation button:hover,
+.admin-sidebar-navigation button.active {
+  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-content {
+  width: min(1320px, 100%);
+  padding: clamp(28px, 4vw, 54px);
+}
+
+.admin-section-heading,
+.admin-editor-heading,
+.admin-subsection-heading {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-stat-card,
+.admin-review-panel,
+.admin-editor,
+.admin-table-wrap {
+  border-radius: 22px;
+}
+
+.admin-stat-card {
+  border-top: 3px solid #b9d8c1;
+}
+
+.admin-table th {
+  background: #f3f6f3;
+  color: #173525;
+}
+
+.admin-table tbody tr:hover {
+  background: #f8faf8;
+}
+
+.admin-row-actions button,
+.admin-danger-link {
+  min-height: 38px;
+  border: 1px solid #cbd8ce;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #fff;
+}
+
+.admin-danger-link {
+  border-color: rgba(157, 45, 45, 0.3);
+  color: var(--danger);
+}
+
+.admin-lot-card,
+.admin-faq-card,
+.admin-info-box,
+.admin-demo-reset {
+  border: 1px solid var(--line);
+  background: #f8faf8;
+}
+
+.admin-editor-actions {
+  border-color: var(--line);
+  box-shadow: var(--shadow-raised);
+}
+
+.admin-confirm-overlay {
+  background: rgba(6, 23, 14, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.admin-confirm-modal {
+  border-radius: 24px;
+}
+
+@media (max-width: 980px) {
+  .detail-page .detail-meta-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .admin-topbar {
+    min-height: 70px;
+    padding: 10px 16px;
+  }
+
+  .admin-topbar .admin-brand .logo-mark,
+  .admin-topbar .admin-brand .logo-subtitle {
+    display: none;
+  }
+
+  .admin-topbar .admin-brand .logo-title {
+    color: #fff;
+    font-size: 1rem;
+  }
+
+  .admin-layout {
+    display: block;
+    min-height: calc(100vh - 70px);
+  }
+
+  .admin-sidebar-header .brand-lockup {
+    padding-right: 48px;
+  }
+}
+
+@media (max-width: 640px) {
+  .public-page .container,
+  .admin-page .container {
+    width: min(100% - 32px, 1280px);
+  }
+
+  .page-heading h1 {
+    font-size: clamp(2rem, 10vw, 2.8rem);
+  }
+
+  .not-found-shell,
+  .status-shell {
+    padding: 26px 20px;
+    border-radius: 20px;
+  }
+
+  .not-found-actions,
+  .not-found-actions .btn,
+  .status-shell .btn {
+    width: 100%;
+  }
+
+  .detail-page .section {
+    padding: 54px 0;
+  }
+
+  .detail-page .detail-hero {
+    padding: 34px 0 58px;
+  }
+
+  .detail-page .detail-meta-card,
+  .detail-page .detail-card,
+  .detail-page .detail-cta {
+    padding: 20px;
+    border-radius: 18px;
+  }
+
+  .lot-carousel-strip {
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
+    gap: 8px;
+  }
+
+  .lot-strip-arrow {
+    width: 40px;
+    height: 40px;
+  }
+
+  .lightbox-overlay {
+    padding: 0;
+  }
+
+  .lightbox-content {
+    display: grid;
+    width: 100%;
+    min-height: 100dvh;
+    border-radius: 0;
+    background: #07130d;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .lightbox-media {
+    display: grid;
+    min-height: 0;
+    place-items: center;
+  }
+
+  .lightbox-image {
+    width: 100%;
+    height: 100%;
+    max-height: calc(100dvh - 110px);
+    border-radius: 0;
+    object-fit: contain;
+  }
+
+  .lightbox-nav {
+    top: auto;
+    bottom: 18px;
+    transform: none;
+  }
+
+  .lightbox-nav-left {
+    left: 16px;
+  }
+
+  .lightbox-nav-right {
+    right: 16px;
+  }
+
+  .lightbox-copy {
+    background: #fff;
+  }
+
+  .admin-content {
+    padding: 24px 16px 40px;
+  }
+
+  .admin-stats-grid,
+  .admin-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-span-two {
+    grid-column: auto;
+  }
+
+  .admin-section-heading,
+  .admin-editor-heading,
+  .admin-subsection-heading {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .admin-section-heading .btn,
+  .admin-editor-heading .btn,
+  .admin-subsection-heading .btn,
+  .admin-editor-actions .btn {
+    width: 100%;
+  }
+
+  .admin-editor-actions {
+    position: static;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-confirm-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .admin-confirm-actions .btn {
+    width: 100%;
+  }
+
+  .admin-login-card {
+    padding: 26px 20px;
+  }
+
+  .map-embed,
+  .map-embed iframe {
+    min-height: 240px;
   }
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { BrandLockup } from "./ui/BrandLockup";
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -39,11 +40,7 @@ export function SiteHeader() {
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
         >
-          <span className="logo-mark">ZR</span>
-          <div>
-            <p className="logo-title">Zunino Remates</p>
-            <p className="logo-subtitle">Remates en vivo</p>
-          </div>
+          <BrandLockup />
         </Link>
         <nav id="menu-principal" className={`nav ${menuOpen ? "open" : ""}`}>
           <a href="/#proximos" onClick={closeMenu}>

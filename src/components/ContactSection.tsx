@@ -1,6 +1,8 @@
 import type { ChangeEvent, FocusEvent, FormEvent } from "react";
 import { useState } from "react";
 import type { ContactInfo, FormFields, SiteCopy } from "../types/site";
+import { MapEmbed } from "./ui/MapEmbed";
+import { SectionHeading } from "./ui/SectionHeading";
 
 type ContactSectionProps = {
   contact: ContactInfo;
@@ -118,9 +120,12 @@ export function ContactSection({ contact, copy }: ContactSectionProps) {
     <section id="contacto" className="section alt">
       <div className="container contact-grid">
         <div className="contact-copy reveal">
-          <p className="eyebrow">Contacto</p>
-          <h2>Hablemos sobre tu próximo remate</h2>
-          <p>Escribinos para recibir catálogos, coordinar visitas o consultar requisitos.</p>
+          <SectionHeading
+            eyebrow="Contacto"
+            title="Hablemos sobre tu próximo remate"
+            description="Escribinos para recibir catálogos, coordinar visitas o consultar requisitos."
+            className="contact-heading"
+          />
           <div className="contact-details">
             <p>
               <strong>Teléfono:</strong> {contact.telefono}
@@ -143,6 +148,7 @@ export function ContactSection({ contact, copy }: ContactSectionProps) {
               <p><strong>Dirección:</strong> {contact.direccion}</p>
               <p><strong>Horario de atención:</strong> {contact.horario}</p>
             </div>
+            <MapEmbed src={contact.mapEmbedUrl} />
             <a
               className="text-link"
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.direccion)}`}

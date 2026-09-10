@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { PublicDataStatus } from "../components/PublicDataStatus";
 import { ContactSection } from "../components/ContactSection";
 import { Seo } from "../components/Seo";
@@ -16,25 +15,6 @@ export function HomePage() {
   const catalogos = createCatalogosFromRemates(remates);
   // El remate destacado se resuelve con un selector para que la home no dependa directamente del orden del array.
   const rematePrincipal = getFeaturedRemate(remates);
-
-  useEffect(() => {
-    // Las secciones de la home se animan al aparecer para darle más ritmo a la landing.
-    const items = document.querySelectorAll(".reveal");
-    const observer = new IntersectionObserver(
-      (entries, current) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("in-view");
-            current.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.2 }
-    );
-
-    items.forEach((item) => observer.observe(item));
-    return () => observer.disconnect();
-  }, [publicDataStatus]);
 
   if (publicDataStatus !== "ready" || !content) return <PublicDataStatus />;
   const { pasos, faqs, contacto, copy } = content;

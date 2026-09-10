@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { formatRemateDateSummary } from "../../data/remateFormatting";
 import type { Remate } from "../../types/site";
+import { SectionHeading } from "../ui/SectionHeading";
 
 type UpcomingRematesSectionProps = {
   remates: Remate[];
@@ -10,11 +11,7 @@ export function UpcomingRematesSection({ remates }: UpcomingRematesSectionProps)
   return (
     <section id="proximos" className="section">
       <div className="container">
-        <div className="section-title reveal">
-          <p className="eyebrow">Agenda abierta</p>
-          <h2>Próximos remates en vivo</h2>
-          <p>Elegí el evento y revisá el catálogo antes de venir.</p>
-        </div>
+        <SectionHeading eyebrow="Agenda abierta" title="Próximos remates en vivo" description="Elegí el evento y revisá el catálogo antes de venir." />
         <div className="cards-grid">
           {remates.map((remate) => (
             <article key={remate.id} className="card reveal">

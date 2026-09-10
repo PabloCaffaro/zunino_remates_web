@@ -1,4 +1,5 @@
 import type { ContactInfo, SiteCopy } from "../types/site";
+import { MapEmbed } from "./ui/MapEmbed";
 
 type LocationSectionProps = {
   contact: ContactInfo;
@@ -31,12 +32,7 @@ export function LocationSection({ contact, copy }: LocationSectionProps) {
           </div>
         </div>
         <div className="location-map reveal">
-          <iframe
-            title="Mapa de ubicación de Zunino Remates"
-            src={contact.mapEmbedUrl}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          ></iframe>
+          <MapEmbed src={contact.mapEmbedUrl} />
         </div>
       </div>
     </section>
