@@ -15,9 +15,7 @@ import { AdminLogin, AdminPage } from "./AdminPage";
 function renderAdmin() {
   return render(
     <SiteDataProvider>
-      <MemoryRouter
-        future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
-      >
+      <MemoryRouter>
         <AdminPage role="administrador" storageEnabled />
       </MemoryRouter>
     </SiteDataProvider>
@@ -27,9 +25,7 @@ function renderAdmin() {
 function renderAdminWithContext(value: SiteDataContextValue) {
   return render(
     <SiteDataContext.Provider value={value}>
-      <MemoryRouter
-        future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
-      >
+      <MemoryRouter>
         <AdminPage role="administrador" storageEnabled />
       </MemoryRouter>
     </SiteDataContext.Provider>

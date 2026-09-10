@@ -20,7 +20,6 @@ async function renderDetailPage(remates: Remate[] = siteContent.remates) {
     <SiteDataProvider>
       <MemoryRouter
         initialEntries={["/remates/maquinaria-y-herramientas"]}
-        future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
       >
         <Routes>
           <Route path="/remates/:slug" element={<RemateDetailPage />} />

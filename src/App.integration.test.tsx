@@ -8,7 +8,6 @@ describe("rutas inexistentes", () => {
     render(
       <MemoryRouter
         initialEntries={["/caca"]}
-        future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
       >
         <App />
       </MemoryRouter>

@@ -9,7 +9,7 @@ import { HomePage } from "./HomePage";
 import { RemateDetailPage } from "./RemateDetailPage";
 
 function renderPublic(path = "/") {
-  return render(<SiteDataProvider><MemoryRouter initialEntries={[path]} future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+  return render(<SiteDataProvider><MemoryRouter initialEntries={[path]}>
     <Routes><Route path="/" element={<HomePage />} /><Route path="/remates/:slug" element={<RemateDetailPage />} /></Routes>
   </MemoryRouter></SiteDataProvider>);
 }
