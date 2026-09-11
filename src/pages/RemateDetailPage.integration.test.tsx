@@ -1,11 +1,11 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Remate } from "../types/site";
 import { SiteDataProvider } from "../context/SiteDataContext";
 import { defaultSiteCopy } from "../data/siteCopy";
-import { siteContent } from "../data/siteContent";
+import { siteContent } from "../test/siteContentFixture";
 import { createCompleteRemate } from "../test/fixtures";
 import { RemateDetailPage } from "./RemateDetailPage";
 
@@ -31,29 +31,12 @@ async function renderDetailPage(remates: Remate[] = siteContent.remates) {
   return result;
 }
 
-beforeEach(() => {
-  window.localStorage.clear();
-});
-
 describe("visibilidad del detalle", () => {
   it("no permite abrir por URL un remate oculto", async () => {
     const hiddenRemate = createCompleteRemate({
       slug: "maquinaria-y-herramientas",
       estadoAdmin: "oculto",
     });
-    window.localStorage.setItem(
-      "zunino-remates-admin-data-v3",
-      JSON.stringify({
-        remates: [hiddenRemate],
-        content: {
-          contacto: siteContent.contacto,
-          pasos: siteContent.pasos,
-          faqs: siteContent.faqs,
-          copy: defaultSiteCopy,
-        },
-      })
-    );
-
     await renderDetailPage([]);
 
     expect(screen.getByRole("heading", { name: "No encontramos ese evento." })).toBeInTheDocument();
@@ -74,19 +57,6 @@ describe("carrusel de lotes destacados", () => {
 
   it("informa cuando el remate no tiene lotes destacados", async () => {
     const remateWithoutLots = createCompleteRemate({ slug: "maquinaria-y-herramientas" });
-    window.localStorage.setItem(
-      "zunino-remates-admin-data-v3",
-      JSON.stringify({
-        remates: [remateWithoutLots],
-        content: {
-          contacto: siteContent.contacto,
-          pasos: siteContent.pasos,
-          faqs: siteContent.faqs,
-          copy: defaultSiteCopy,
-        },
-      })
-    );
-
     await renderDetailPage([remateWithoutLots]);
 
     expect(screen.getByRole("heading", { name: "Próximamente habrá lotes destacados" })).toBeInTheDocument();

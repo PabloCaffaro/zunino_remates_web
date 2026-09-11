@@ -4,7 +4,7 @@ import { SiteDataContext } from "./siteDataContextValue";
 import type { EditableSiteContent, Remate } from "../types/site";
 
 const emptyContent: EditableSiteContent = {
-  contacto: { email: "", telefono: "", direccion: "", horario: "", mapEmbedUrl: "", formRecipientEmail: "" },
+  contacto: { email: "", telefono: "", direccion: "", horario: "", mapEmbedUrl: "" },
   pasos: [], faqs: [],
   copy: { heroEyebrow: "", heroTitle: "", heroDescription: "", empresaTitle: "", empresaParagraph1: "", empresaParagraph2: "", ubicacionTitle: "", ubicacionDescription: "" },
 };
@@ -33,6 +33,6 @@ export function SiteDataProvider({ children }: { children: ReactNode }) {
     remates: [], publishedRemates: [], content: publicData.content ?? emptyContent,
     publicContent: publicData.content, publicRemates: publicData.remates, publicDataStatus: publicData.status,
     retryPublicData, saveRemate: adminRequired, deleteRemate: adminRequired,
-    changeRemateStatus: adminRequired, saveContent: adminRequired, resetDemoData: adminRequired,
+    changeRemateStatus: adminRequired, saveContent: adminRequired,
   }}>{children}</SiteDataContext.Provider>;
 }

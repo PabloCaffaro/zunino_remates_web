@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SiteDataProvider } from "../context/SiteDataContext";
-import { siteContent } from "../data/siteContent";
+import { siteContent } from "../test/siteContentFixture";
 import { defaultSiteCopy } from "../data/siteCopy";
 import { HomePage } from "./HomePage";
 import { RemateDetailPage } from "./RemateDetailPage";
@@ -26,7 +26,7 @@ function respondWithRemoteData(empty = false) {
 afterEach(() => vi.useRealTimers());
 
 describe("carga pública sin respaldo local", () => {
-  it("no muestra remates de demostración mientras espera la API", () => {
+  it("no muestra contenido ficticio mientras espera la API", () => {
     renderPublic();
     expect(screen.getByRole("heading", { name: "Cargando…" })).toBeInTheDocument();
     expect(screen.queryByText("Maquinaria y herramientas")).not.toBeInTheDocument();
@@ -59,6 +59,15 @@ describe("carga pública sin respaldo local", () => {
 
     const map = await screen.findByTitle("Mapa de ubicación de Zunino Remates");
     expect(map).toHaveAttribute("src", siteContent.contacto.mapEmbedUrl);
+  });
+
+  it("mantiene cerradas todas las preguntas frecuentes al cargar", async () => {
+    respondWithRemoteData();
+    renderPublic();
+
+    await screen.findByRole("heading", { name: "Contenido remoto verificado" });
+    const questions = screen.getAllByText(/¿/).map((question) => question.closest("details"));
+    expect(questions.filter(Boolean).every((question) => !question?.hasAttribute("open"))).toBe(true);
   });
 
   it("espera la respuesta antes de decidir que el detalle no existe", () => {

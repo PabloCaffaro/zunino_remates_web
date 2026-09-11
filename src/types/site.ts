@@ -72,7 +72,6 @@ export type ContactInfo = {
   telefono: string;
   direccion: string;
   horario: string;
-  formRecipientEmail: string;
   mapEmbedUrl: string;
 };
 

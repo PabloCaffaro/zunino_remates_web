@@ -11,17 +11,17 @@ export function FaqSection({ faqs }: FaqSectionProps) {
       <div className="container">
         <SectionHeading eyebrow="Preguntas frecuentes" title="Todo lo que necesitás saber" />
         <div className="faq-list">
-          {faqs.map((faq, index) => (
-            <details key={faq.id} className="faq-detail reveal" open={index === 0}>
-              <summary id={`faq-trigger-${index}`} className="faq-item">
+          {faqs.map((faq) => (
+            <details key={faq.id} className="faq-detail reveal">
+              <summary id={`faq-trigger-${faq.id}`} className="faq-item">
                 <span>{faq.pregunta}</span>
                 <span className="faq-icon">+</span>
               </summary>
               <div
-                id={`faq-panel-${index}`}
+                id={`faq-panel-${faq.id}`}
                 className="faq-content faq-content-open"
                 role="region"
-                aria-labelledby={`faq-trigger-${index}`}
+                aria-labelledby={`faq-trigger-${faq.id}`}
               >
                 <p>{faq.respuesta}</p>
               </div>

@@ -1,10 +1,7 @@
 import type { AdminRemate, EditableSiteContent, Remate } from "../types/site";
-import { siteContent } from "./siteContent";
 
 type PublicContentResponse = {
-  data: Omit<EditableSiteContent, "contacto"> & {
-    contacto: Omit<EditableSiteContent["contacto"], "formRecipientEmail">;
-  };
+  data: EditableSiteContent;
 };
 
 type PublicRemateResponse = {
@@ -28,14 +25,7 @@ export const fetchPublicSiteData = async (signal: AbortSignal) => {
   ]);
 
   return {
-    content: {
-      ...contentResponse.data,
-      contacto: {
-        ...contentResponse.data.contacto,
-        // El destinatario actual se retirará del navegador al crear el endpoint de contacto.
-        formRecipientEmail: siteContent.contacto.formRecipientEmail,
-      },
-    },
+    content: contentResponse.data,
     remates: rematesResponse.data,
   };
 };

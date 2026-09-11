@@ -44,8 +44,7 @@ type PendingConfirmation =
       kind: "status";
       remate: AdminRemate;
       status: "finalizado" | "cancelado";
-    }
-  | { kind: "reset" };
+    };
 
 const LOT_IMAGE_MAX_BYTES = 700_000;
 const LOT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -111,7 +110,7 @@ function createEmptyRemate(): AdminRemate {
 
 function readFileAsDataUrl(file: File, maxBytes: number): Promise<string> {
   if (file.size > maxBytes) {
-    return Promise.reject(new Error("El archivo supera el tamaño permitido para esta demostración."));
+    return Promise.reject(new Error("El archivo supera el tamaño permitido de 700 KB."));
   }
 
   return new Promise((resolve, reject) => {
@@ -207,7 +206,7 @@ export function AdminLogin({ onLogin }: { onLogin: (email: string, password: str
 }
 
 type RemateEditorProps = {
-  storageEnabled: boolean;
+  highlightedLotsEnabled: boolean;
   initialRemate: AdminRemate;
   existingRemates: AdminRemate[];
   onSave: (remate: AdminRemate) => Promise<RemateMutationResult>;
@@ -216,7 +215,7 @@ type RemateEditorProps = {
 };
 
 function RemateEditor({
-  storageEnabled,
+  highlightedLotsEnabled,
   initialRemate,
   existingRemates,
   onSave,
@@ -672,7 +671,7 @@ function RemateEditor({
         </label>
       </div>
 
-      {storageEnabled ? <div className="admin-subsection admin-lots-section">
+      {highlightedLotsEnabled ? <div className="admin-subsection admin-lots-section">
         <div className="admin-subsection-heading">
           <div>
             <h3>Lotes destacados</h3>
@@ -761,7 +760,7 @@ function RemateEditor({
             <span className="admin-lot-drop-icon" aria-hidden="true">+</span>
             <strong>Arrastrá las fotos acá</strong>
             <span>o hacé clic para elegir varias desde tu dispositivo</span>
-            <small>JPG, PNG o WebP. Hasta 700 KB por foto en esta demostración.</small>
+            <small>JPG, PNG o WebP. Hasta 700 KB por foto.</small>
           </label>
           {lotUploadNotice ? (
             <p
@@ -1065,17 +1064,16 @@ function SiteContentEditor() {
   );
 }
 
-export function AdminPage({ onLogout = () => {}, role = "editor", storageEnabled = false }: {
+export function AdminPage({ onLogout = () => {}, role = "editor", highlightedLotsEnabled = true }: {
   onLogout?: () => void;
   role?: "administrador" | "editor";
-  storageEnabled?: boolean;
+  highlightedLotsEnabled?: boolean;
 }) {
   const {
     remates,
     saveRemate,
     deleteRemate,
     changeRemateStatus,
-    resetDemoData,
   } = useSiteData();
   const [tab, setTab] = useState<AdminTab>("resumen");
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false);
@@ -1171,14 +1169,12 @@ export function AdminPage({ onLogout = () => {}, role = "editor", storageEnabled
         pendingConfirmation.remate.id,
         pendingConfirmation.remate.version
       );
-    } else if (pendingConfirmation.kind === "status") {
+    } else {
       result = await changeRemateStatus(
         pendingConfirmation.remate.id,
         pendingConfirmation.remate.version,
         pendingConfirmation.status
       );
-    } else {
-      result = await resetDemoData();
     }
 
     setIsConfirming(false);
@@ -1199,24 +1195,17 @@ export function AdminPage({ onLogout = () => {}, role = "editor", storageEnabled
           description: `Vas a eliminar “${pendingConfirmation.remate.titulo || "este remate"}”. Esta acción no se puede deshacer.`,
           confirmLabel: "Eliminar remate",
         }
-      : pendingConfirmation.kind === "status"
-        ? pendingConfirmation.status === "finalizado"
+      : pendingConfirmation.status === "finalizado"
           ? {
               title: "Finalizar remate",
               description: `“${pendingConfirmation.remate.titulo || "Este remate"}” quedará finalizado de forma permanente y no podrá reactivarse.`,
               confirmLabel: "Finalizar remate",
             }
-          : {
+        : {
               title: "Cancelar remate",
               description: `“${pendingConfirmation.remate.titulo || "Este remate"}” quedará cancelado de forma permanente y no podrá reactivarse.`,
               confirmLabel: "Cancelar remate",
             }
-        : {
-            title: "Restablecer demostración",
-            description:
-              "Se reemplazarán los cambios guardados en este navegador por los datos iniciales de demostración.",
-            confirmLabel: "Restablecer datos",
-          }
     : null;
 
   const logout = onLogout;
@@ -1244,10 +1233,10 @@ export function AdminPage({ onLogout = () => {}, role = "editor", storageEnabled
           <BrandLockup inverse compact subtitle="Panel administrador" />
         </div>
         <div className="admin-topbar-actions">
-          <a className="btn btn-outline btn-small" href="/" target="_blank" rel="noreferrer">
+          <a className="btn btn-small admin-public-site-button" href="/" target="_blank" rel="noreferrer">
             Ver sitio público
           </a>
-          <button className="btn btn-ghost btn-small" type="button" onClick={logout}>
+          <button className="btn btn-small admin-logout-button" type="button" onClick={logout}>
             Cerrar sesión
           </button>
         </div>
@@ -1291,10 +1280,10 @@ export function AdminPage({ onLogout = () => {}, role = "editor", storageEnabled
             ))}
           </div>
           <div className="admin-sidebar-actions">
-            <a href="/" target="_blank" rel="noreferrer">
+            <a className="admin-public-site-button" href="/" target="_blank" rel="noreferrer">
               Ver sitio público
             </a>
-            <button type="button" onClick={logout}>
+            <button className="admin-logout-button" type="button" onClick={logout}>
               Cerrar sesión
             </button>
           </div>
@@ -1313,7 +1302,7 @@ export function AdminPage({ onLogout = () => {}, role = "editor", storageEnabled
           {editingRemate ? (
             <RemateEditor
               initialRemate={editingRemate}
-              storageEnabled={storageEnabled}
+              highlightedLotsEnabled={highlightedLotsEnabled}
               existingRemates={remates}
               onSave={handleSaveRemate}
               onSaved={() => {
@@ -1473,21 +1462,6 @@ export function AdminPage({ onLogout = () => {}, role = "editor", storageEnabled
 
           {!editingRemate && tab === "contenido" ? <SiteContentEditor /> : null}
 
-          {!editingRemate && storageEnabled ? (
-            <div className="admin-demo-reset">
-              <p>
-                Los cambios se guardan en este navegador. Esta persistencia es apropiada para la
-                demostración, no para producción.
-              </p>
-              <button
-                className="admin-danger-link"
-                type="button"
-                onClick={() => setPendingConfirmation({ kind: "reset" })}
-              >
-                Restablecer datos de demostración
-              </button>
-            </div>
-          ) : null}
         </div>
       </div>
       {confirmationCopy ? (

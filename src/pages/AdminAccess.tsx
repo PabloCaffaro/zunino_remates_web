@@ -23,6 +23,6 @@ export function AdminAccess() {
   if (!user) return <><AdminLogin onLogin={async (email, password) => { const { user } = await api.login(email, password); setError(""); setUser(user); }} />{error ? <p className="container" role="alert">{error}</p> : null}</>;
   return <AdminDataProvider api={api} onLogout={logout}>
     {error ? <p className="container" role="alert">{error}</p> : null}
-    <AdminPage role={user.rol} onLogout={logout} storageEnabled />
+    <AdminPage role={user.rol} onLogout={logout} />
   </AdminDataProvider>;
 }

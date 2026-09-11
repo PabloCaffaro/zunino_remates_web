@@ -1,6 +1,6 @@
 # Despliegue
 
-Esta versión se puede desplegar en Vercel como demostración. Vercel detecta
+Esta versión se despliega en Vercel. Vercel detecta
 Vite, ejecuta `npm run build` y publica el directorio `dist/`.
 
 ## Requisitos previos
@@ -11,7 +11,7 @@ registro de decisiones temporales y verificaciones detectadas durante el trabajo
 - Contenido y datos de contacto reales.
 - La interfaz pública requiere que la API y sus variables de entorno estén
   configuradas. Mientras consulta muestra carga; ante fallos ofrece reintentar,
-  sin sustituir los datos remotos por datos de demostración.
+  sin sustituir los datos remotos por contenido local.
 - Revisar contenido y datos de contacto antes de compartir la URL.
 
 En `desarrollo`, la sesión se guarda en una cookie cifrada `HttpOnly` y los
@@ -90,8 +90,8 @@ La página pública obtiene los datos mediante funciones del mismo dominio:
 
 La API consulta Supabase con la clave publicable y queda limitada por permisos de
 columnas y RLS. No utiliza `service_role`. Si la API no está disponible, el
-frontend conserva temporalmente el contenido demostrativo local para no mostrar
-una página vacía.
+frontend muestra un estado de error con opción de reintentar y no reemplaza la
+respuesta con información local.
 
 Las imágenes de lotes se guardan en el bucket privado `lotes-remates` y se
 entregan mediante URLs firmadas con una vigencia de una hora.

@@ -32,7 +32,6 @@ export type SiteDataContextValue = {
     status: RemateEstadoAdmin
   ) => Promise<RemateMutationResult>;
   saveContent: (content: EditableSiteContent) => Promise<DataOperationResult>;
-  resetDemoData: () => Promise<DataOperationResult>;
 };
 
 export const SiteDataContext = createContext<SiteDataContextValue | null>(null);

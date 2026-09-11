@@ -6,7 +6,7 @@ administrar el contenido de la empresa.
 El proyecto incluye una web pública, páginas de detalle por remate y un panel
 administrativo. En la rama `desarrollo`, la web pública y el panel utilizan una
 API del mismo origen conectada con Supabase Auth, PostgreSQL y Storage privado.
-`main` conserva por ahora la versión de demostración.
+Los datos públicos y administrativos se obtienen mediante la API conectada a Supabase.
 
 ## Tecnologías
 
@@ -64,14 +64,14 @@ Supabase Auth, cookie cifrada `HttpOnly`, API del mismo origen y políticas RLS.
 src/
 ├── admin/       # Configuración y reglas del panel
 ├── components/  # Componentes compartidos y secciones
-├── context/     # Estado y persistencia actual
-├── data/        # Contenido inicial y selectores
+├── context/     # Estado remoto y proveedores de datos
+├── data/        # Clientes de API, formato y selectores
 ├── pages/       # Páginas y rutas
 ├── test/        # Configuración y datos para pruebas
 └── types/       # Tipos TypeScript
 
 docs/            # Documentación de mantenimiento
-public/          # Archivos estáticos de demostración
+public/          # Archivos estáticos del sitio
 supabase/        # Migraciones, modelo y diagrama de base de datos
 ```
 

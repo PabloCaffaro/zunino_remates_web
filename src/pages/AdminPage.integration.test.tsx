@@ -3,8 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultSiteCopy } from "../data/siteCopy";
-import { siteContent } from "../data/siteContent";
-import { SiteDataProvider } from "../test/DemoSiteDataProvider";
+import { siteContent } from "../test/siteContentFixture";
+import { SiteDataProvider } from "../test/TestSiteDataProvider";
 import {
   SiteDataContext,
   type SiteDataContextValue,
@@ -12,11 +12,11 @@ import {
 import { createCompleteRemate } from "../test/fixtures";
 import { AdminLogin, AdminPage } from "./AdminPage";
 
-function renderAdmin() {
+function renderAdmin(initialRemates?: ReturnType<typeof createCompleteRemate>[]) {
   return render(
-    <SiteDataProvider>
+    <SiteDataProvider initialRemates={initialRemates}>
       <MemoryRouter>
-        <AdminPage role="administrador" storageEnabled />
+        <AdminPage role="administrador" />
       </MemoryRouter>
     </SiteDataProvider>
   );
@@ -26,7 +26,7 @@ function renderAdminWithContext(value: SiteDataContextValue) {
   return render(
     <SiteDataContext.Provider value={value}>
       <MemoryRouter>
-        <AdminPage role="administrador" storageEnabled />
+        <AdminPage role="administrador" />
       </MemoryRouter>
     </SiteDataContext.Provider>
   );
@@ -34,7 +34,6 @@ function renderAdminWithContext(value: SiteDataContextValue) {
 
 describe("panel administrador", () => {
   beforeEach(() => {
-    window.localStorage.clear();
     window.sessionStorage.clear();
     vi.restoreAllMocks();
   });
@@ -80,6 +79,24 @@ describe("panel administrador", () => {
     await user.click(within(screen.getByRole("navigation")).getByRole("button", { name: "Remates" }));
     expect(menuButton).toHaveAttribute("aria-expanded", "false");
     expect(screen.getByRole("heading", { name: "Todos los remates" })).toBeInTheDocument();
+  });
+
+  it("diferencia visualmente las acciones de cabecera y no ofrece datos de demostración", () => {
+    renderAdmin();
+
+    expect(
+      screen.getAllByRole("link", { name: "Ver sitio público" }).every((item) =>
+        item.classList.contains("admin-public-site-button")
+      )
+    ).toBe(true);
+    expect(
+      screen.getAllByRole("button", { name: "Cerrar sesión" }).every((item) =>
+        item.classList.contains("admin-logout-button")
+      )
+    ).toBe(true);
+    expect(
+      screen.queryByRole("button", { name: "Restablecer datos de demostración" })
+    ).not.toBeInTheDocument();
   });
 
   it("bloquea la publicación de la precarga mientras falten datos obligatorios", async () => {
@@ -142,19 +159,7 @@ describe("panel administrador", () => {
   it("permite publicar directamente un borrador completo", async () => {
     const user = userEvent.setup();
     const completeDraft = createCompleteRemate({ estadoAdmin: "borrador" });
-    window.localStorage.setItem(
-      "zunino-remates-admin-data-v3",
-      JSON.stringify({
-        remates: [completeDraft],
-        content: {
-          contacto: siteContent.contacto,
-          pasos: siteContent.pasos,
-          faqs: siteContent.faqs,
-          copy: defaultSiteCopy,
-        },
-      })
-    );
-    renderAdmin();
+    renderAdmin([completeDraft]);
 
     await user.click(screen.getByRole("button", { name: "Remates" }));
     const draftRow = screen.getByText("Remate de prueba").closest("tr");
@@ -260,7 +265,7 @@ describe("panel administrador", () => {
     expect(within(row).getByText("Publicado")).toBeInTheDocument();
   });
 
-  it("muestra el modal propio al eliminar y restablecer datos", async () => {
+  it("muestra el modal propio al eliminar un remate", async () => {
     const user = userEvent.setup();
     renderAdmin();
 
@@ -273,10 +278,6 @@ describe("panel administrador", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByText("Maquinaria y herramientas")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Restablecer datos de demostración" }));
-    const resetDialog = screen.getByRole("dialog", { name: "Restablecer demostración" });
-    expect(within(resetDialog).getByText(/datos iniciales/i)).toBeInTheDocument();
-    await user.click(within(resetDialog).getByRole("button", { name: "Volver" }));
   });
 
   it("finaliza y cancela remates desde el modal de confirmación", async () => {
@@ -334,7 +335,6 @@ describe("panel administrador", () => {
       deleteRemate: async () => ({ status: "saved" }),
       changeRemateStatus: async () => ({ status: "saved", remate }),
       saveContent: async () => ({ status: "saved" }),
-      resetDemoData: async () => ({ status: "saved" }),
     };
     const user = userEvent.setup();
     renderAdminWithContext(contextValue);

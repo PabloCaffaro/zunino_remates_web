@@ -233,7 +233,6 @@ export const siteContent: SiteContent = {
     telefono: "+598 99 123 456",
     direccion: "Av. 18 de Julio 1234, Centro, Montevideo",
     horario: "Lun a Vie · 9:00 a 18:00",
-    formRecipientEmail: "pablocaffaro2000@gmail.com",
     mapEmbedUrl:
       "https://www.google.com/maps?q=Av.%2018%20de%20Julio%201234,%20Montevideo&z=15&output=embed",
   },

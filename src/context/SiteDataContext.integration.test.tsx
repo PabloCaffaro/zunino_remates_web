@@ -2,8 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createCompleteRemate } from "../test/fixtures";
-import type { AdminRemate } from "../types/site";
-import { SiteDataProvider } from "../test/DemoSiteDataProvider";
+import { SiteDataProvider } from "../test/TestSiteDataProvider";
 import {
   useSiteData,
   type DataOperationResult,
@@ -16,7 +15,6 @@ function wrapper({ children }: { children: ReactNode }) {
 
 describe("SiteDataProvider", () => {
   beforeEach(() => {
-    window.localStorage.clear();
     vi.restoreAllMocks();
   });
 
@@ -32,7 +30,7 @@ describe("SiteDataProvider", () => {
     ).toBe(false);
   });
 
-  it("publica un remate nuevo y lo persiste en localStorage", async () => {
+  it("publica un remate nuevo y actualiza el estado en memoria", async () => {
     const { result } = renderHook(() => useSiteData(), { wrapper });
     const remate = createCompleteRemate({
       id: "nuevo-publicado",
@@ -50,10 +48,7 @@ describe("SiteDataProvider", () => {
       ])
     );
 
-    await waitFor(() => {
-      const stored = window.localStorage.getItem("zunino-remates-admin-data-v3");
-      expect(stored).toContain("nuevo-publicado");
-    });
+    await waitFor(() => expect(result.current.remates.some((item) => item.id === "nuevo-publicado")).toBe(true));
   });
 
   it("oculta y vuelve a publicar conservando el slug", async () => {
@@ -209,62 +204,6 @@ describe("SiteDataProvider", () => {
     expect(result.current.remates.find((item) => item.id === cancelled.id)?.slug).toBe(
       toCancel.slug
     );
-  });
-
-  it("normaliza los datos v2 y los guarda en el formato v3 en la siguiente edición", async () => {
-    const initial = renderHook(() => useSiteData(), { wrapper });
-    const content = initial.result.current.content;
-    initial.unmount();
-    window.localStorage.clear();
-
-    const legacyRemate = {
-      ...createCompleteRemate({ id: "legado-v2", slug: "legado-v2" }),
-      fechaCompleta: "20/06/2026 17:00",
-    } as Partial<AdminRemate> & { fechaCompleta: string };
-    delete legacyRemate.fechaHora;
-    delete legacyRemate.version;
-    window.localStorage.setItem(
-      "zunino-remates-admin-data-v2",
-      JSON.stringify({ remates: [legacyRemate], content })
-    );
-
-    const migrated = renderHook(() => useSiteData(), { wrapper });
-    expect(migrated.result.current.remates[0]).toMatchObject({
-      id: "legado-v2",
-      fechaHora: "2026-06-20T20:00:00.000Z",
-      version: 1,
-    });
-
-    await act(async () => {
-      await migrated.result.current.saveRemate({
-        ...migrated.result.current.remates[0],
-        detalle: "Registro legado verificado.",
-      });
-    });
-
-    const storedV3 = window.localStorage.getItem("zunino-remates-admin-data-v3");
-    expect(storedV3).toContain('"fechaHora":"2026-06-20T20:00:00.000Z"');
-    expect(storedV3).toContain('"version":2');
-  });
-
-  it("informa un fallo de almacenamiento sin aplicar el cambio", async () => {
-    const { result } = renderHook(() => useSiteData(), { wrapper });
-    const original = result.current.remates[0];
-    vi.spyOn(Storage.prototype, "setItem").mockImplementationOnce(() => {
-      throw new DOMException("Cuota superada", "QuotaExceededError");
-    });
-    let saveResult: RemateMutationResult | undefined;
-
-    await act(async () => {
-      saveResult = await result.current.saveRemate({
-        ...original,
-        titulo: "Cambio que no debe persistirse",
-      });
-    });
-
-    expect(saveResult?.status).toBe("error");
-    expect(result.current.remates[0].titulo).toBe(original.titulo);
-    expect(result.current.remates[0].version).toBe(original.version);
   });
 
   it("elimina un remate y actualiza el contenido general", async () => {

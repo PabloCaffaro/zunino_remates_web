@@ -14,16 +14,16 @@ export function AdminDataProvider({ api, onLogout, children }: { api: AdminApi; 
     let active = true;
     Promise.all([
       api.request<AdminRemate[]>("remates"),
-      api.request<Omit<EditableSiteContent, "contacto"> & { contacto: Omit<EditableSiteContent["contacto"], "formRecipientEmail"> }>("content"),
+      api.request<EditableSiteContent>("content"),
     ]).then(([remoteRemates, remoteContent]) => {
       if (active) {
         setRemates(remoteRemates);
-        setContent({ ...remoteContent, contacto: { ...remoteContent.contacto, formRecipientEmail: publicData.content.contacto.formRecipientEmail } });
+        setContent(remoteContent);
         setStatus("ready");
       }
     }).catch((error: Error) => { if (active) { setError(error.message); setStatus("error"); } });
     return () => { active = false; };
-  }, [api, attempt, publicData.content.contacto.formRecipientEmail]);
+  }, [api, attempt]);
   const mutate = useCallback(async (method: string, body: unknown): Promise<RemateMutationResult> => {
     try {
       const result = await api.request<RemateMutationResult>("remates", method, body);
@@ -54,8 +54,8 @@ export function AdminDataProvider({ api, onLogout, children }: { api: AdminApi; 
     },
     saveContent: async (nextContent) => {
       try {
-        const saved = await api.request<Omit<EditableSiteContent, "contacto"> & { contacto: Omit<EditableSiteContent["contacto"], "formRecipientEmail"> }>("content", "POST", { content: nextContent });
-        setContent({ ...saved, contacto: { ...saved.contacto, formRecipientEmail: nextContent.contacto.formRecipientEmail } });
+        const saved = await api.request<EditableSiteContent>("content", "POST", { content: nextContent });
+        setContent(saved);
         publicData.retryPublicData();
         return { status: "saved" };
       } catch (error) { return { status: "error", message: error instanceof Error ? error.message : "No se pudo guardar el contenido." }; }

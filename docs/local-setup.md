@@ -58,12 +58,6 @@ Mientras se usa solamente `npm run dev`, las solicitudes a `/api/v1/public/*`
 no estarán disponibles y la página mostrará un error con opción de reintentar. Esto no
 permite validar cambios realizados en Supabase.
 
-## Datos de demostración
-
-El proveedor local de `src/context` se conserva para pruebas automatizadas y
-para `main` mientras no se promueva esta integración. En `desarrollo`, el panel
-real no guarda sesión ni datos administrativos en el almacenamiento del navegador.
-
 ## Calidad
 
 Ejecutar antes de entregar cambios:

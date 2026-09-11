@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { canRegenerateRemateSlug, canTransitionRemateStatus } from "../admin/remateWorkflow";
-import { remateDateTimeInputToIso } from "../data/remateFormatting";
-import { siteContent } from "../data/siteContent";
+import { siteContent } from "./siteContentFixture";
 import { defaultSiteCopy } from "../data/siteCopy";
 import { fetchPublicSiteData } from "../data/publicSiteApi";
 import { SiteDataContext, type SiteDataContextValue } from "../context/siteDataContextValue";
@@ -12,9 +11,6 @@ import type {
   RemateEstadoAdmin,
 } from "../types/site";
 
-const STORAGE_KEY = "zunino-remates-admin-data-v3";
-const LEGACY_STORAGE_KEY = "zunino-remates-admin-data-v2";
-
 type StoredSiteData = {
   remates: AdminRemate[];
   content: EditableSiteContent;
@@ -24,12 +20,6 @@ type PublicSiteDataState = {
   remates: Remate[];
   content: EditableSiteContent | null;
   status: "loading" | "ready" | "error";
-};
-
-type LegacyAdminRemate = Omit<AdminRemate, "fechaHora" | "version"> & {
-  fechaHora?: string | null;
-  fechaCompleta?: string;
-  version?: number;
 };
 
 function createPendingRemate(): AdminRemate {
@@ -85,45 +75,17 @@ function createInitialData(): StoredSiteData {
   };
 }
 
-function normalizeStoredRemate(remate: LegacyAdminRemate): AdminRemate {
-  const { fechaCompleta, ...current } = remate;
-  const legacyDate = fechaCompleta ? remateDateTimeInputToIso(fechaCompleta) : null;
-
-  return {
-    ...current,
-    fechaHora: current.fechaHora ?? legacyDate,
-    version:
-      typeof current.version === "number" && current.version > 0 ? current.version : 1,
-  } as AdminRemate;
-}
-
-function readStoredData(): StoredSiteData {
-  try {
-    const storedValue =
-      window.localStorage.getItem(STORAGE_KEY) ??
-      window.localStorage.getItem(LEGACY_STORAGE_KEY);
-    if (!storedValue) return createInitialData();
-
-    const parsed = JSON.parse(storedValue) as Partial<StoredSiteData> & {
-      remates?: LegacyAdminRemate[];
-    };
-    if (!Array.isArray(parsed.remates) || !parsed.content) return createInitialData();
-
-    return {
-      remates: parsed.remates.map(normalizeStoredRemate),
-      content: parsed.content,
-    };
-  } catch {
-    return createInitialData();
-  }
-}
-
-function storageErrorMessage() {
-  return "No se pudieron guardar los cambios en este navegador. Revisá el espacio disponible e intentá nuevamente.";
-}
-
-export function SiteDataProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<StoredSiteData>(readStoredData);
+export function SiteDataProvider({
+  children,
+  initialRemates,
+}: {
+  children: ReactNode;
+  initialRemates?: AdminRemate[];
+}) {
+  const [data, setData] = useState<StoredSiteData>(() => ({
+    ...createInitialData(),
+    ...(initialRemates ? { remates: initialRemates } : {}),
+  }));
   const dataRef = useRef(data);
   const [publicData, setPublicData] = useState<PublicSiteDataState>(() => ({
     remates: [],
@@ -162,14 +124,9 @@ export function SiteDataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<SiteDataContextValue>(() => {
     const commitData = (nextData: StoredSiteData) => {
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextData));
-        dataRef.current = nextData;
-        setData(nextData);
-        return { status: "saved" as const };
-      } catch {
-        return { status: "error" as const, message: storageErrorMessage() };
-      }
+      dataRef.current = nextData;
+      setData(nextData);
+      return { status: "saved" as const };
     };
 
     const saveRemate = async (remate: AdminRemate) => {
@@ -202,11 +159,8 @@ export function SiteDataProvider({ children }: { children: ReactNode }) {
       const nextRemates = existing
         ? current.remates.map((item) => (item.id === savedRemate.id ? savedRemate : item))
         : [...current.remates, savedRemate];
-      const commitResult = commitData({ ...current, remates: nextRemates });
-
-      return commitResult.status === "saved"
-        ? { status: "saved" as const, remate: savedRemate }
-        : commitResult;
+      commitData({ ...current, remates: nextRemates });
+      return { status: "saved" as const, remate: savedRemate };
     };
 
     const deleteRemate = async (id: string, expectedVersion: number) => {
@@ -243,8 +197,6 @@ export function SiteDataProvider({ children }: { children: ReactNode }) {
     const saveContent = async (content: EditableSiteContent) =>
       commitData({ ...dataRef.current, content });
 
-    const resetDemoData = async () => commitData(createInitialData());
-
     return {
       ...data,
       publishedRemates: data.remates.filter((item) => item.estadoAdmin === "publicado"),
@@ -256,7 +208,6 @@ export function SiteDataProvider({ children }: { children: ReactNode }) {
       deleteRemate,
       changeRemateStatus,
       saveContent,
-      resetDemoData,
     };
   }, [data, publicData, retryPublicData]);
 

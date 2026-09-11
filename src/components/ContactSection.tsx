@@ -86,7 +86,7 @@ export function ContactSection({ contact, copy }: ContactSectionProps) {
 
     try {
       // FormSubmit permite enviar emails desde el sitio sin mantener un backend propio.
-      const response = await fetch(`https://formsubmit.co/ajax/${contact.formRecipientEmail}`, {
+      const response = await fetch(`https://formsubmit.co/ajax/${contact.email}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
