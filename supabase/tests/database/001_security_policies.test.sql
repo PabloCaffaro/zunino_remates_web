@@ -1,8 +1,13 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
 
 select plan(55);
+
+-- Aísla los fixtures de los datos que ya existan en el entorno probado.
+-- Todo se restaura al finalizar porque el archivo completo usa ROLLBACK.
+truncate table public.admin_profiles, public.remates restart identity cascade;
 
 -- Ejecuta una mutación con RETURNING como sentencia de nivel superior y
 -- devuelve cuántas filas atravesaron RLS.
@@ -385,7 +390,12 @@ select is(
 );
 
 select is(
-  (select count(*) from storage.objects where bucket_id = 'lotes-remates'),
+  (
+    select count(*)
+    from storage.objects
+    where bucket_id = 'lotes-remates'
+      and name like '20000000-0000-0000-0000-00000000000%/%'
+  ),
   1::bigint,
   'El visitante solamente ve imágenes vinculadas a lotes visibles y publicados'
 );
@@ -395,6 +405,7 @@ select is(
     select name
     from storage.objects
     where bucket_id = 'lotes-remates'
+      and name like '20000000-0000-0000-0000-00000000000%/%'
   ),
   '20000000-0000-0000-0000-000000000002/lote-publicado.webp',
   'El visitante no ve imágenes ocultas ni archivos huérfanos'
@@ -477,7 +488,12 @@ select lives_ok(
 );
 
 select is(
-  (select count(*) from storage.objects where bucket_id = 'lotes-remates'),
+  (
+    select count(*)
+    from storage.objects
+    where bucket_id = 'lotes-remates'
+      and name like '20000000-0000-0000-0000-00000000000%/%'
+  ),
   4::bigint,
   'El editor puede listar imágenes de remates publicados y no publicados'
 );
