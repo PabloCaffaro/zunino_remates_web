@@ -36,4 +36,24 @@ describe("cliente de la API administrativa", () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("offline"));
     await expect(createAdminApi().session()).rejects.toBeInstanceOf(AdminApiError);
   });
+
+  it("envía sin alterar la versión visible al solicitar un cambio de estado", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      jsonResponse({ data: { status: "conflict", current: { version: 12 } } }, 409)
+    );
+
+    await expect(
+      createAdminApi().request("remates", "PATCH", {
+        id: "10000000-0000-4000-8000-000000000001",
+        version: 11,
+        status: "oculto",
+      })
+    ).resolves.toMatchObject({ status: "conflict" });
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toEqual({
+      id: "10000000-0000-4000-8000-000000000001",
+      version: 11,
+      status: "oculto",
+    });
+  });
 });

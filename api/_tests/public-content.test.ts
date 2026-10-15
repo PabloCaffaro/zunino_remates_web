@@ -33,6 +33,7 @@ describe("GET /api/v1/public/content", () => {
 
     expect(response.status).toBe(200);
     expect(body.data.copy.heroTitle).toBe("t");
+    expect(body.data.contacto).toEqual({ email: "a@b.com", telefono: "1", direccion: "d", horario: "h", mapEmbedUrl: "m" });
     expect(body.requestId).toBe(response.headers.get("x-request-id"));
   });
 

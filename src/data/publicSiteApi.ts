@@ -9,7 +9,11 @@ type PublicRemateResponse = {
 };
 
 const getJson = async <Data>(url: string, signal: AbortSignal): Promise<Data> => {
-  const response = await fetch(url, { signal, headers: { Accept: "application/json" } });
+  const response = await fetch(url, {
+    signal,
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
 
   if (!response.ok) {
     throw new Error("La API pública no respondió correctamente.");

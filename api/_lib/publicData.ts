@@ -116,7 +116,7 @@ export const getPublishedRemates = async (): Promise<PublicRemate[]> => {
     supabase
       .from("remates")
       .select(
-        "id, slug, titulo, subtitulo, fecha_hora, fecha_por_confirmar, lugar, ubicacion_detalle, detalle, descripcion_larga, catalogo_descripcion, catalogo_estado, destacado, orden",
+        "id, slug, estado, titulo, subtitulo, fecha_hora, fecha_por_confirmar, lugar, ubicacion_detalle, detalle, descripcion_larga, catalogo_descripcion, catalogo_estado, destacado, orden",
       )
       .eq("estado", "publicado")
       .order("destacado", { ascending: false })
@@ -151,7 +151,7 @@ export const getPublishedRemates = async (): Promise<PublicRemate[]> => {
   const signedUrls = requireData(signedResult.data, signedResult.error);
   if (signedUrls.some((item) => item.error || !item.signedUrl)) throw new Error("No se pudieron firmar las imágenes públicas.");
 
-  return remates.map((remate) => ({
+  return remates.filter((remate) => remate.estado === "publicado").map((remate) => ({
     id: remate.id,
     slug: remate.slug,
     fechaHora: remate.fecha_hora,

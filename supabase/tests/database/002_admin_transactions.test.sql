@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(15);
+select plan(17);
 insert into auth.users (id, email) values
  ('90000000-0000-4000-8000-000000000001', 'qa-admin@example.invalid'),
  ('90000000-0000-4000-8000-000000000002', 'qa-editor@example.invalid');
@@ -21,6 +21,8 @@ select is(public.admin_remate_snapshot('90000000-0000-4000-8000-000000000003')->
 select throws_ok($$select public.admin_save_remate(current_setting('test.payload')::jsonb || '{"estadoAdmin":"publicado","titulo":"","requisitos":["No debe guardarse"]}', 3)$$, '23514', null, 'La validación rechaza publicación inválida');
 select is(public.admin_remate_snapshot('90000000-0000-4000-8000-000000000003')->'requisitos'->>0, 'QA requisito', 'La operación fallida revierte también sus listas');
 select throws_ok($$select public.admin_save_remate(current_setting('test.payload')::jsonb || '{"estadoAdmin":"publicado","slug":"otra-ruta"}', 3)$$, '23514', null, 'El slug publicado permanece fijo');
+select is(public.admin_change_remate_status('90000000-0000-4000-8000-000000000003', 2, 'oculto')->>'status', 'conflict', 'Ocultar con una versión anterior devuelve conflicto');
+select is(public.admin_remate_snapshot('90000000-0000-4000-8000-000000000003')->>'estadoAdmin', 'publicado', 'La transición obsoleta conserva el estado más reciente');
 select is(public.admin_change_remate_status('90000000-0000-4000-8000-000000000003', 3, 'oculto')->>'status', 'saved', 'Oculta con versión correcta');
 select is(public.admin_change_remate_status('90000000-0000-4000-8000-000000000003', 4, 'publicado')->>'status', 'saved', 'Vuelve a publicar');
 select throws_ok($$select public.admin_delete_remate('90000000-0000-4000-8000-000000000003', 5)$$, '42501', null, 'Editor no puede eliminar');

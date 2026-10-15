@@ -371,4 +371,37 @@ describe("panel administrador", () => {
     await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
     expect(screen.getByText("Gran remate de maquinaria")).toBeInTheDocument();
   });
+
+  it("no muestra éxito cuando falla el guardado de contenido", async () => {
+    const saveContent = vi.fn().mockResolvedValue({
+      status: "error",
+      message: "No se pudo confirmar la escritura.",
+    });
+    const content = {
+      contacto: siteContent.contacto,
+      pasos: siteContent.pasos,
+      faqs: siteContent.faqs,
+      copy: defaultSiteCopy,
+    };
+    renderAdminWithContext({
+      remates: [],
+      publishedRemates: [],
+      publicRemates: [],
+      publicDataStatus: "ready",
+      retryPublicData: vi.fn(),
+      content,
+      publicContent: content,
+      saveContent,
+    } as unknown as SiteDataContextValue);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole("button", { name: "Contenido general" }));
+    const email = screen.getByRole("textbox", { name: "Email" });
+    await user.clear(email);
+    await user.type(email, "qa@example.invalid");
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    expect(await screen.findByText("No se pudo confirmar la escritura.")).toBeInTheDocument();
+    expect(screen.queryByText("Cambios guardados.")).not.toBeInTheDocument();
+  });
 });

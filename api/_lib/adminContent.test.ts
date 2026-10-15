@@ -36,4 +36,20 @@ describe("validación del contenido administrativo", () => {
     expect(() => validateContent({ content: { ...validContent, contacto: { ...validContent.contacto, mapEmbedUrl: "https://evil.example/map" } } })).toThrow(/Google Maps/);
     expect(() => validateContent({ content: { ...validContent, faqs: [{ pregunta: "", respuesta: "Respuesta" }] } })).toThrow(/pregunta 1/);
   });
+
+  it("conserva caracteres especiales, comillas y saltos de línea internos", () => {
+    const content = {
+      ...validContent,
+      contacto: { ...validContent.contacto, horario: " Lunes & miércoles\n9:00 a 18:00 " },
+      copy: { ...validContent.copy, heroDescription: " Línea con ñ y \"comillas\"\nSegunda línea " },
+      faqs: [{ pregunta: " ¿Aceptan dólares & pesos? ", respuesta: " Sí, según condiciones.\nConsultá antes. " }],
+    };
+
+    const result = validateContent({ content });
+
+    expect(result.contacto.horario).toBe("Lunes & miércoles\n9:00 a 18:00");
+    expect(result.copy.heroDescription).toBe("Línea con ñ y \"comillas\"\nSegunda línea");
+    expect(result.faqs[0].respuesta).toBe("Sí, según condiciones.\nConsultá antes.");
+  });
+
 });

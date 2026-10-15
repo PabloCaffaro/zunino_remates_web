@@ -59,6 +59,12 @@ describe("carga pública sin respaldo local", () => {
 
     const map = await screen.findByTitle("Mapa de ubicación de Zunino Remates");
     expect(map).toHaveAttribute("src", siteContent.contacto.mapEmbedUrl);
+    const mapsLinks = screen.getAllByRole("link", { name: /Ver ubicación en Google Maps/ });
+    expect(mapsLinks).toHaveLength(1);
+    expect(mapsLinks[0]).toHaveAttribute(
+      "href",
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(siteContent.contacto.direccion)}`,
+    );
   });
 
   it("mantiene cerradas todas las preguntas frecuentes al cargar", async () => {

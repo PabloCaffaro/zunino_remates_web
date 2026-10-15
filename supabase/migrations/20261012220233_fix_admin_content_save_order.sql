@@ -37,7 +37,7 @@ begin
     raise exception 'Configuración principal no encontrada.' using errcode = 'P0002';
   end if;
 
-  delete from public.preguntas_frecuentes where id is not null;
+  delete from public.preguntas_frecuentes;
   insert into public.preguntas_frecuentes (pregunta, respuesta, visible, orden)
     select btrim(value->>'pregunta'), btrim(value->>'respuesta'), true, ordinality::integer - 1
     from jsonb_array_elements(p_content->'faqs') with ordinality;
