@@ -6,6 +6,13 @@ const MAX_IMAGE_BYTES = 700_000;
 const MAX_LOTS = 8;
 const types = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const;
 
+type StoredLot = {
+  id: string;
+  nombre: string;
+  storagePath: string;
+  imagen: { url: string; alt: string };
+};
+
 const isSignatureValid = (bytes: Uint8Array, mime: keyof typeof types) => mime === "image/jpeg"
   ? bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff
   : mime === "image/png"
@@ -27,8 +34,9 @@ function decodeDataUrl(url: string) {
 export async function prepareLots(supabase: SupabaseClient, remateIdValue: unknown, lotsValue: unknown) {
   const remateId = requireId(remateIdValue);
   if (!Array.isArray(lotsValue) || lotsValue.length > MAX_LOTS) throw new ApiError(400, "Podés cargar hasta 8 lotes destacados por remate.");
+  const bucket = supabase.storage.from("lotes-remates");
   const uploaded: string[] = [];
-  const lots = [];
+  const lots: StoredLot[] = [];
   try {
     for (const [index, value] of lotsValue.entries()) {
       if (!value || typeof value !== "object" || Array.isArray(value)) throw new ApiError(400, `Revisá el lote ${index + 1}.`);
@@ -40,7 +48,7 @@ export async function prepareLots(supabase: SupabaseClient, remateIdValue: unkno
         const decoded = decodeDataUrl(image.url);
         const id = crypto.randomUUID();
         const path = `${remateId}/${id}.${decoded.extension}`;
-        const { error } = await supabase.storage.from("lotes-remates").upload(path, decoded.bytes, { contentType: decoded.mime, upsert: false });
+        const { error } = await bucket.upload(path, decoded.bytes, { contentType: decoded.mime, upsert: false });
         if (error) throw new Error("No se pudo subir una imagen.");
         uploaded.push(path);
         lots.push({ id, nombre, storagePath: path, imagen: { url: "", alt: image.alt.trim() || `Imagen de ${nombre}` } });
@@ -51,15 +59,39 @@ export async function prepareLots(supabase: SupabaseClient, remateIdValue: unkno
         lots.push({ id, nombre, storagePath: path, imagen: { url: "", alt: image.alt.trim() || `Imagen de ${nombre}` } });
       }
     }
-    return { lots, uploaded };
+    for (const [index, lot] of lots.entries()) {
+      const { data: exists } = await bucket.exists(lot.storagePath);
+      if (!exists) throw new ApiError(400, `La fotografía del lote ${index + 1} no existe en Storage.`);
+    }
+    const signed = await signLots(supabase, { destacados: lots });
+    return { lots, uploaded, signedLots: signed?.destacados ?? [] };
   } catch (error) {
-    if (uploaded.length) await supabase.storage.from("lotes-remates").remove(uploaded);
+    if (uploaded.length && !await removeStoragePaths(supabase, uploaded)) {
+      throw new Error("No se pudo revertir la carga de imágenes incompleta.");
+    }
     throw error;
   }
 }
 
 export async function removeStoragePaths(supabase: SupabaseClient, paths: string[]) {
-  if (paths.length) await supabase.storage.from("lotes-remates").remove(paths);
+  const uniquePaths = [...new Set(paths.filter(Boolean))];
+  if (!uniquePaths.length) return true;
+  const { error } = await supabase.storage.from("lotes-remates").remove(uniquePaths);
+  return !error;
+}
+
+export function applySignedLotUrls<
+  T extends { destacados?: Array<{ storagePath?: string; imagen: { url: string } }> },
+>(remate: T | null, signedLots: Array<{ storagePath: string; imagen: { url: string } }>): T | null {
+  if (!remate?.destacados?.length) return remate;
+  const urls = new Map(signedLots.map((lot) => [lot.storagePath, lot.imagen.url]));
+  return {
+    ...remate,
+    destacados: remate.destacados.map((lot) => ({
+      ...lot,
+      imagen: { ...lot.imagen, url: urls.get(lot.storagePath ?? "") ?? lot.imagen.url },
+    })),
+  };
 }
 
 export async function signLots<T extends { destacados?: Array<{ storagePath?: string; imagen: { url: string } }> }>(supabase: SupabaseClient, remate: T | null): Promise<T | null> {
