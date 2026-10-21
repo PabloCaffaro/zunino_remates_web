@@ -22,7 +22,10 @@ const content = {
     ubicacionTitle: "Cómo llegar",
     ubicacionDescription: "Atención con coordinación previa",
   },
-  faqs: [{ id: "faq-local", pregunta: "¿Cómo participo?", respuesta: "En sala & online.\nConsultá antes." }],
+  faqs: [
+    { id: "faq-local-1", pregunta: "¿Cómo participo?", respuesta: "En sala & online.\nConsultá antes." },
+    { id: "faq-local-2", pregunta: "¿Aceptan dólares o pesos?", respuesta: "Sí: $ y U$S, según condiciones." },
+  ],
   pasos: [],
 };
 
@@ -36,7 +39,10 @@ describe("POST /api/v1/admin/content", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("envía y devuelve los cuatro contactos, textos y FAQ sin perder caracteres", async () => {
-    const saved = { ...content, faqs: [{ ...content.faqs[0], id: "faq-db" }] };
+    const saved = {
+      ...content,
+      faqs: content.faqs.map((faq, index) => ({ ...faq, id: `faq-db-${index + 1}` })),
+    };
     const rpc = vi.fn().mockResolvedValue({ data: saved, error: null });
     vi.mocked(requireAdmin).mockResolvedValue({ supabase: { rpc } } as never);
 
@@ -47,10 +53,10 @@ describe("POST /api/v1/admin/content", () => {
       p_content: expect.objectContaining({
         contacto: content.contacto,
         copy: content.copy,
-        faqs: [{ pregunta: content.faqs[0].pregunta, respuesta: content.faqs[0].respuesta }],
+        faqs: content.faqs.map(({ pregunta, respuesta }) => ({ pregunta, respuesta })),
       }),
     });
-    await expect(response.json()).resolves.toMatchObject({ data: saved });
+    await expect(response.json()).resolves.toEqual(expect.objectContaining({ data: saved }));
   });
 
   it("no informa éxito cuando PostgreSQL revierte una confirmación inconsistente", async () => {
