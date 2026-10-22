@@ -23,12 +23,25 @@ describe("formato de fecha de remates", () => {
 
   it("valida formato, hora y calendario", () => {
     expect(isValidRemateDateTime("05/09/2026 09:30")).toBe(true);
+    expect(isValidRemateDateTime("5/9/2026 09:30")).toBe(true);
     expect(isValidRemateDateTime("29/02/2028 09:30")).toBe(true);
     expect(isValidRemateDateTime("29/02/2027 09:30")).toBe(false);
-    expect(isValidRemateDateTime("5/9/2026 09:30")).toBe(false);
     expect(isValidRemateDateTime("31/02/2026 09:30")).toBe(false);
     expect(isValidRemateDateTime("05/09/2026 24:00")).toBe(false);
+    expect(isValidRemateDateTime("5/9/2026 9:30")).toBe(false);
     expect(isValidRemateDateTime("Cualquier cosa")).toBe(false);
+  });
+
+  it("normaliza fechas con uno y dos dígitos sin cambiar la hora de Montevideo", () => {
+    const unpaddedInput = "5/9/2026 09:30";
+    const paddedInput = "05/09/2026 09:30";
+    const unpaddedIso = remateDateTimeInputToIso(unpaddedInput);
+    const paddedIso = remateDateTimeInputToIso(paddedInput);
+
+    expect(unpaddedIso).toBe("2026-09-05T12:30:00.000Z");
+    expect(unpaddedIso).toBe(paddedIso);
+    expect(formatRemateDateInput(unpaddedIso)).toBe(paddedInput);
+    expect(formatRemateDateSummary(unpaddedIso)).toBe("05 SEP · 09:30");
   });
 
   it("conserva fecha y hora al convertir de formulario a ISO y volver", () => {

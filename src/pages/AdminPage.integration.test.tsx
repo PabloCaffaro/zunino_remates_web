@@ -372,6 +372,47 @@ describe("panel administrador", () => {
     expect(screen.getByText("Gran remate de maquinaria")).toBeInTheDocument();
   });
 
+  it("rechaza un archivo vacío sin crear una tarjeta", async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    await user.click(screen.getByRole("button", { name: "Remates" }));
+    const pendingRow = screen.getByText("Remate especial de activos varios").closest("tr");
+    await user.click(
+      within(pendingRow as HTMLTableRowElement).getByRole("button", { name: "Editar" })
+    );
+
+    const fileInput = screen.getByLabelText("Agregar fotos de lotes destacados");
+    const emptyImage = new File([], "foto-vacia.png", { type: "image/png" });
+
+    await user.upload(fileInput, emptyImage);
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "foto-vacia.png: El archivo está vacío."
+    );
+    expect(screen.queryByRole("img", { name: "Vista previa de foto-vacia.png" })).not.toBeInTheDocument();
+  });
+
+  it("incorpora un archivo de imagen válido como tarjeta", async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+
+    await user.click(screen.getByRole("button", { name: "Remates" }));
+    const pendingRow = screen.getByText("Remate especial de activos varios").closest("tr");
+    await user.click(
+      within(pendingRow as HTMLTableRowElement).getByRole("button", { name: "Editar" })
+    );
+
+    const fileInput = screen.getByLabelText("Agregar fotos de lotes destacados");
+    const validImage = new File(["imagen válida"], "foto-valida.png", { type: "image/png" });
+
+    await user.upload(fileInput, validImage);
+
+    expect(
+      await screen.findByRole("img", { name: "Vista previa de foto-valida.png" })
+    ).toBeInTheDocument();
+  });
+
   it("no muestra éxito cuando falla el guardado de contenido", async () => {
     const saveContent = vi.fn().mockResolvedValue({
       status: "error",

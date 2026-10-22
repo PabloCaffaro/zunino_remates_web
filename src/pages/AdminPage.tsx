@@ -109,6 +109,10 @@ function createEmptyRemate(): AdminRemate {
 }
 
 function readFileAsDataUrl(file: File, maxBytes: number): Promise<string> {
+  if (file.size === 0) {
+    return Promise.reject(new Error("El archivo está vacío."));
+  }
+
   if (file.size > maxBytes) {
     return Promise.reject(new Error("El archivo supera el tamaño permitido de 700 KB."));
   }

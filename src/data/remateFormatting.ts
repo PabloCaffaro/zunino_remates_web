@@ -15,7 +15,7 @@ const MONTH_ABBREVIATIONS = [
   "DIC",
 ];
 
-const REMATE_DATE_PATTERN = /^(\d{2})\/(\d{2})\/(\d{4}) ([01]\d|2[0-3]):([0-5]\d)$/;
+const REMATE_DATE_PATTERN = /^(\d{1,2})\/(\d{1,2})\/(\d{4}) ([01]\d|2[0-3]):([0-5]\d)$/;
 
 type DateParts = {
   day: number;
