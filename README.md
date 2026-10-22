@@ -36,10 +36,52 @@ Vite mostrará la dirección local, normalmente `http://localhost:5173`.
 npm run dev        # Servidor de desarrollo
 npm test           # Suite automática
 npm run test:watch # Pruebas en modo continuo
+npm run test:e2e:smoke # Smoke E2E sobre el Preview protegido (Microsoft Edge)
+npm run test:e2e   # Todas las pruebas E2E presentes y futuras
+npm run test:e2e:regression # Regresiones marcadas con @regression
 npm run lint       # Revisión estática
 npm run build      # Compilación de producción
 npm run preview    # Vista previa del build
 ```
+
+## Pruebas E2E con Playwright
+
+El smoke E2E usa Microsoft Edge instalado en el equipo (`channel: "msedge"`) y
+no requiere descargar navegadores de Playwright. Desde una instalación limpia:
+
+1. Instalá Node.js 24 LTS y Microsoft Edge.
+2. Copiá la configuración local autorizada a `.env.local` e incluí
+   `VERCEL_AUTOMATION_BYPASS_SECRET`. No confirmes ese archivo en Git.
+3. Instalá exactamente las dependencias bloqueadas por el repositorio:
+
+   ```powershell
+   $env:PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1"
+   npm ci
+   ```
+
+4. Ejecutá el smoke desde la raíz del repositorio:
+
+   ```powershell
+   npm run test:e2e:smoke
+   ```
+
+El objetivo predeterminado es el Preview asociado al commit
+`7b5e179383e8c1dff0d112e30dfd82f994fb0493`. Para otro Preview se puede definir
+`E2E_BASE_URL` con una URL HTTPS. La preparación obtiene una cookie temporal con
+el mecanismo oficial de Vercel; la cabecera que contiene el secreto se envía en
+una única solicitud al origen configurado y no se agrega al contexto del
+navegador. La autenticación del panel es independiente: el smoke solo comprueba
+el formulario y nunca inicia sesión.
+
+Los resultados temporales se guardan en rutas ignoradas por Git y la cookie se
+elimina al finalizar normalmente. `npm test` continúa reservado para Vitest;
+Playwright detecta sus pruebas únicamente dentro de `tests/e2e`.
+
+Las regresiones administrativas reutilizan los fixtures QA existentes y exigen
+credenciales locales en `.qa-credentials.local`. Se ejecutan de forma
+independiente con `npm run test:e2e:regression`; no crean ni modifican remates.
+Los detalles de acceso y mantenimiento están en
+[Pruebas E2E y acceso a Previews QA](docs/qa/e2e.md).
 
 Antes de integrar o publicar un cambio deben pasar:
 
