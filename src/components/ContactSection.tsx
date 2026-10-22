@@ -102,7 +102,14 @@ export function ContactSection({ contact, copy }: ContactSectionProps) {
         }),
       });
 
-      if (!response.ok) {
+      const payload: unknown = await response.json();
+      const accepted =
+        typeof payload === "object" &&
+        payload !== null &&
+        "success" in payload &&
+        (payload.success === true || payload.success === "true");
+
+      if (!response.ok || !accepted) {
         throw new Error("No se pudo enviar");
       }
 
@@ -236,7 +243,7 @@ export function ContactSection({ contact, copy }: ContactSectionProps) {
 
             {formStatus === "success" && (
               <p className="form-status form-status-success" aria-live="polite">
-                Gracias. Tu consulta fue enviada correctamente.
+                Gracias. Tu consulta fue aceptada para envío.
               </p>
             )}
             {formStatus === "error" && (
