@@ -113,4 +113,43 @@ describe("carrusel de lotes destacados", () => {
     expect(nextButton.parentElement).toBe(image.parentElement);
     expect(closeButton.parentElement).not.toBe(image.parentElement);
   });
+
+  it("lleva el foco al diálogo y lo restaura al disparador con todos los cierres disponibles", async () => {
+    const user = userEvent.setup();
+    await renderDetailPage();
+    const trigger = screen.getByRole("button", {
+      name: "Ver Compresor industrial de alto caudal en grande",
+    });
+
+    await user.click(trigger);
+    const dialog = screen.getByRole("dialog", { name: "Compresor industrial de alto caudal" });
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(within(dialog).getByRole("button", { name: "Cerrar imagen ampliada" })).toHaveFocus();
+
+    await user.click(within(dialog).getByRole("button", { name: "Cerrar imagen ampliada" }));
+    expect(trigger).toHaveFocus();
+
+    await user.click(trigger);
+    await user.keyboard("{Escape}");
+    expect(trigger).toHaveFocus();
+
+    await user.click(trigger);
+    await user.click(screen.getByRole("dialog", { name: "Compresor industrial de alto caudal" }));
+    expect(trigger).toHaveFocus();
+  });
+
+  it("no intenta devolver el foco a un disparador desmontado", async () => {
+    const user = userEvent.setup();
+    await renderDetailPage();
+    const trigger = screen.getByRole("button", {
+      name: "Ver Compresor industrial de alto caudal en grande",
+    });
+
+    await user.click(trigger);
+    trigger.remove();
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(document.activeElement).not.toBe(trigger);
+  });
 });

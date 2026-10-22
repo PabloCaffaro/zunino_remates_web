@@ -16,8 +16,7 @@ export function createUniqueRemateSlug(
   currentRemateId?: string
 ): string {
   // Reserva el slug base para el primer remate y agrega índices correlativos en duplicados.
-  const baseSlug = slugify(title);
-  if (!baseSlug) return "";
+  const baseSlug = slugify(title) || `borrador-${currentRemateId ?? "sin-id"}`;
 
   const usedSlugs = new Set(
     remates

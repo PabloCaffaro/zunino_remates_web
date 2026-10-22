@@ -81,6 +81,45 @@ describe("panel administrador", () => {
     expect(screen.getByRole("heading", { name: "Todos los remates" })).toBeInTheDocument();
   });
 
+  it("cierra el menú móvil al pasar a escritorio y permanece cerrado al volver a móvil", async () => {
+    const user = userEvent.setup();
+    let matches = false;
+    const listeners = new Set<(event: MediaQueryListEvent) => void>();
+    const mediaQuery = {
+      media: "(min-width: 901px)",
+      get matches() {
+        return matches;
+      },
+      onchange: null,
+      addEventListener: vi.fn((event: string, listener: (event: MediaQueryListEvent) => void) => {
+        if (event === "change") listeners.add(listener);
+      }),
+      removeEventListener: vi.fn((event: string, listener: (event: MediaQueryListEvent) => void) => {
+        if (event === "change") listeners.delete(listener);
+      }),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    } as MediaQueryList;
+    vi.stubGlobal("matchMedia", vi.fn(() => mediaQuery));
+
+    const { unmount } = renderAdmin();
+    const menuButton = screen.getByRole("button", { name: "Abrir menú" });
+    await user.click(menuButton);
+    expect(menuButton).toHaveAttribute("aria-expanded", "true");
+
+    matches = true;
+    act(() => listeners.forEach((listener) => listener({ matches: true } as MediaQueryListEvent)));
+    expect(menuButton).toHaveAttribute("aria-expanded", "false");
+
+    matches = false;
+    act(() => listeners.forEach((listener) => listener({ matches: false } as MediaQueryListEvent)));
+    expect(menuButton).toHaveAttribute("aria-expanded", "false");
+
+    unmount();
+    expect(mediaQuery.removeEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+  });
+
   it("diferencia visualmente las acciones de cabecera y no ofrece datos de demostración", () => {
     renderAdmin();
 
@@ -154,6 +193,76 @@ describe("panel administrador", () => {
       .getByText("Remate especial de activos varios")
       .closest("tr");
     expect(within(updatedRow as HTMLTableRowElement).getByText("Borrador")).toBeInTheDocument();
+  });
+
+  it("mantiene un slug técnico al guardar un borrador nuevo sin título", async () => {
+    const user = userEvent.setup();
+    renderAdmin([]);
+
+    await user.click(screen.getByRole("button", { name: "Remates" }));
+    await user.click(screen.getByRole("button", { name: "Agregar remate" }));
+    const title = screen.getAllByRole("textbox")[0];
+    const slug = screen.getByPlaceholderText("maquinaria-y-herramientas") as HTMLInputElement;
+    const technicalSlug = slug.value;
+
+    expect(technicalSlug).toMatch(/^borrador-[0-9a-f-]{36}$/);
+    await user.type(title, "!@#$%");
+    expect(slug).toHaveValue(technicalSlug);
+
+    await user.clear(title);
+    await user.type(title, "Remate técnico");
+    expect(slug).toHaveValue("remate-tecnico");
+
+    await user.clear(title);
+    expect(slug).toHaveValue(technicalSlug);
+    await user.click(screen.getByRole("button", { name: "Guardar borrador" }));
+
+    const savedRow = screen.getByText("Sin título").closest("tr");
+    await user.click(within(savedRow as HTMLTableRowElement).getByRole("button", { name: "Editar" }));
+    expect(screen.getByPlaceholderText("maquinaria-y-herramientas")).toHaveValue(technicalSlug);
+
+    await user.click(screen.getByRole("button", { name: "Guardar borrador" }));
+    expect(screen.getByText("Sin título")).toBeInTheDocument();
+  });
+
+  it("no regenera el slug de un remate publicado", async () => {
+    const user = userEvent.setup();
+    renderAdmin([
+      createCompleteRemate({
+        id: "publicado",
+        slug: "enlace-publicado",
+        estadoAdmin: "publicado",
+      }),
+    ]);
+
+    await user.click(screen.getByRole("button", { name: "Remates" }));
+    const row = screen.getByText("Remate de prueba").closest("tr");
+    await user.click(within(row as HTMLTableRowElement).getByRole("button", { name: "Editar" }));
+    const title = screen.getAllByRole("textbox")[0];
+    await user.clear(title);
+    await user.type(title, "Título actualizado");
+
+    expect(screen.getByPlaceholderText("maquinaria-y-herramientas")).toHaveValue("enlace-publicado");
+  });
+
+  it("muestra el error de fecha al guardar un borrador con una fecha inválida", async () => {
+    const user = userEvent.setup();
+    renderAdmin([createCompleteRemate({ estadoAdmin: "borrador" })]);
+
+    await user.click(screen.getByRole("button", { name: "Remates" }));
+    const draftRow = screen.getByText("Remate de prueba").closest("tr");
+    await user.click(within(draftRow as HTMLTableRowElement).getByRole("button", { name: "Editar" }));
+
+    const dateInput = screen.getByLabelText(/Fecha y hora completas/);
+    await user.clear(dateInput);
+    await user.type(dateInput, "31/02/2027 17:00");
+    await user.click(screen.getByRole("button", { name: "Guardar borrador" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Ingresá una fecha válida con el formato dd/mm/yyyy HH:mm."
+    );
+    expect(dateInput).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Editor de remate")).toBeInTheDocument();
   });
 
   it("permite publicar directamente un borrador completo", async () => {

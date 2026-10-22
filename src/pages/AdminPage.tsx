@@ -86,7 +86,7 @@ function createEmptyRemate(): AdminRemate {
 
   return {
     id,
-    slug: "",
+    slug: createUniqueRemateSlug("", [], id),
     fechaHora: null,
     fechaPorConfirmar: false,
     titulo: "",
@@ -321,8 +321,11 @@ function RemateEditor({
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length > 0) {
+      const isDraftSave = status === "borrador" || status === "en_revision";
       showNotice(
-        status === "publicado" || status === "oculto"
+        validationErrors.fechaHora && isDraftSave
+          ? validationErrors.fechaHora
+          : status === "publicado" || status === "oculto"
           ? "El remate no puede publicarse hasta completar todos los campos obligatorios."
           : "Poné un nombre a cada foto antes de guardar el remate."
       );
@@ -1129,6 +1132,18 @@ export function AdminPage({ onLogout = () => {}, role = "editor", highlightedLot
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [isMobileNavigationOpen]);
 
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+
+    const desktopQuery = window.matchMedia("(min-width: 901px)");
+    const closeOnDesktop = (event: MediaQueryListEvent) => {
+      if (event.matches) setIsMobileNavigationOpen(false);
+    };
+
+    if (desktopQuery.matches) setIsMobileNavigationOpen(false);
+    desktopQuery.addEventListener("change", closeOnDesktop);
+    return () => desktopQuery.removeEventListener("change", closeOnDesktop);
+  }, []);
 
   const handleSaveRemate = async (remate: AdminRemate) => {
     return saveRemate(remate);

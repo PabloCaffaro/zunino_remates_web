@@ -24,4 +24,21 @@ describe("slug de remates", () => {
       "remate-especial"
     );
   });
+
+  it("genera un slug técnico estable para títulos vacíos o compuestos por símbolos", () => {
+    const id = "7ba5d85f-4507-4d1b-a26e-5a7ab6ad5b80";
+
+    expect(createUniqueRemateSlug("", [], id)).toBe(`borrador-${id}`);
+    expect(createUniqueRemateSlug("!@#$%", [], id)).toBe(`borrador-${id}`);
+    expect(createUniqueRemateSlug("", [], id)).toBe(`borrador-${id}`);
+  });
+
+  it("evita colisiones del slug técnico", () => {
+    const id = "7ba5d85f-4507-4d1b-a26e-5a7ab6ad5b80";
+    const remates = [
+      createCompleteRemate({ id: "otro", slug: `borrador-${id}` }),
+    ];
+
+    expect(createUniqueRemateSlug("", remates, id)).toBe(`borrador-${id}-2`);
+  });
 });

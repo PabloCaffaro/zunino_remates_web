@@ -183,7 +183,7 @@ export function ContactSection({ contact, copy }: ContactSectionProps) {
               />
             </label>
             {touchedFields.name && formErrors.name && (
-              <p id="name-error" className="field-error">
+              <p id="name-error" className="field-error" role="alert">
                 {formErrors.name}
               </p>
             )}
@@ -205,7 +205,7 @@ export function ContactSection({ contact, copy }: ContactSectionProps) {
               />
             </label>
             {touchedFields.email && formErrors.email && (
-              <p id="email-error" className="field-error">
+              <p id="email-error" className="field-error" role="alert">
                 {formErrors.email}
               </p>
             )}
@@ -225,7 +225,7 @@ export function ContactSection({ contact, copy }: ContactSectionProps) {
               ></textarea>
             </label>
             {touchedFields.message && formErrors.message && (
-              <p id="message-error" className="field-error">
+              <p id="message-error" className="field-error" role="alert">
                 {formErrors.message}
               </p>
             )}

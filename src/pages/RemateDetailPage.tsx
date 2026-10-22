@@ -51,6 +51,9 @@ export function RemateDetailPage() {
   // Mientras el carrusel se mueve, mantenemos una pista temporal separada del estado ya asentado.
   const [carouselAnimation, setCarouselAnimation] = useState<CarouselStep | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
+  const lightboxCloseRef = useRef<HTMLButtonElement | null>(null);
+  const lightboxTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const lightboxWasOpenRef = useRef(false);
 
   const totalLots = remate?.destacados.length ?? 0;
   const visibleLotCount = Math.min(cardsPerView, totalLots);
@@ -103,6 +106,26 @@ export function RemateDetailPage() {
       document.body.style.overflow = "";
     };
   }, [selectedLotIndex, totalLots]);
+
+  useEffect(() => {
+    if (selectedLotIndex !== null) {
+      if (!lightboxWasOpenRef.current) {
+        lightboxWasOpenRef.current = true;
+        lightboxCloseRef.current?.focus();
+      }
+      return;
+    }
+
+    if (lightboxWasOpenRef.current) {
+      lightboxWasOpenRef.current = false;
+      const trigger = lightboxTriggerRef.current;
+      lightboxTriggerRef.current = null;
+
+      if (trigger?.isConnected) {
+        trigger.focus();
+      }
+    }
+  }, [selectedLotIndex]);
 
   const visibleIndices = useMemo(() => {
     if (!remate || totalLots === 0) {
@@ -197,6 +220,11 @@ export function RemateDetailPage() {
 
   const goToPreviousLot = () => moveCarousel("left");
   const goToNextLot = () => moveCarousel("right");
+  const openLightbox = (trigger: HTMLButtonElement, lotIndex: number) => {
+    lightboxTriggerRef.current = trigger;
+    setSelectedLotIndex(lotIndex);
+  };
+  const closeLightbox = () => setSelectedLotIndex(null);
 
   if (publicDataStatus !== "ready") return <PublicDataStatus />;
 
@@ -277,7 +305,7 @@ export function RemateDetailPage() {
                         <button
                           type="button"
                           className="lot-highlight-button"
-                          onClick={() => setSelectedLotIndex(displayedIndices[index])}
+                          onClick={(event) => openLightbox(event.currentTarget, displayedIndices[index])}
                           aria-label={`Ver ${lote.nombre} en grande`}
                         >
                           <img src={lote.imagen.url} alt={lote.imagen.alt} className="lot-highlight-image" />
@@ -361,13 +389,14 @@ export function RemateDetailPage() {
           role="dialog"
           aria-modal="true"
           aria-label={activeLot.nombre}
-          onClick={() => setSelectedLotIndex(null)}
+          onClick={closeLightbox}
         >
           <div className="lightbox-content" onClick={(event) => event.stopPropagation()}>
             <button
               type="button"
               className="lightbox-close"
-              onClick={() => setSelectedLotIndex(null)}
+              ref={lightboxCloseRef}
+              onClick={closeLightbox}
               aria-label="Cerrar imagen ampliada"
             >
               ×
