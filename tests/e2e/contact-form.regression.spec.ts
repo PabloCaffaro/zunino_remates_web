@@ -1,4 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { mkdir } from "node:fs/promises";
+import { resolve } from "node:path";
 
 const successMessage = "Gracias. Tu consulta fue aceptada para envío.";
 const errorMessage = "No se pudo enviar la consulta. Intentá de nuevo en unos minutos.";
@@ -7,11 +9,20 @@ const syntheticData = {
   email: "qa-e2e@example.invalid",
   message: "Consulta sintética interceptada por Playwright",
 };
+const evidenceDir = resolve(
+  process.cwd(),
+  "docs",
+  "qa",
+  "evidence",
+  "2026-10-22",
+  "unblock-batch-1-6381218",
+);
 
 type MockResponse = {
   status: number;
   body: string;
   contentType?: string;
+  networkError?: boolean;
 };
 
 async function interceptFormSubmit(
@@ -47,11 +58,15 @@ async function interceptFormSubmit(
       return;
     }
 
-    await route.fulfill({
-      status: mockResponse.status,
-      contentType: mockResponse.contentType ?? "application/json",
-      body: mockResponse.body,
-    });
+    if (mockResponse.networkError) {
+      await route.abort("connectionfailed");
+    } else {
+      await route.fulfill({
+        status: mockResponse.status,
+        contentType: mockResponse.contentType ?? "application/json",
+        body: mockResponse.body,
+      });
+    }
   });
 
   return {
@@ -123,5 +138,36 @@ test.describe("@regression CON-005 formulario de contacto", () => {
     await expect(status).toHaveAttribute("aria-live", "polite");
     await expectFields(page, syntheticData);
     guard.assertIsolated();
+  });
+});
+
+test.describe("@regression CON-006 recuperación ante fallo de red", () => {
+  test.beforeAll(async () => {
+    await mkdir(evidenceDir, { recursive: true });
+  });
+
+  test("conserva los datos y anuncia el error sin enviar a FormSubmit", async ({
+    context,
+    page,
+  }) => {
+    const guard = await interceptFormSubmit(context, page, {
+      status: 0,
+      body: "",
+      networkError: true,
+    });
+
+    await submitSyntheticContact(page);
+
+    const status = page.getByText(errorMessage, { exact: true });
+    await expect(status).toBeVisible();
+    await expect(status).toHaveAttribute("aria-live", "polite");
+    await expect(page.getByText(successMessage, { exact: true })).toBeHidden();
+    await expectFields(page, syntheticData);
+    guard.assertIsolated();
+
+    await page.screenshot({
+      path: resolve(evidenceDir, "CON-006-error-red-datos-conservados.png"),
+      fullPage: true,
+    });
   });
 });
