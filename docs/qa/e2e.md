@@ -13,9 +13,13 @@ npm run test:e2e
 ```
 
 El smoke no inicia sesión. Las regresiones leen `QA_ADMIN_EMAIL` y
-`QA_ADMIN_PASSWORD` desde `.qa-credentials.local`, reutilizan únicamente los
-fixtures QA existentes y no crean ni modifican remates. Cada caso corre en un
-contexto independiente, por lo que un fallo no impide ejecutar los demás.
+`QA_ADMIN_PASSWORD` desde `.qa-credentials.local`. Las regresiones de permisos
+también requieren `QA_EDITOR_EMAIL` y `QA_EDITOR_PASSWORD` en ese mismo archivo.
+Las regresiones de solo lectura reutilizan fixtures QA existentes. Las que
+ejercen escrituras crean únicamente fixtures descartables con UUID y prefijo QA,
+registran su estado en un journal ignorado y verifican su eliminación antes de
+finalizar. Cada caso corre en un contexto independiente, por lo que un fallo no
+impide ejecutar los demás.
 
 ## Comprobaciones de Vercel
 

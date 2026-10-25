@@ -1,14 +1,15 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { readCatalogFixtureJournal } from "./helpers/catalog-fixture-journal";
 
 const evidenceDir = resolve(
   process.cwd(),
   "docs",
   "qa",
   "evidence",
-  "2026-10-22",
-  "unblock-batch-4-6381218",
+  "2026-10-24",
+  "unblock-batch-6-2657ae5",
 );
 
 type PublicLot = {
@@ -18,6 +19,7 @@ type PublicLot = {
 };
 
 type PublicRemate = {
+  id: string;
   slug: string;
   titulo: string;
   destacados: PublicLot[];
@@ -58,7 +60,11 @@ async function expectActiveLot(
   if (previousSrc) expect(await image.getAttribute("src")).not.toBe(previousSrc);
 }
 
-async function expectClosedAndRestored(dialog: Locator, trigger: Locator) {
+async function expectClosedAndRestored(
+  dialog: Locator,
+  trigger: Locator,
+  baselineOverflow: { body: string; html: string },
+) {
   await expect(dialog).toHaveCount(0);
   await expect(trigger).toBeFocused();
   await expect(trigger.page().locator(".lightbox-overlay")).toHaveCount(0);
@@ -69,7 +75,7 @@ async function expectClosedAndRestored(dialog: Locator, trigger: Locator) {
         html: getComputedStyle(document.documentElement).overflow,
       })),
     )
-    .toEqual({ body: "visible", html: "visible" });
+    .toEqual(baselineOverflow);
 }
 
 async function visibleBackdropPoint(overlay: Locator, content: Locator) {
@@ -111,14 +117,22 @@ test("@regression CAT-012 navega y cierra una galería real restaurando el scrol
 
   await page.goto("/");
   const remates = await publicRemates(page);
-  const remate = remates.find(
+  const journal = await readCatalogFixtureJournal();
+  const targetedFixture = journal?.status === "published" ? journal.fixture.id : null;
+  const remate = targetedFixture
+    ? remates.find(({ id }) => id === targetedFixture)
+    : remates.find(
     ({ destacados }) =>
       destacados.length >= 2 &&
       new Set(destacados.map(({ imagen }) => imagen.url)).size === destacados.length,
-  );
+    );
   if (!remate) {
+    if (targetedFixture) throw new Error("El fixture publicado de la tanda no aparece en la API pública.");
     test.skip(true, "El Preview no tiene una galería pública real con dos imágenes distintas.");
     return;
+  }
+  if (targetedFixture) {
+    expect(remate.destacados, "galería real de la tanda").toHaveLength(3);
   }
 
   await page.goto(`/remates/${remate.slug}`);
@@ -145,6 +159,10 @@ test("@regression CAT-012 navega y cierra una galería real restaurando el scrol
   const trigger = triggers.first();
   await trigger.scrollIntoViewIfNeeded();
   const dialog = page.getByRole("dialog");
+  const baselineOverflow = await page.evaluate(() => ({
+    body: getComputedStyle(document.body).overflow,
+    html: getComputedStyle(document.documentElement).overflow,
+  }));
   const initialSrc = remate.destacados[0].imagen.url;
   await trigger.click();
   await expectActiveLot(dialog, remate.destacados[0]);
@@ -167,7 +185,7 @@ test("@regression CAT-012 navega y cierra una galería real restaurando el scrol
   await expectActiveLot(dialog, remate.destacados[0]);
 
   await dialog.getByRole("button", { name: "Cerrar imagen ampliada", exact: true }).click();
-  await expectClosedAndRestored(dialog, trigger);
+  await expectClosedAndRestored(dialog, trigger, baselineOverflow);
 
   const initialScrollY = await page.evaluate(() => window.scrollY);
   await trigger.click();
@@ -179,7 +197,7 @@ test("@regression CAT-012 navega y cierra una galería real restaurando el scrol
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(openScrollY);
 
   await page.keyboard.press("Escape");
-  await expectClosedAndRestored(dialog, trigger);
+  await expectClosedAndRestored(dialog, trigger, baselineOverflow);
   const afterEscapeScrollY = await page.evaluate(() => window.scrollY);
   expect(Math.abs(afterEscapeScrollY - initialScrollY)).toBeLessThanOrEqual(1);
 
@@ -202,7 +220,7 @@ test("@regression CAT-012 navega y cierra una galería real restaurando el scrol
     fullPage: false,
   });
   await overlay.click({ position: backdropPoint });
-  await expectClosedAndRestored(dialog, trigger);
+  await expectClosedAndRestored(dialog, trigger, baselineOverflow);
   const afterBackdropScrollY = await page.evaluate(() => window.scrollY);
   expect(Math.abs(afterBackdropScrollY - initialScrollY)).toBeLessThanOrEqual(1);
   expect(unexpectedWrites).toEqual([]);
