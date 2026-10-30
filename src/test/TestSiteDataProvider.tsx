@@ -34,15 +34,12 @@ function createPendingRemate(): AdminRemate {
     subtitulo: "Carga inicial pendiente de verificación",
     lugar: "",
     ubicacionDetalle: "",
-    detalle: "Pre-carga recibida. Falta verificar fecha, lugar, condiciones y catálogo.",
-    enlace: "Catálogo pendiente",
-    catalogoEstado: "El catálogo todavía no fue cargado.",
+    detalle: "Pre-carga recibida. Falta verificar fecha, lugar y condiciones.",
     descripcionLarga: "",
     destacados: [],
     requisitos: [],
     condiciones: [],
     estadoAdmin: "en_revision",
-    catalogoPublicacionEstado: "proximamente",
     version: 1,
     creadoEn: now,
     actualizadoEn: now,
@@ -52,12 +49,9 @@ function createPendingRemate(): AdminRemate {
 function createInitialData(): StoredSiteData {
   const now = new Date().toISOString();
   const adminRemates = siteContent.remates.map<AdminRemate>((remate) => {
-    const catalogo = siteContent.catalogos.find((item) => item.remateId === remate.id);
-
     return {
       ...remate,
       estadoAdmin: "publicado",
-      catalogoPublicacionEstado: catalogo?.estado ?? "disponible",
       version: 1,
       creadoEn: now,
       actualizadoEn: now,

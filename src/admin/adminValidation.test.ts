@@ -25,7 +25,6 @@ describe("validateRemateForPublish", () => {
       ubicacionDetalle: "",
       detalle: "",
       descripcionLarga: "",
-      catalogoEstado: "",
     });
 
     const errors = validateRemateForPublish(remate);
@@ -39,7 +38,6 @@ describe("validateRemateForPublish", () => {
       ubicacionDetalle: expect.any(String),
       detalle: expect.any(String),
       descripcionLarga: expect.any(String),
-      catalogoEstado: expect.any(String),
     });
   });
 

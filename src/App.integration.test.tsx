@@ -22,5 +22,7 @@ describe("rutas inexistentes", () => {
     );
     expect(screen.getByRole("banner")).toBeInTheDocument();
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Catálogos" })).not.toBeInTheDocument();
+    expect(document.querySelector('a[href="/#catalogos"]')).not.toBeInTheDocument();
   });
 });

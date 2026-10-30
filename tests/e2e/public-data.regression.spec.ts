@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 
 const publicApiPaths = new Set(["/api/v1/public/content", "/api/v1/public/remates"]);
 const defaultHeroTitle =
-  "Participá en remates en vivo con catálogos claros y reglas transparentes.";
+  "Participá en remates presenciales con información clara y reglas transparentes.";
 const evidenceDir = resolve(
   process.cwd(),
   "docs",
@@ -31,7 +31,7 @@ async function expectNoFallbackContent(page: Page) {
 }
 
 async function expectRealPublicContent(page: Page) {
-  await expect(page.getByRole("heading", { name: "Próximos remates en vivo" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Próximos remates presenciales" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Ver detalle del remate" }).first()).toBeVisible();
 }
 

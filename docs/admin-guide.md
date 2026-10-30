@@ -41,7 +41,7 @@ Flujo recomendado:
 1. Crear el remate.
 2. Completar la información disponible.
 3. Guardar como `Borrador`.
-4. Cargar la información del catálogo y las condiciones.
+4. Cargar los requisitos, las condiciones y, si corresponde, las fotos de lotes.
 5. Enviar a `En revisión`.
 6. Verificar la información y los archivos.
 7. Publicar.
@@ -55,18 +55,16 @@ Una carga en borrador o revisión no aparece en la web pública.
 - Fecha y hora en formato `dd/mm/yyyy HH:mm`, o la opción `Fecha a confirmar`.
 - Lugar y ubicación detallada.
 - Descripción breve y completa.
-- Texto sobre el catálogo.
 - Al menos un requisito.
 - Al menos una condición.
 
 Los lotes destacados son opcionales. Si se agrega una foto, su nombre es
 obligatorio incluso al guardar como borrador.
 
-## Catálogos e imágenes
+## Imágenes de lotes destacados
 
-En esta versión, el catálogo se describe mediante texto y estado de publicación.
-No se cargan archivos de catálogo. Los lotes destacados y sus imágenes son
-opcionales.
+Los lotes destacados y sus imágenes son opcionales. No hay campos ni acciones
+para administrar documentos PDF en V1.
 
 El navegador prepara la carga y la API valida nuevamente formato, firma y peso
 antes de guardar el archivo en Storage privado.
@@ -115,7 +113,7 @@ reservarse para duplicados o cargas erróneas.
 Antes de publicar:
 
 - Revisar fecha, hora y ubicación.
-- Comprobar el estado y la descripción del catálogo.
+- Comprobar las fotografías y los nombres de los lotes destacados.
 - Comprobar requisitos y condiciones.
 - Revisar ortografía y datos de contacto.
 - Confirmar que el evento debe quedar visible.

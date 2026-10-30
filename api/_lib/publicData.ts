@@ -32,9 +32,6 @@ type PublicRemate = {
   lugar: string;
   ubicacionDetalle: string;
   detalle: string;
-  enlace: string;
-  catalogoEstado: string;
-  catalogoPublicacionEstado: "disponible" | "proximamente" | "preliminar";
   descripcionLarga: string;
   destacados: Array<{ id: string; nombre: string; imagen: { url: string; alt: string } }>;
   requisitos: string[];
@@ -116,7 +113,7 @@ export const getPublishedRemates = async (): Promise<PublicRemate[]> => {
     supabase
       .from("remates")
       .select(
-        "id, slug, estado, titulo, subtitulo, fecha_hora, fecha_por_confirmar, lugar, ubicacion_detalle, detalle, descripcion_larga, catalogo_descripcion, catalogo_estado, destacado, orden",
+        "id, slug, estado, titulo, subtitulo, fecha_hora, fecha_por_confirmar, lugar, ubicacion_detalle, detalle, descripcion_larga, destacado, orden",
       )
       .eq("estado", "publicado")
       .order("destacado", { ascending: false })
@@ -161,12 +158,6 @@ export const getPublishedRemates = async (): Promise<PublicRemate[]> => {
     lugar: remate.lugar,
     ubicacionDetalle: remate.ubicacion_detalle,
     detalle: remate.detalle,
-    enlace:
-      remate.catalogo_estado === "disponible"
-        ? "Catálogo disponible"
-        : "Catálogo próximamente",
-    catalogoEstado: remate.catalogo_descripcion,
-    catalogoPublicacionEstado: remate.catalogo_estado,
     descripcionLarga: remate.descripcion_larga,
     destacados: lots
       .map((lot, index) => ({ ...lot, signedUrl: signedUrls[index]?.signedUrl }))

@@ -35,8 +35,6 @@ const remate = {
   ubicacionDetalle: "Dirección",
   detalle: "Detalle",
   descripcionLarga: "Descripción",
-  catalogoEstado: "Catálogo",
-  catalogoPublicacionEstado: "disponible",
   estadoAdmin: "borrador",
   version: 0,
   destacados: [{ id: lotId, nombre: "Lote", storagePath, imagen: { url: "", alt: "Lote" } }],

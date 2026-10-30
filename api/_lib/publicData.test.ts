@@ -65,6 +65,10 @@ describe("datos públicos de remates", () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({ id: published.id, slug: "publicado" });
     expect(result[0]).not.toHaveProperty("estado");
+    expect(result[0]).not.toHaveProperty("catalogoEstado");
+    expect(result[0]).not.toHaveProperty("catalogoPublicacionEstado");
+    expect(result[0]).not.toHaveProperty("enlace");
+    expect(rematesQuery.select).toHaveBeenCalledWith(expect.not.stringMatching(/catalogo|pdf/i));
     expect(rematesQuery.eq).toHaveBeenCalledWith("estado", "publicado");
   });
 });

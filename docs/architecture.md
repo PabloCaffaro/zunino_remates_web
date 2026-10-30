@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Zunino Remates Web publica próximos remates presenciales, catálogos y datos de la
+Zunino Remates Web publica próximos remates presenciales, lotes destacados y datos de la
 empresa. También ofrece un panel para preparar, revisar y publicar contenido.
 
 ## Estado actual
@@ -48,7 +48,7 @@ La decisión completa, incluyendo sesiones, entornos y rollback, está en
 
 | Ruta | Función |
 | --- | --- |
-| `/` | Inicio, remates, catálogos, empresa y contacto |
+| `/` | Inicio, remates, participación, empresa y contacto |
 | `/remates/:slug` | Información completa de un remate publicado |
 | `/admin12345` | Panel administrativo |
 
@@ -71,7 +71,7 @@ borrador ↔ en_revision → publicado ↔ oculto
 - `cancelado`: evento suspendido.
 
 La publicación requiere título, una fecha concreta o el estado `Fecha a confirmar`,
-ubicación, descripciones, información del catálogo, al menos un requisito y al
+ubicación, descripciones, al menos un requisito y al
 menos una condición. El frontend valida el formulario y PostgreSQL volverá a
 validar la transición.
 
@@ -92,6 +92,11 @@ para detectar ediciones simultáneas antes de sobrescribir datos.
 
 La capa de contexto mantiene separadas las fuentes pública y administrativa, y
 ambas consultan DTO explícitos de la API sin acoplar React al esquema físico.
+
+Las columnas `catalogo_descripcion` y `catalogo_estado` permanecen como legado
+para conservar valores históricos. La migración de V1 elimina su uso en el DTO,
+la escritura y la validación. Su retiro físico requiere una migración futura,
+tras verificar que ninguna integración externa las utiliza y respaldar los datos.
 
 ## Modelo de datos
 

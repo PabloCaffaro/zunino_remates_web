@@ -58,6 +58,11 @@ erDiagram
   }
 ```
 
+`remates.catalogo_estado` y `remates.catalogo_descripcion` son columnas legadas.
+V1 no las consulta, presenta ni exige para publicar; se conservan para preservar
+datos históricos. El diagrama editable representa el esquema físico y debe
+mantener ambas columnas hasta una futura migración de retiro.
+
 ## Acceso público
 
 Los visitantes solamente pueden leer:

@@ -42,6 +42,16 @@ describe("panel administrador", () => {
     vi.useRealTimers();
   });
 
+  it("abre el editor sin exigir campos de catálogo PDF", async () => {
+    const user = userEvent.setup();
+    renderAdmin();
+    await user.click(screen.getByRole("button", { name: "Remates" }));
+    const row = screen.getByText("Maquinaria y herramientas").closest("tr")!;
+    await user.click(within(row).getByRole("button", { name: "Editar" }));
+    expect(screen.queryByText(/estado visible del catálogo|texto sobre el catálogo/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Agregar fotos de lotes destacados")).toBeInTheDocument();
+  });
+
   it("envía credenciales al servidor y muestra sus errores", async () => {
     const login = vi.fn().mockRejectedValueOnce(new Error("Email o contraseña incorrectos.")).mockResolvedValue(undefined);
     const user = userEvent.setup();

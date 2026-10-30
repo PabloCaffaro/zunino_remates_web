@@ -248,7 +248,7 @@ export function RemateDetailPage() {
       <main id="contenido-principal" className="public-page detail-page">
         <Seo
           title={`${remate.titulo} | Zunino Remates`}
-          description={`${remate.detalle} ${remate.catalogoEstado}`}
+          description={remate.detalle}
           path={`/remates/${remate.slug}`}
         />
         <section className="section detail-hero">
@@ -267,10 +267,6 @@ export function RemateDetailPage() {
               <div className="detail-meta-card">
                 <p className="card-tag">Ubicación</p>
                 <p>{remate.ubicacionDetalle}</p>
-              </div>
-              <div className="detail-meta-card">
-                <p className="card-tag">Catálogo</p>
-                <p>{remate.catalogoEstado}</p>
               </div>
             </div>
           </div>
@@ -365,10 +361,9 @@ export function RemateDetailPage() {
           <div className="container detail-cta">
             <div>
               <p className="eyebrow">Siguiente paso</p>
-              <h2>¿Querés recibir el catálogo o hacer una consulta puntual?</h2>
+              <h2>¿Querés hacer una consulta sobre este remate?</h2>
               <p>
-                Escribinos y te enviamos la información completa de este remate junto con requisitos,
-                condiciones y estado actualizado de la documentación.
+                Escribinos para consultar sobre los lotes, requisitos o condiciones de participación.
               </p>
             </div>
             <div className="card-actions">

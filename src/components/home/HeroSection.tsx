@@ -26,8 +26,8 @@ export function HeroSection({ rematePrincipal, copy }: HeroSectionProps) {
               <p>Experiencia en remates agro, vehículos y maquinaria.</p>
             </div>
             <div>
-              <p className="highlight-title">Catálogos abiertos</p>
-              <p>Detalles completos antes del evento.</p>
+              <p className="highlight-title">Lotes destacados</p>
+              <p>Fotografías y detalles para conocer cada remate.</p>
             </div>
             <div>
               <p className="highlight-title">Equipo en sala</p>
@@ -60,7 +60,7 @@ export function HeroSection({ rematePrincipal, copy }: HeroSectionProps) {
             <div className="hero-card">
               <p className="card-tag">Agenda</p>
               <h2>Próximos remates en preparación</h2>
-              <p>Estamos verificando nuevas fechas y catálogos para publicar.</p>
+              <p>Estamos verificando nuevas fechas y lotes destacados para publicar.</p>
             </div>
           )}
           <div className="hero-card ghost">

@@ -130,7 +130,7 @@ export function ContactSection({ contact, copy }: ContactSectionProps) {
           <SectionHeading
             eyebrow="Contacto"
             title="Hablemos sobre tu próximo remate"
-            description="Escribinos para recibir catálogos, coordinar visitas o consultar requisitos."
+            description="Escribinos para coordinar visitas o consultar lotes y requisitos."
             className="contact-heading"
           />
           <div className="contact-details">
@@ -222,7 +222,7 @@ export function ContactSection({ contact, copy }: ContactSectionProps) {
               <textarea
                 name="message"
                 rows={4}
-                placeholder="Quiero recibir el catálogo de..."
+                placeholder="Quiero consultar sobre el remate de..."
                 value={formData.message}
                 onChange={handleFormChange}
                 onBlur={handleFieldBlur}

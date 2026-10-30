@@ -12,10 +12,8 @@ export const siteContent: SiteContent = {
       lugar: "Salón Central · Ruta 8 Km 45",
       ubicacionDetalle: "Salón Central, Ruta 8 Km 45, con inspección previa coordinada.",
       detalle: "Equipos industriales, compresores, tornos y lotes de taller.",
-      enlace: "Catálogo disponible",
-      catalogoEstado: "Catálogo abierto con fichas técnicas, condiciones y retiro coordinado.",
       descripcionLarga:
-        "Una jornada pensada para compradores que buscan equipamiento industrial, herramientas de taller y lotes de uso inmediato. El evento contará con inspección previa, apoyo en sala y condiciones visibles desde el catálogo.",
+        "Una jornada pensada para compradores que buscan equipamiento industrial, herramientas de taller y lotes de uso inmediato. El evento contará con inspección previa, apoyo en sala y condiciones de participación visibles en la web.",
       destacados: [
         {
           id: "maq-lote-01",
@@ -45,7 +43,7 @@ export const siteContent: SiteContent = {
       requisitos: [
         "Documento de identidad vigente al registrarte",
         "Datos de contacto actualizados para confirmar adjudicación",
-        "Revisión previa del catálogo y condiciones de retiro",
+        "Revisión previa de los lotes destacados y condiciones de retiro",
       ],
       condiciones: [
         "Remate presencial con incrementos informados en sala",
@@ -63,8 +61,6 @@ export const siteContent: SiteContent = {
       lugar: "Predio Zunino · Montevideo",
       ubicacionDetalle: "Predio Zunino, Montevideo, con agenda para ver unidades antes del remate.",
       detalle: "Pickups, furgones y flota urbana con inspección previa.",
-      enlace: "Catálogo disponible",
-      catalogoEstado: "Catálogo de unidades con publicación escalonada y notas de inspección.",
       descripcionLarga:
         "Este remate reúne vehículos utilitarios seleccionados para trabajo urbano, logística y uso comercial. Cada unidad se presenta con datos base, estado general y su instancia de inspección previa.",
       destacados: [
@@ -114,8 +110,6 @@ export const siteContent: SiteContent = {
       lugar: "Predio Rural · Canelones",
       ubicacionDetalle: "Predio Rural en Canelones, con recepción de público desde media tarde.",
       detalle: "Implementos agrícolas, trailers y herramientas de campo.",
-      enlace: "Catálogo disponible",
-      catalogoEstado: "Listado preliminar publicado con ampliación prevista en la semana del remate.",
       descripcionLarga:
         "Una propuesta orientada a productores, contratistas y compradores del rubro rural. El remate combina implementos agrícolas, accesorios y herramientas de uso intensivo para campo y mantenimiento.",
       destacados: [
@@ -156,35 +150,12 @@ export const siteContent: SiteContent = {
       ],
     },
   ],
-  catalogos: [
-    {
-      id: "cat-maquinaria",
-      remateId: "maq-herr-2026-03-22",
-      titulo: "Maquinaria y herramientas",
-      detalle: "Consultá las fichas técnicas, condiciones y ubicación informada para cada lote.",
-      estado: "disponible",
-    },
-    {
-      id: "cat-vehiculos",
-      remateId: "veh-util-2026-04-05",
-      titulo: "Vehículos utilitarios",
-      detalle: "Catálogo disponible con unidades, observaciones generales y condiciones por lote.",
-      estado: "disponible",
-    },
-    {
-      id: "cat-agro",
-      remateId: "agro-campo-2026-04-19",
-      titulo: "Agro y campo",
-      detalle: "Listado preliminar disponible con ubicación, condiciones y notas del organizador.",
-      estado: "preliminar",
-    },
-  ],
   pasos: [
     {
       id: "paso-01",
       numero: "01",
-      titulo: "Revisá el catálogo",
-      detalle: "Verificá lotes, condiciones y fechas. Podés coordinar inspecciones.",
+      titulo: "Conocé los lotes destacados",
+      detalle: "Revisá fotos, condiciones y fechas. Podés coordinar inspecciones.",
     },
     {
       id: "paso-02",

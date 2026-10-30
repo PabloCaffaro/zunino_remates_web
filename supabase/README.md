@@ -79,7 +79,6 @@ Para pasar a `publicado`, PostgreSQL exige:
 - Fecha real o estado `Fecha a confirmar`.
 - Lugar y ubicación detallada.
 - Descripción breve y completa.
-- Descripción y estado del catálogo.
 - Al menos un requisito.
 - Al menos una condición.
 
@@ -97,6 +96,15 @@ from public.validate_remate_for_publication('UUID_DEL_REMATE');
 
 Aunque el frontend omitiera esa comprobación, el trigger de la base impediría una
 publicación incompleta.
+
+La migración `20261029010000_remove_pdf_catalog_from_v1.sql` retira la
+dependencia de catálogo de la publicación y de los RPC. Las columnas históricas
+`catalogo_descripcion` y `catalogo_estado` permanecen para compatibilidad y
+conservación de datos; se podrán retirar tras auditar consumidores externos y
+respaldar sus valores. Se aplicó y verificó en Supabase QA el 30/10/2026.
+Antes de desplegar el código de V1 en otro entorno, aplicar allí esta migración.
+Los cinco cambios de texto público se aplicaron por separado en QA; no forman
+parte de la migración técnica ni se aplican automáticamente en otros entornos.
 
 ## Organización de Storage
 

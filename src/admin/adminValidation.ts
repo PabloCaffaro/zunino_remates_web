@@ -27,7 +27,6 @@ export function validateRemateForPublish(remate: AdminRemate): PublishValidation
     ["ubicacionDetalle", "La ubicación detallada es obligatoria."],
     ["detalle", "La descripción breve es obligatoria."],
     ["descripcionLarga", "La descripción completa es obligatoria."],
-    ["catalogoEstado", "El texto sobre el estado del catálogo es obligatorio."],
   ];
 
   requiredTextFields.forEach(([field, message]) => {

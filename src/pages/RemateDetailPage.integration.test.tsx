@@ -32,6 +32,13 @@ async function renderDetailPage(remates: Remate[] = siteContent.remates) {
 }
 
 describe("visibilidad del detalle", () => {
+  it("ofrece consultas y conserva los lotes sin enlaces a PDF", async () => {
+    await renderDetailPage();
+    expect(screen.getByRole("heading", { name: "¿Querés hacer una consulta sobre este remate?" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Compresor industrial de alto caudal" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /catálogo|pdf|descargar/i })).not.toBeInTheDocument();
+  });
+
   it("no permite abrir por URL un remate oculto", async () => {
     const hiddenRemate = createCompleteRemate({
       slug: "maquinaria-y-herramientas",

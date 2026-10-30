@@ -94,14 +94,11 @@ function createEmptyRemate(): AdminRemate {
     lugar: "",
     ubicacionDetalle: "",
     detalle: "",
-    enlace: "Catálogo pendiente",
-    catalogoEstado: "",
     descripcionLarga: "",
     destacados: [],
     requisitos: [],
     condiciones: [],
     estadoAdmin: "borrador",
-    catalogoPublicacionEstado: "proximamente",
     version: 0,
     creadoEn: now,
     actualizadoEn: now,
@@ -573,25 +570,6 @@ function RemateEditor({
           />
           {errors.lugar ? <span className="admin-field-error">{errors.lugar}</span> : null}
         </label>
-        <label>
-          <FieldTitle description="Indica al público si el catálogo todavía no está publicado, es preliminar o ya está disponible.">
-            Estado visible del catálogo *
-          </FieldTitle>
-          <select
-            value={form.catalogoPublicacionEstado}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                catalogoPublicacionEstado: event.target
-                  .value as AdminRemate["catalogoPublicacionEstado"],
-              }))
-            }
-          >
-            <option value="proximamente">Próximamente</option>
-            <option value="preliminar">Preliminar</option>
-            <option value="disponible">Disponible</option>
-          </select>
-        </label>
         <label className="admin-span-two">
           <FieldTitle description="Dirección completa y cualquier indicación necesaria para llegar o coordinar una inspección.">
             Ubicación detallada *
@@ -629,20 +607,6 @@ function RemateEditor({
           />
           {errors.descripcionLarga ? (
             <span className="admin-field-error">{errors.descripcionLarga}</span>
-          ) : null}
-        </label>
-        <label className="admin-span-two">
-          <FieldTitle description="Mensaje público que describe qué contiene el catálogo o cuándo estará disponible.">
-            Texto sobre el catálogo *
-          </FieldTitle>
-          <textarea
-            rows={2}
-            value={form.catalogoEstado}
-            onChange={(event) => updateTextField("catalogoEstado", event.target.value)}
-            aria-invalid={Boolean(errors.catalogoEstado)}
-          />
-          {errors.catalogoEstado ? (
-            <span className="admin-field-error">{errors.catalogoEstado}</span>
           ) : null}
         </label>
       </div>

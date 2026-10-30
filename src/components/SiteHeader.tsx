@@ -46,9 +46,6 @@ export function SiteHeader() {
           <a href="/#proximos" onClick={closeMenu}>
             Próximos remates
           </a>
-          <a href="/#catalogos" onClick={closeMenu}>
-            Catálogos
-          </a>
           <a href="/#como" onClick={closeMenu}>
             Cómo participar
           </a>

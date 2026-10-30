@@ -1,11 +1,11 @@
-import type { AdminRemate, EditableSiteContent, Remate } from "../types/site";
+import type { EditableSiteContent, Remate } from "../types/site";
 
 type PublicContentResponse = {
   data: EditableSiteContent;
 };
 
 type PublicRemateResponse = {
-  data: Array<Remate & Pick<AdminRemate, "catalogoPublicacionEstado">>;
+  data: Remate[];
 };
 
 const getJson = async <Data>(url: string, signal: AbortSignal): Promise<Data> => {

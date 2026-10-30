@@ -333,38 +333,7 @@ a {
   margin-bottom: 30px;
 }
 
-.catalog-status {
-  display: inline-flex;
-  margin-bottom: 10px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  text-transform: capitalize;
-}
-
-.catalog-status-disponible {
-  background: rgba(47, 172, 94, 0.14);
-  color: var(--green-800);
-}
-
-.catalog-status-proximamente {
-  background: rgba(201, 148, 29, 0.14);
-  color: #8a6611;
-}
-
-.catalog-status-preliminar {
-  background: rgba(28, 115, 153, 0.12);
-  color: #155973;
-}
-
-.catalog-pending {
-  color: var(--green-800);
-  font-weight: 700;
-}
-
 .cards-grid,
-.catalog-grid,
 .steps-grid {
   display: grid;
   gap: 20px;
@@ -372,7 +341,6 @@ a {
 }
 
 .card,
-.catalog-card,
 .step-card {
   background: var(--white);
   padding: 24px;
@@ -1773,7 +1741,6 @@ textarea:focus-visible {
 
   .hero-card,
   .card,
-  .catalog-card,
   .step-card,
   .panel-box,
   .contact-form,
@@ -2948,7 +2915,6 @@ textarea:focus-visible {
 
 .home-page .hero-card,
 .home-page .card,
-.home-page .catalog-card,
 .home-page .step-card,
 .home-page .panel-box,
 .home-page .contact-form,
@@ -2962,7 +2928,6 @@ textarea:focus-visible {
 
 .home-page .hero-card:hover,
 .home-page .card:hover,
-.home-page .catalog-card:hover,
 .home-page .step-card:hover,
 .home-page .panel-box:hover {
   transform: translateY(-4px);
@@ -2977,8 +2942,7 @@ textarea:focus-visible {
   background: rgba(255, 255, 255, 0.76);
 }
 
-.home-page .card-tag,
-.home-page .catalog-status {
+.home-page .card-tag {
   padding: 5px 11px;
   border: 1px solid #cce5d4;
   background: #f0faf3;
@@ -3014,7 +2978,6 @@ textarea:focus-visible {
   background: rgba(244, 247, 244, 0.78);
 }
 
-.home-page #catalogos,
 .home-page #empresa,
 .home-page #contacto {
   background: #f7f8f5;
@@ -3034,14 +2997,12 @@ textarea:focus-visible {
 }
 
 .home-page .cards-grid,
-.home-page .catalog-grid,
 .home-page .steps-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 22px;
 }
 
 .home-page .card,
-.home-page .catalog-card,
 .home-page .step-card {
   display: flex;
   min-width: 0;
@@ -3049,8 +3010,7 @@ textarea:focus-visible {
   padding: 24px;
 }
 
-.home-page .card > .btn,
-.home-page .catalog-card .card-actions {
+.home-page .card > .btn {
   margin-top: auto;
 }
 
@@ -3060,8 +3020,7 @@ textarea:focus-visible {
   letter-spacing: 0.1em;
 }
 
-.home-page .card h3,
-.home-page .catalog-card h3 {
+.home-page .card h3 {
   font-size: 1.25rem;
 }
 
@@ -3071,7 +3030,6 @@ textarea:focus-visible {
 }
 
 .home-page .card p,
-.home-page .catalog-card p,
 .home-page .step-card p {
   font-size: 0.86rem;
   line-height: 1.65;
@@ -3283,7 +3241,6 @@ textarea:focus-visible {
 
 @media (max-width: 1080px) {
   .home-page .cards-grid,
-  .home-page .catalog-grid,
   .home-page .steps-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3349,7 +3306,6 @@ textarea:focus-visible {
 
   .home-page .hero-highlights,
   .home-page .cards-grid,
-  .home-page .catalog-grid,
   .home-page .steps-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -3359,14 +3315,12 @@ textarea:focus-visible {
   }
 
   .home-page .hero-actions .btn,
-  .home-page .card .btn,
-  .home-page .catalog-card .btn {
+  .home-page .card .btn {
     width: 100%;
   }
 
   .home-page .hero-card,
   .home-page .card,
-  .home-page .catalog-card,
   .home-page .step-card,
   .home-page .panel-box,
   .home-page .contact-form,

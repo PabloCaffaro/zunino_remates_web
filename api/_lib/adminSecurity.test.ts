@@ -6,8 +6,7 @@ const validRemate = {
   id: "10000000-0000-4000-8000-000000000001", version: 0,
   estadoAdmin: "borrador", titulo: "Prueba", subtitulo: "Detalle",
   slug: "prueba", lugar: "Montevideo", ubicacionDetalle: "Dirección",
-  detalle: "Detalle", descripcionLarga: "Descripción", catalogoEstado: "Catálogo",
-  catalogoPublicacionEstado: "disponible", fechaPorConfirmar: false,
+  detalle: "Detalle", descripcionLarga: "Descripción", fechaPorConfirmar: false,
   fechaHora: "2026-10-18T17:00:00-03:00", requisitos: ["Documento"],
   condiciones: ["Pago contado"], destacados: [],
 };
@@ -27,6 +26,8 @@ describe("protecciones de la API administrativa", () => {
     const result = validateRemate({ remate: { ...validRemate, fechaPorConfirmar: true, created_by: "intruso" } });
     expect(result.remate.fechaHora).toBeNull();
     expect(result.remate).not.toHaveProperty("created_by");
+    expect(result.remate).not.toHaveProperty("catalogoEstado");
+    expect(result.remate).not.toHaveProperty("catalogoPublicacionEstado");
   });
 
   it("conserva los lotes para validarlos en Storage y rechaza versiones inválidas", () => {

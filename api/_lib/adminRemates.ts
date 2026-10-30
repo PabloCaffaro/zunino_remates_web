@@ -18,7 +18,7 @@ export function validateRemate(body: Record<string, unknown>) {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new ApiError(400, "Falta el remate.");
   const r = input as Record<string, unknown>;
   const result: Record<string, unknown> = { id: requireId(r.id), estadoAdmin: requireStatus(r.estadoAdmin) };
-  for (const key of ["titulo", "subtitulo", "slug", "lugar", "ubicacionDetalle", "detalle", "descripcionLarga", "catalogoEstado"]) {
+  for (const key of ["titulo", "subtitulo", "slug", "lugar", "ubicacionDetalle", "detalle", "descripcionLarga"]) {
     if (typeof r[key] !== "string" || r[key].length > 10000) throw new ApiError(400, `Campo inválido: ${key}.`);
     result[key] = r[key];
   }
@@ -27,8 +27,6 @@ export function validateRemate(body: Record<string, unknown>) {
   if (r.fechaHora !== null && (typeof r.fechaHora !== "string" || !/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(r.fechaHora) || !Number.isFinite(Date.parse(r.fechaHora)))) throw new ApiError(400, "Fecha inválida.");
   result.fechaHora = r.fechaPorConfirmar ? null : r.fechaHora;
   result.fechaPorConfirmar = r.fechaPorConfirmar;
-  if (!["disponible", "preliminar", "proximamente"].includes(String(r.catalogoPublicacionEstado))) throw new ApiError(400, "Estado de catálogo inválido.");
-  result.catalogoPublicacionEstado = r.catalogoPublicacionEstado;
   for (const key of ["requisitos", "condiciones"]) {
     const items = r[key];
     if (!Array.isArray(items) || items.length > 100 || items.some((value) => typeof value !== "string" || !value.trim() || value.length > 2000)) throw new ApiError(400, `Lista inválida: ${key}.`);

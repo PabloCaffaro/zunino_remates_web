@@ -10,7 +10,6 @@ export type HighlightedLot = {
   storagePath?: string;
 };
 
-export type CatalogoEstado = "disponible" | "proximamente" | "preliminar";
 
 export type RemateEstadoAdmin =
   | "borrador"
@@ -30,8 +29,6 @@ export type Remate = {
   lugar: string;
   ubicacionDetalle: string;
   detalle: string;
-  enlace: string;
-  catalogoEstado: string;
   descripcionLarga: string;
   destacados: HighlightedLot[];
   requisitos: string[];
@@ -40,18 +37,9 @@ export type Remate = {
 
 export type AdminRemate = Remate & {
   estadoAdmin: RemateEstadoAdmin;
-  catalogoPublicacionEstado: CatalogoEstado;
   version: number;
   creadoEn: string;
   actualizadoEn: string;
-};
-
-export type Catalogo = {
-  id: string;
-  remateId: string;
-  titulo: string;
-  detalle: string;
-  estado: CatalogoEstado;
 };
 
 export type Paso = {
@@ -77,7 +65,6 @@ export type ContactInfo = {
 
 export type SiteContent = {
   remates: Remate[];
-  catalogos: Catalogo[];
   pasos: Paso[];
   faqs: FaqItem[];
   contacto: ContactInfo;

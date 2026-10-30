@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(55);
+select plan(56);
 
 -- Aísla los fixtures de los datos que ya existan en el entorno probado.
 -- Todo se restaura al finalizar porque el archivo completo usa ROLLBACK.
@@ -48,8 +48,7 @@ insert into public.remates (
   lugar,
   ubicacion_detalle,
   detalle,
-  descripcion_larga,
-  catalogo_descripcion
+  descripcion_larga
 )
 values
   (
@@ -62,8 +61,7 @@ values
     'Montevideo',
     'Dirección de prueba',
     'Descripción breve de prueba',
-    'Descripción completa de prueba',
-    'Catálogo en preparación'
+    'Descripción completa de prueba'
   ),
   (
     '20000000-0000-0000-0000-000000000002',
@@ -75,8 +73,7 @@ values
     'Montevideo',
     'Dirección de prueba',
     'Descripción breve de prueba',
-    'Descripción completa de prueba',
-    'Catálogo disponible en la página'
+    'Descripción completa de prueba'
   );
 
 insert into public.remate_requisitos (remate_id, contenido)
@@ -106,8 +103,7 @@ insert into public.remates (
   lugar,
   ubicacion_detalle,
   detalle,
-  descripcion_larga,
-  catalogo_descripcion
+  descripcion_larga
 )
 values (
   '20000000-0000-0000-0000-000000000003',
@@ -119,8 +115,7 @@ values (
   'Montevideo',
   'Dirección de prueba',
   'Descripción breve de prueba',
-  'Descripción completa de prueba',
-  'Catálogo disponible en la página'
+  'Descripción completa de prueba'
 );
 
 insert into public.remate_requisitos (remate_id, contenido)
@@ -372,6 +367,14 @@ select ok(
   has_column_privilege('anon', 'public.remates', 'titulo', 'SELECT')
     and has_column_privilege('anon', 'public.configuracion_sitio', 'hero_titulo', 'SELECT'),
   'El visitante conserva las columnas necesarias para renderizar el sitio'
+);
+
+select ok(
+  not has_column_privilege('anon', 'public.remates', 'catalogo_descripcion', 'SELECT')
+    and not has_column_privilege('anon', 'public.remates', 'catalogo_estado', 'SELECT')
+    and not has_column_privilege('authenticated', 'public.remates', 'catalogo_descripcion', 'SELECT')
+    and not has_column_privilege('authenticated', 'public.remates', 'catalogo_estado', 'SELECT'),
+  'Las columnas legadas de catálogo no se exponen en Data API'
 );
 
 set local role anon;

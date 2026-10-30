@@ -1,7 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(21);
+select plan(22);
 
 insert into auth.users (id, email)
 values ('91000000-0000-4000-8000-000000000001', 'qa-contenido@example.invalid');
@@ -102,7 +102,18 @@ reset role;
 drop trigger zz_test_keep_previous_content_address on public.configuracion_sitio;
 
 set local role authenticated;
-select set_config('test.lot_payload', '{"id":"91000000-0000-4000-8000-000000000002","slug":"qa-storage","titulo":"QA Storage","subtitulo":"QA subtítulo","fechaHora":null,"fechaPorConfirmar":true,"lugar":"QA lugar","ubicacionDetalle":"QA ubicación","detalle":"QA breve","descripcionLarga":"QA completa","catalogoEstado":"QA catálogo","catalogoPublicacionEstado":"preliminar","estadoAdmin":"borrador","destacados":[{"id":"91000000-0000-4000-8000-000000000003","nombre":"Lote QA","storagePath":"91000000-0000-4000-8000-000000000002/91000000-0000-4000-8000-000000000003.jpg","imagen":{"alt":"Imagen QA"}}],"requisitos":["QA requisito"],"condiciones":["QA condición"]}', true);
+select set_config('test.lot_payload', '{"id":"91000000-0000-4000-8000-000000000002","slug":"qa-storage","titulo":"QA Storage","subtitulo":"QA subtítulo","fechaHora":null,"fechaPorConfirmar":true,"lugar":"QA lugar","ubicacionDetalle":"QA ubicación","detalle":"QA breve","descripcionLarga":"QA completa","estadoAdmin":"borrador","destacados":[{"id":"91000000-0000-4000-8000-000000000003","nombre":"Lote QA","storagePath":"91000000-0000-4000-8000-000000000002/91000000-0000-4000-8000-000000000003.jpg","imagen":{"alt":"Imagen QA"}}],"requisitos":["QA requisito"],"condiciones":["QA condición"]}', true);
+select throws_ok(
+  $$select public.admin_save_remate(current_setting('test.lot_payload')::jsonb, 0)$$,
+  '22023', 'Una fotografía no existe en Storage.',
+  'Rechaza un lote sin objeto de Storage antes de guardar el remate'
+);
+reset role;
+insert into storage.objects (bucket_id, name) values (
+  'lotes-remates',
+  '91000000-0000-4000-8000-000000000002/91000000-0000-4000-8000-000000000003.jpg'
+);
+set local role authenticated;
 select is(public.admin_save_remate(current_setting('test.lot_payload')::jsonb, 0)->>'status', 'saved', 'Guarda un remate con metadatos del lote');
 select is(public.admin_remate_snapshot('91000000-0000-4000-8000-000000000002')->'destacados'->0->>'nombre', 'Lote QA', 'La lectura administrativa incluye el lote');
 select is(public.admin_delete_remate('91000000-0000-4000-8000-000000000002', 2)->'storagePaths'->>0, '91000000-0000-4000-8000-000000000002/91000000-0000-4000-8000-000000000003.jpg', 'La eliminación devuelve la ruta que debe limpiarse de Storage');

@@ -11,7 +11,6 @@ export function SiteFooter() {
           </div>
           <nav className="footer-links" aria-label="Navegación del pie">
             <a href="/#proximos">Próximos remates</a>
-            <a href="/#catalogos">Catálogos</a>
             <a href="/#como">Cómo participar</a>
             <a href="/#contacto">Contacto</a>
           </nav>
